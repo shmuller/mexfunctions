@@ -3,9 +3,12 @@
  * Algorithm: 
  * http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
  *
- * Compile: 
+ * Compile on Linux: 
  * mex -v COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3 pnpolymex.c
  * 
+ * Compile on Windows
+ * mex -v OPTIMFLAGS=-O3 pnpolymex.c
+ *
  * S. H. Muller, 2007/10/03
  */
 
