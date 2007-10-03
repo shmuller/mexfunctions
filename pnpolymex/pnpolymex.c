@@ -12,9 +12,10 @@
 #include "mex.h"
 #include "matrix.h"
 
-int pnpoly(int npol, const double *xp, const double *yp, double x, double y)
+char pnpoly(int npol, const double *xp, const double *yp, double x, double y)
 {
-    int i, j, c = 0;
+    char c = 0;
+    int i, j;
     for (i = 0, j = npol-1; i < npol; j = i++) {
         if ((((yp[i]<=y) && (y<yp[j])) ||
             ((yp[j]<=y) && (y<yp[i]))) &&
@@ -36,12 +37,12 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     const int npol = mxGetNumberOfElements(R[2]);
     const double *xp=mxGetPr(R[2]), *yp=mxGetPr(R[3]);
     
-    double *in;
+    char *in;
     
-    L[0] = mxCreateNumericArray(ndims,dims,mxDOUBLE_CLASS,mxREAL);
-    in = mxGetPr(L[0]);
+    L[0] = mxCreateNumericArray(ndims,dims,mxLOGICAL_CLASS,mxREAL);
+    in = (char*) mxGetPr(L[0]);
     
     for (i=npts; i--; ) {
-        *in++ = (double) pnpoly(npol,xp,yp,*x++,*y++);
+        *in++ = pnpoly(npol,xp,yp,*x++,*y++);
     }
 }
