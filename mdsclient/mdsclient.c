@@ -30,7 +30,6 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	int dtype_long = DTYPE_LONG;
 	char dtype=DTYPE_CSTRING;
 	int nbytes=0;
-	void **dptr;
 
   	int idesc = descr2(&dtype_long, &zero);
     
@@ -39,14 +38,17 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	char ndims = mxGetNumberOfDimensions(R[0]);
 	const mwSize *Dims = mxGetDimensions(R[0]);
 	short len = mxGetNumberOfElements(R[0]);
-	char *ptr = (char*) mxGetPr(R[0]);
-    
+	char *ptr = malloc((len+1)*sizeof(char));
+
+	mxGetString(R[0],ptr,len+1);
+	printf("%s\n",ptr);    
+
 	int *dims = malloc(ndims*sizeof(int));
 	for(i=0; i<ndims; i++) dims[i] = (int)Dims[i];
 
 	int *out;
     
-	L[0] = mxCreateNumericArray(ndims,Dims,mxINT32_CLASS,mxREAL);
+	L[0] = mxCreateNumericArray(1,Dims,mxINT32_CLASS,mxREAL);
 	out = (int*) mxGetPr(L[0]);
     
 	sock = MdsConnect("plaspc03.ucsd.edu");
@@ -55,10 +57,28 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	}
 
 	stat = MdsOpen("csdx",&shot);
-/*	
-	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, nbytes=%d\n",dtype,len,ndims,dims[0],nbytes);
 
-	stat = SendArg(sock, 0, dtype, nargs, len, ndims, dims, ptr);
+
+	struct descrip exparg, *arg, *ans_arg;
+	ans_arg = arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,ptr);
+
+	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,ArgLen(arg),arg->ndims,arg->dims[0],0);
+	
+	int idx=0;
+    	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+
+    	int numbytes;
+    	void *dptr;
+    	void *mem = 0;
+    	stat = GetAnswerInfoTS(sock, &ans_arg->dtype, &len, &ans_arg->ndims, ans_arg->dims, &numbytes, &dptr, &mem);
+	ans_arg->length = len;
+
+	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",ans_arg->dtype,ans_arg->length,ans_arg->ndims,ans_arg->dims[0],numbytes);
+	
+	*out = *((int*)dptr);
+
+/*
+	stat = SendArg(sock, 0, DTYPE_CSTRING, nargs, len, ndims, dims, ptr);
 	if (!status_ok(stat)) {
 		mxErrMsgTxt("SendArg error");
 	}
@@ -67,10 +87,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	if (!status_ok(stat)) {
 		mxErrMsgTxt("GetAnswerInfo error");
 	}
-
-	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, nbytes=%d\n",dtype,len,ndims,dims[0],nbytes);
 */
-	stat = MdsValue2("$shot",&idesc,out,&zero);
+
+/*	stat = MdsValue2(ptr,&idesc,out,&zero);*/
 	
 	stat = MdsClose("csdx",&shot);
 
