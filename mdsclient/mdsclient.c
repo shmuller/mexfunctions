@@ -44,8 +44,6 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	mxGetString(R[0],expression,len+1);
 	printf("%s\n",expression);    
 
-	L[0] = mxCreateNumericArray(1,dims,mxINT32_CLASS,mxREAL);
-	void *out = (void*) mxGetPr(L[0]);
     
 	sock = ConnectToMds("plaspc03.ucsd.edu");
 	if (sock == INVALID_SOCKET) {
@@ -55,7 +53,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	stat = MdsOpen(sock,"csdx",shot);
 	
 	struct descrip exparg, *arg=&exparg;
-/*
+
 	int idx=0, nargs=1;
     	int numbytes = 0;
     	void *dptr;
@@ -71,11 +69,13 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
 	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,arg->length,arg->ndims,arg->dims[0],numbytes);
 
-	*((int*)out) = *((int*)dptr);
-*/
 	
-	stat = myMdsValue(sock, expression, arg);
-	*((int*)out) = *((int*)arg->ptr);
+/*	stat = myMdsValue(sock, expression, arg);*/
+
+
+	L[0] = mxCreateNumericArray(arg->ndims,arg->dims,mxINT16_CLASS,mxREAL);
+	void *out = (void*) mxGetPr(L[0]);
+	memcpy(out,arg->ptr,numbytes);
 
 	stat = MdsClose(sock);
 
