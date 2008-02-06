@@ -16,7 +16,6 @@
 #include "matrix.h"
 #include "math.h"
 #include "ipdesc.h"
-#include "stdarg.h"
 #include "string.h"
 
 #define min(a,b) ((a)<(b) ? (a) : (b))
@@ -29,7 +28,7 @@
 #endif
 
 
-int myMdsValue(SOCKET sock, char *expression, ...);
+int myMdsValue(SOCKET sock, char *expression, struct descrip *ans_arg);
 
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
@@ -54,13 +53,14 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	}
 
 	stat = MdsOpen(sock,"csdx",shot);
-
-	int idx=0, nargs=0;
+	
 	struct descrip exparg, *arg=&exparg;
+/*
+	int idx=0, nargs=1;
     	int numbytes = 0;
     	void *dptr;
     	void *mem = 0;
-/*
+
 	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
 	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 	
@@ -74,7 +74,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	*((int*)out) = *((int*)dptr);
 */
 	
-	stat = myMdsValue(sock, expression, arg, NULL);
+	stat = myMdsValue(sock, expression, arg);
 	*((int*)out) = *((int*)arg->ptr);
 
 	stat = MdsClose(sock);
@@ -84,35 +84,19 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
 
 
-int myMdsValue(SOCKET sock, char *expression, ...)
+int myMdsValue(SOCKET sock, char *expression, struct descrip *ans_arg)
 {
-  va_list incrmtr;
-  int a_count;
   int i;
-  unsigned char nargs;
-  unsigned char idx;
+  unsigned char nargs = 1;
+  unsigned char idx = 0;
   int status = 1;
   struct descrip exparg;
-  struct descrip *ans_arg;
   struct descrip *arg = &exparg;
   
-  va_start(incrmtr, expression);
-  for (a_count = 1; arg != NULL; a_count++)
-  {
-    ans_arg=arg;
-    arg = va_arg(incrmtr, struct descrip *);
-  }
+  arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
+
+  status = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
   
-  va_start(incrmtr, expression);
-  nargs = a_count - 2;
-  arg = MakeDescrip((struct descrip *)&exparg,DTYPE_CSTRING,0,0,expression);
-  for (i=1;i<a_count-1 && (status & 1);i++)
-  {
-    idx = i - 1;
-    status = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-    arg = va_arg(incrmtr, struct descrip *);
-  }
-  va_end(incrmtr);
   if (status & 1)
   {
     short len;
