@@ -26,23 +26,27 @@
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
 	SOCKET sock;
-	int stat,shot=0,zero=0,size;
+	int stat,shot=0,zero=0;
 	int dtype_long = DTYPE_LONG;
+	char dtype=DTYPE_CSTRING;
+	int nbytes=0;
+	void **dptr;
+
   	int idesc = descr2(&dtype_long, &zero);
     
 	register int i;
-	const mwSize ndims = mxGetNumberOfDimensions(R[0]);
-	const mwSize *dims = mxGetDimensions(R[0]);
-	const int npts = mxGetNumberOfElements(R[0]);
-	register double *x=mxGetPr(R[0]), *y=mxGetPr(R[1]);
+	unsigned char nargs = 0;
+	char ndims = mxGetNumberOfDimensions(R[0]);
+	const mwSize *Dims = mxGetDimensions(R[0]);
+	short len = mxGetNumberOfElements(R[0]);
+	char *ptr = (char*) mxGetPr(R[0]);
     
-	const int npol = mxGetNumberOfElements(R[2]);
-	const double *xp=mxGetPr(R[2]), *yp=mxGetPr(R[3]);
-	const double *px=xp, *py=yp;
-    
+	int *dims = malloc(ndims*sizeof(int));
+	for(i=0; i<ndims; i++) dims[i] = (int)Dims[i];
+
 	int *out;
     
-	L[0] = mxCreateNumericArray(ndims,dims,mxINT32_CLASS,mxREAL);
+	L[0] = mxCreateNumericArray(ndims,Dims,mxINT32_CLASS,mxREAL);
 	out = (int*) mxGetPr(L[0]);
     
 	sock = MdsConnect("plaspc03.ucsd.edu");
@@ -51,8 +55,22 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	}
 
 	stat = MdsOpen("csdx",&shot);
+/*	
+	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, nbytes=%d\n",dtype,len,ndims,dims[0],nbytes);
 
-	stat = MdsValue2("\\NXPIX",&idesc,out,&zero);
+	stat = SendArg(sock, 0, dtype, nargs, len, ndims, dims, ptr);
+	if (!status_ok(stat)) {
+		mxErrMsgTxt("SendArg error");
+	}
+
+	stat = GetAnswerInfo(sock, &dtype, &len, &ndims, dims, &nbytes, dptr);
+	if (!status_ok(stat)) {
+		mxErrMsgTxt("GetAnswerInfo error");
+	}
+
+	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, nbytes=%d\n",dtype,len,ndims,dims[0],nbytes);
+*/
+	stat = MdsValue2("$shot",&idesc,out,&zero);
 	
 	stat = MdsClose("csdx",&shot);
 
