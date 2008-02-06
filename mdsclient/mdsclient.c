@@ -25,6 +25,7 @@
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
+	SOCKET sock;
 	int stat,shot=0,zero=0,size;
 	int dtype_long = DTYPE_LONG;
   	int idesc = descr2(&dtype_long, &zero);
@@ -44,9 +45,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	L[0] = mxCreateNumericArray(ndims,dims,mxINT32_CLASS,mxREAL);
 	out = (int*) mxGetPr(L[0]);
     
-	stat = MdsConnect("plaspc03.ucsd.edu");
-	if (!status_ok(stat)) {
-		printf("Could not connect to server\n");
+	sock = MdsConnect("plaspc03.ucsd.edu");
+	if (sock == INVALID_SOCKET) {
+		mxErrMsgTxt("Could not connect to server");
 	}
 
 	stat = MdsOpen("csdx",&shot);
@@ -55,7 +56,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	
 	stat = MdsClose("csdx",&shot);
 
-	MdsDisconnect();
+	stat = DisconnectFromMds(sock);
 
 
 }
