@@ -80,27 +80,12 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	stat = MdsClose(sock);
 
 	stat = DisconnectFromMds(sock);
-	
-#ifdef _USE_VARARGS
-	printf("Hallo!\n");
-#endif
-
 }
 
 
 
-
-
-#ifdef _USE_VARARGS
-int myMdsValue(va_alist) va_dcl
-{
-  SOCKET sock;
-  char *expression;
-#else
 int myMdsValue(SOCKET sock, char *expression, ...)
 {
-#endif
-
   va_list incrmtr;
   int a_count;
   int i;
@@ -110,25 +95,15 @@ int myMdsValue(SOCKET sock, char *expression, ...)
   struct descrip exparg;
   struct descrip *ans_arg;
   struct descrip *arg = &exparg;
-#ifdef _USE_VARARGS
-  va_start(incrmtr);
-  sock = va_arg(incrmtr, SOCKET);
-  expression = va_arg(incrmtr, char *);
-#else
+  
   va_start(incrmtr, expression);
-#endif
   for (a_count = 1; arg != NULL; a_count++)
   {
     ans_arg=arg;
     arg = va_arg(incrmtr, struct descrip *);
   }
-#ifdef _USE_VARARGS
-  va_start(incrmtr);
-  sock = va_arg(incrmtr, SOCKET);
-  expression = va_arg(incrmtr, char *);
-#else
+  
   va_start(incrmtr, expression);
-#endif
   nargs = a_count - 2;
   arg = MakeDescrip((struct descrip *)&exparg,DTYPE_CSTRING,0,0,expression);
   for (i=1;i<a_count-1 && (status & 1);i++)
