@@ -116,18 +116,11 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[], SOCKET sock) {
 		L[0] = mxCreateString((char*)out);
 	} else {
 		stat = mds2mex_dims(arg,&ndims,&dims);
-/*		L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
+		L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
 		out = (void*) mxGetPr(L[0]);
 		memcpy(out,arg->ptr,numbytes);
-		free(arg->ptr);
-		free(arg->dims);
-		free(mem);
-*/
-		L[0] = mxCreateNumericArray(0,0,mxID,mxCo);
-		mexMakeArrayPersistent(L[0]);
-		mxSetData(L[0],arg->ptr);
-		mxSetDimensions(L[0],dims,ndims);
 	}
+	if (mem) free(mem);
 	return(1);
 }
 
