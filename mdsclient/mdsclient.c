@@ -27,6 +27,7 @@
 #endif
 
 
+
 void* getnumarg(const mxArray *r, mxClassID id) {
 	if (mxGetClassID(r) == id) { 
 		return((void*)mxGetPr(r));
@@ -77,39 +78,56 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 }
 
 
+int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
+	char *serv = getstringarg(R[1]);
+	SOCKET sock = ConnectToMds(serv);
+	if (sock != INVALID_SOCKET) {
+		mexErrMsgTxt("Could not connect to server");
+	}
+	
+}
+
+
 int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[], SOCKET sock) {
 /*	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));*/
 	char *expression = getstringarg(R[2]);
-	printf("%s\n",expression);
 
 	struct descrip exparg, *arg;
-        int idx = 0, nargs = 1, numbytes = 0, stat = 0;
-        void *mem = 0, *out = 0;
+	int idx = 0, nargs = 1, numbytes = 0, stat = 0;
+	void *mem = 0, *out = 0;
 
 	mxClassID mxID;
 	mxComplexity mxCo;
 	char ndims;
 	mwSize *dims;
 
-        arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
-        stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
+	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 
-        stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
 
-        stat = mds2mex_type(arg,&mxID,&mxCo);
+	stat = mds2mex_type(arg,&mxID,&mxCo);
 
-        if (mxID == mxUNKNOWN_CLASS) {
-                L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
-        } else if (mxID == mxCHAR_CLASS) {
-                out = calloc(numbytes+1,sizeof(char));
-                memcpy(out,arg->ptr,numbytes);
-                L[0] = mxCreateString((char*)out);
-        } else {
-                stat = mds2mex_dims(arg,&ndims,&dims);
-                L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
-                out = (void*) mxGetPr(L[0]);
-                memcpy(out,arg->ptr,numbytes);
-        }
+	if (mxID == mxUNKNOWN_CLASS) {
+		L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
+	} else if (mxID == mxCHAR_CLASS) {
+		out = calloc(numbytes+1,sizeof(char));
+		memcpy(out,arg->ptr,numbytes);
+		L[0] = mxCreateString((char*)out);
+	} else {
+		stat = mds2mex_dims(arg,&ndims,&dims);
+/*		L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
+		out = (void*) mxGetPr(L[0]);
+		memcpy(out,arg->ptr,numbytes);
+		free(arg->ptr);
+		free(arg->dims);
+		free(mem);
+*/
+		L[0] = mxCreateNumericArray(0,0,mxID,mxCo);
+		mexMakeArrayPersistent(L[0]);
+		mxSetData(L[0],arg->ptr);
+		mxSetDimensions(L[0],dims,ndims);
+	}
 	return(1);
 }
 
@@ -121,14 +139,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	SOCKET sock;
 	int stat, shot=0;
 
-	printf("%s\n",cmd);
-
 /*	sock = ConnectToMds("plaspc03.ucsd.edu");*/
 	sock = ConnectToMds("localhost:8001");
 
-	if (sock == INVALID_SOCKET) {
-		mexErrMsgTxt("Could not connect to server");
-	}
 	stat = MdsOpen(sock,"csdx",shot);
 
 	if (strcmp(cmd,"mdsvalue")==0) {
