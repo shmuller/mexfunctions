@@ -27,25 +27,40 @@
 #endif
 
 
+void* getnumarg(const mxArray *r, mxClassID id) {
+	if (mxGetClassID(r) == id) { 
+		return((void*)mxGetPr(r));
+	} else {
+		mexErrMsgTxt("Wrong argument type");
+	}
+}
+
+char *getstringarg(const mxArray *r) {
+	short len = mxGetNumberOfElements(r);
+	char *str = malloc((len+1)*sizeof(char));
+
+	mxGetString(r,str,len+1);
+	return(str);
+}
 
 int mds2mex_type(struct descrip *d, mxClassID *mxID, mxComplexity *mxCo)
 {
   switch (d->dtype)
   {
-	case DTYPE_CSTRING		:  *mxID = -1;             *mxCo = mxREAL; break;
-	case DTYPE_UCHAR		:  *mxID = mxUINT8_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_CHAR			:  *mxID = mxINT8_CLASS;   *mxCo = mxREAL; break;
-	case DTYPE_USHORT		:  *mxID = mxUINT16_CLASS; *mxCo = mxREAL; break;
-	case DTYPE_SHORT		:  *mxID = mxINT16_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_ULONG		:  *mxID = mxUINT32_CLASS; *mxCo = mxREAL; break;
-	case DTYPE_LONG			:  *mxID = mxINT32_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_ULONGLONG		:  *mxID = mxUINT64_CLASS; *mxCo = mxREAL; break;
-	case DTYPE_LONGLONG		:  *mxID = mxINT64_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_FLOAT		:  *mxID = mxSINGLE_CLASS; *mxCo = mxREAL; break;
-	case DTYPE_DOUBLE		:  *mxID = mxDOUBLE_CLASS; *mxCo = mxREAL; break;
-	case DTYPE_COMPLEX		:  *mxID = mxSINGLE_CLASS; *mxCo = mxCOMPLEX; break;
-	case DTYPE_COMPLEX_DOUBLE	:  *mxID = mxDOUBLE_CLASS; *mxCo = mxCOMPLEX; break;
-	default				:  *mxID = 0;              *mxCo = mxREAL; break;
+	case DTYPE_CSTRING		:  *mxID = mxCHAR_CLASS;    *mxCo = mxREAL; break;
+	case DTYPE_UCHAR		:  *mxID = mxUINT8_CLASS;   *mxCo = mxREAL; break;
+	case DTYPE_CHAR			:  *mxID = mxINT8_CLASS;    *mxCo = mxREAL; break;
+	case DTYPE_USHORT		:  *mxID = mxUINT16_CLASS;  *mxCo = mxREAL; break;
+	case DTYPE_SHORT		:  *mxID = mxINT16_CLASS;   *mxCo = mxREAL; break;
+	case DTYPE_ULONG		:  *mxID = mxUINT32_CLASS;  *mxCo = mxREAL; break;
+	case DTYPE_LONG			:  *mxID = mxINT32_CLASS;   *mxCo = mxREAL; break;
+	case DTYPE_ULONGLONG		:  *mxID = mxUINT64_CLASS;  *mxCo = mxREAL; break;
+	case DTYPE_LONGLONG		:  *mxID = mxINT64_CLASS;   *mxCo = mxREAL; break;
+	case DTYPE_FLOAT		:  *mxID = mxSINGLE_CLASS;  *mxCo = mxREAL; break;
+	case DTYPE_DOUBLE		:  *mxID = mxDOUBLE_CLASS;  *mxCo = mxREAL; break;
+	case DTYPE_COMPLEX		:  *mxID = mxSINGLE_CLASS;  *mxCo = mxCOMPLEX; break;
+	case DTYPE_COMPLEX_DOUBLE	:  *mxID = mxDOUBLE_CLASS;  *mxCo = mxCOMPLEX; break;
+	default				:  *mxID = mxUNKNOWN_CLASS; *mxCo = mxREAL; break;
   }
   return(1);
 }
@@ -62,7 +77,10 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 }
 
 
-int sm_mdsvalue(SOCKET sock, char *expression, mxArray **l) {
+int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[], SOCKET sock) {
+/*	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));*/
+	char *expression = getstringarg(R[2]);
+	printf("%s\n",expression);
 
 	struct descrip exparg, *arg;
         int idx = 0, nargs = 1, numbytes = 0, stat = 0;
@@ -80,44 +98,43 @@ int sm_mdsvalue(SOCKET sock, char *expression, mxArray **l) {
 
         stat = mds2mex_type(arg,&mxID,&mxCo);
 
-        if (mxID == 0) {
-                *l = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
-        } else if (mxID == -1) {
+        if (mxID == mxUNKNOWN_CLASS) {
+                L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
+        } else if (mxID == mxCHAR_CLASS) {
                 out = calloc(numbytes+1,sizeof(char));
                 memcpy(out,arg->ptr,numbytes);
-                *l = mxCreateString((char*)out);
+                L[0] = mxCreateString((char*)out);
         } else {
                 stat = mds2mex_dims(arg,&ndims,&dims);
-                *l = mxCreateNumericArray(ndims,dims,mxID,mxCo);
-                out = (void*) mxGetPr(*l);
+                L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
+                out = (void*) mxGetPr(L[0]);
                 memcpy(out,arg->ptr,numbytes);
         }
 	return(1);
 }
 
 
+
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
+	char *cmd = getstringarg(R[0]);
 	SOCKET sock;
-	int stat,shot=0,zero=0;
-	char ndimsR = mxGetNumberOfDimensions(R[0]);
-	const mwSize *dimsR = mxGetDimensions(R[0]);
+	int stat, shot=0;
 
-	short len = mxGetNumberOfElements(R[0]);
-	char *expression = malloc((len+1)*sizeof(char));
-	mxGetString(R[0],expression,len+1);
+	printf("%s\n",cmd);
 
-    
 /*	sock = ConnectToMds("plaspc03.ucsd.edu");*/
 	sock = ConnectToMds("localhost:8001");
 
 	if (sock == INVALID_SOCKET) {
 		mexErrMsgTxt("Could not connect to server");
 	}
-
 	stat = MdsOpen(sock,"csdx",shot);
-	
-	stat = sm_mdsvalue(sock,expression,&L[0]);
+
+	if (strcmp(cmd,"mdsvalue")==0) {
+		stat = sm_mdsvalue(nL,L,nR,R,sock);
+	} else {
+	}
 
 	stat = MdsClose(sock);
 
