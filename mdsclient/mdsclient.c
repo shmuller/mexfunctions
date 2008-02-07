@@ -31,6 +31,29 @@
 int myMdsValue(SOCKET sock, char *expression, struct descrip *ans_arg);
 
 
+int mds2mex_type(struct descrip *d, mxClassID *mxID, mxComplexity *mxCo)
+{
+  switch (d->dtype)
+  {
+    case DTYPE_CSTRING		:  *mxID = 0;              *mxCo = mxREAL; break;
+    case DTYPE_UCHAR		:  *mxID = mxUINT8_CLASS;  *mxCo = mxREAL; break;
+    case DTYPE_CHAR		:  *mxID = mxINT8_CLASS;   *mxCo = mxREAL; break;
+    case DTYPE_USHORT		:  *mxID = mxUINT16_CLASS; *mxCo = mxREAL; break;
+    case DTYPE_SHORT		:  *mxID = mxINT16_CLASS;  *mxCo = mxREAL; break;
+    case DTYPE_ULONG		:  *mxID = mxUINT32_CLASS; *mxCo = mxREAL; break;
+    case DTYPE_LONG		:  *mxID = mxINT32_CLASS;  *mxCo = mxREAL; break;
+    case DTYPE_ULONGLONG	:  *mxID = mxUINT64_CLASS; *mxCo = mxREAL; break;
+    case DTYPE_LONGLONG		:  *mxID = mxINT64_CLASS;  *mxCo = mxREAL; break;
+    case DTYPE_FLOAT		:  *mxID = mxSINGLE_CLASS; *mxCo = mxREAL; break;
+    case DTYPE_DOUBLE		:  *mxID = mxDOUBLE_CLASS; *mxCo = mxREAL; break;
+    case DTYPE_COMPLEX		:  *mxID = mxSINGLE_CLASS; *mxCo = mxCOMPLEX; break;
+    case DTYPE_COMPLEX_DOUBLE	:  *mxID = mxDOUBLE_CLASS; *mxCo = mxCOMPLEX; break;
+  }
+  return(1);
+}
+
+
+
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
 	SOCKET sock;
@@ -44,8 +67,13 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	mxGetString(R[0],expression,len+1);
 	printf("%s\n",expression);    
 
+	mxClassID mxID;
+	mxComplexity mxCo;
+
     
-	sock = ConnectToMds("plaspc03.ucsd.edu");
+/*	sock = ConnectToMds("plaspc03.ucsd.edu");*/
+	sock = ConnectToMds("localhost:8001");
+
 	if (sock == INVALID_SOCKET) {
 		mexErrMsgTxt("Could not connect to server");
 	}
@@ -64,18 +92,23 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	
 	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,arg->length,arg->ndims,arg->dims[0],numbytes);
 
-	stat = GetAnswerInfoTS(sock, &arg->dtype, &len, &arg->ndims, arg->dims, &numbytes, &dptr, &mem);
-    	arg->length = len;
+	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
 
 	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,arg->length,arg->ndims,arg->dims[0],numbytes);
 
 	
 /*	stat = myMdsValue(sock, expression, arg);*/
 
+	stat = mds2mex_type(arg,&mxID,&mxCo);
 
-	L[0] = mxCreateNumericArray(arg->ndims,arg->dims,mxINT16_CLASS,mxREAL);
-	void *out = (void*) mxGetPr(L[0]);
-	memcpy(out,arg->ptr,numbytes);
+	if (mxID) {
+		L[0] = mxCreateNumericArray(1,dims,mxID,mxCo);
+		void *out = (void*) mxGetPr(L[0]);
+		memcpy(out,arg->ptr,numbytes);
+	} else {
+		((char*)arg->ptr)[numbytes] = 0;
+		L[0] = mxCreateString((char*)arg->ptr);
+	}
 
 	stat = MdsClose(sock);
 
