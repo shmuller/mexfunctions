@@ -14,7 +14,6 @@
 
 #include "mex.h"
 #include "matrix.h"
-#include "math.h"
 #include "ipdesc.h"
 #include "string.h"
 
@@ -27,8 +26,6 @@
 #define INVALID_SOCKET -1
 #endif
 
-
-int myMdsValue(SOCKET sock, char *expression, struct descrip *ans_arg);
 
 
 int mds2mex_type(struct descrip *d, mxClassID *mxID, mxComplexity *mxCo)
@@ -75,7 +72,6 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	short len = mxGetNumberOfElements(R[0]);
 	char *expression = malloc((len+1)*sizeof(char));
 	mxGetString(R[0],expression,len+1);
-	printf("%s\n",expression);    
 
 	mxClassID mxID;
 	mxComplexity mxCo;
@@ -101,18 +97,11 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
 	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 	
-	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,arg->length,arg->ndims,arg->dims[0],numbytes);
-
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
-
-	printf("dtype=%d, len=%d, ndims=%d, dims[0]=%d, numbytes=%d\n",arg->dtype,arg->length,arg->ndims,arg->dims[0],numbytes);
-	
-/*	stat = myMdsValue(sock, expression, arg);*/
 
 	stat = mds2mex_type(arg,&mxID,&mxCo);
 
 	if (mxID == 0) {
-		printf("was here!\n");
 		L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
 	} else if (mxID == -1) {
 		out = calloc(numbytes+1,sizeof(char));
@@ -129,49 +118,4 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
 	stat = DisconnectFromMds(sock);
 }
-
-
-
-int myMdsValue(SOCKET sock, char *expression, struct descrip *ans_arg)
-{
-  int i;
-  unsigned char nargs = 1;
-  unsigned char idx = 0;
-  int status = 1;
-  struct descrip exparg;
-  struct descrip *arg = &exparg;
-  
-  arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
-
-  status = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-  
-  if (status & 1)
-  {
-    short len;
-    int numbytes;
-    void *dptr;
-    void *mem = 0;
-    status = GetAnswerInfoTS(sock, &ans_arg->dtype, &len, &ans_arg->ndims, ans_arg->dims, &numbytes, &dptr, &mem);
-    ans_arg->length = len;
-    if (numbytes)
-    {
-      if (ans_arg->dtype == DTYPE_CSTRING)
-      {
-        ans_arg->ptr = malloc(numbytes+1);
-        ((char *)ans_arg->ptr)[numbytes] = 0;
-      }
-      else if (numbytes > 0)
-        ans_arg->ptr = malloc(numbytes);
-      if (numbytes > 0)
-        memcpy(ans_arg->ptr,dptr,numbytes);
-    }
-    else
-      ans_arg->ptr = NULL;
-    if (mem) free(mem);
-  }
-  else
-    ans_arg->ptr = NULL;
-  return status;
-}
-
 
