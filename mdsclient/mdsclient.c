@@ -62,6 +62,40 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 }
 
 
+int sm_mdsvalue(SOCKET sock, char *expression, mxArray **l) {
+
+	struct descrip exparg, *arg;
+        int idx = 0, nargs = 1, numbytes = 0, stat = 0;
+        void *mem = 0, *out = 0;
+
+	mxClassID mxID;
+	mxComplexity mxCo;
+	char ndims;
+	mwSize *dims;
+
+        arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
+        stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+
+        stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+
+        stat = mds2mex_type(arg,&mxID,&mxCo);
+
+        if (mxID == 0) {
+                *l = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
+        } else if (mxID == -1) {
+                out = calloc(numbytes+1,sizeof(char));
+                memcpy(out,arg->ptr,numbytes);
+                *l = mxCreateString((char*)out);
+        } else {
+                stat = mds2mex_dims(arg,&ndims,&dims);
+                *l = mxCreateNumericArray(ndims,dims,mxID,mxCo);
+                out = (void*) mxGetPr(*l);
+                memcpy(out,arg->ptr,numbytes);
+        }
+	return(1);
+}
+
+
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
 	SOCKET sock;
@@ -73,10 +107,6 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 	char *expression = malloc((len+1)*sizeof(char));
 	mxGetString(R[0],expression,len+1);
 
-	mxClassID mxID;
-	mxComplexity mxCo;
-	char ndims;
-	mwSize *dims;
     
 /*	sock = ConnectToMds("plaspc03.ucsd.edu");*/
 	sock = ConnectToMds("localhost:8001");
@@ -87,32 +117,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
 	stat = MdsOpen(sock,"csdx",shot);
 	
-	struct descrip exparg, *arg=&exparg;
-
-	int idx=0, nargs=1;
-    	int numbytes = 0;
-    	void *mem = 0;
-	void *out = 0;
-
-	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
-	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-	
-	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
-
-	stat = mds2mex_type(arg,&mxID,&mxCo);
-
-	if (mxID == 0) {
-		L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
-	} else if (mxID == -1) {
-		out = calloc(numbytes+1,sizeof(char));
-		memcpy(out,arg->ptr,numbytes);
-		L[0] = mxCreateString((char*)out);
-	} else {
-		stat = mds2mex_dims(arg,&ndims,&dims);
-		L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
-		out = (void*) mxGetPr(L[0]);
-		memcpy(out,arg->ptr,numbytes);
-	}
+	stat = sm_mdsvalue(sock,expression,&L[0]);
 
 	stat = MdsClose(sock);
 
