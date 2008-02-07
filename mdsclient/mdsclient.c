@@ -81,15 +81,45 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	char *serv = getstringarg(R[1]);
 	SOCKET sock = ConnectToMds(serv);
-	if (sock != INVALID_SOCKET) {
+	if (sock == INVALID_SOCKET) {
 		mexErrMsgTxt("Could not connect to server");
 	}
-	
+	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
+	*((int*)mxGetPr(L[0])) = sock;
+	return(1);
 }
 
+int sm_mdsopen(int nL, mxArray *L[], int nR, const mxArray *R[]) {
+	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	char *tree = getstringarg(R[2]);
+	int shot = *((int*)getnumarg(R[3],mxINT32_CLASS));
+	int stat = MdsOpen(sock,tree,shot);
+/*	if (!status_ok(stat)) {
+		mexErrMsgTxt("Could not open tree");
+	}
+*/	return(stat);
+}
 
-int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[], SOCKET sock) {
-/*	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));*/
+int sm_mdsclose(int nL, mxArray *L[], int nR, const mxArray *R[]) {
+	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	int stat = MdsClose(sock);
+/*	if (!status_ok(stat)) {
+		mexErrMsgTxt("Could not close tree");
+	}
+*/	return(stat);
+}
+
+int sm_mdsdisconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
+	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	int stat = DisconnectFromMds(sock);
+/*	if (!status_ok(stat)) {
+		mexErrMsgTxt("Could not disconnect from server");
+	}
+*/	return(stat);
+}
+
+int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
+	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
 	char *expression = getstringarg(R[2]);
 
 	struct descrip exparg, *arg;
@@ -129,21 +159,24 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[], SOCKET sock) {
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
 	char *cmd = getstringarg(R[0]);
-	SOCKET sock;
-	int stat, shot=0;
-
-/*	sock = ConnectToMds("plaspc03.ucsd.edu");*/
-	sock = ConnectToMds("localhost:8001");
-
-	stat = MdsOpen(sock,"csdx",shot);
+	int stat;
 
 	if (strcmp(cmd,"mdsvalue")==0) {
-		stat = sm_mdsvalue(nL,L,nR,R,sock);
+		stat = sm_mdsvalue(nL,L,nR,R);
+	} else if (strcmp(cmd,"mdsconnect")==0) {
+		stat = sm_mdsconnect(nL,L,nR,R);
+	} else if (strcmp(cmd,"mdsopen")==0) {
+		stat = sm_mdsopen(nL,L,nR,R);
+	} else if (strcmp(cmd,"mdsclose")==0) {
+		stat = sm_mdsclose(nL,L,nR,R);
+	} else if (strcmp(cmd,"mdsdisconnect")==0) {
+		stat = sm_mdsdisconnect(nL,L,nR,R);
 	} else {
+		mexErrMsgTxt("Unknown command");
 	}
 
-	stat = MdsClose(sock);
-
-	stat = DisconnectFromMds(sock);
+	if (!status_ok(stat)) {
+		mexErrMsgTxt("Untrapped error occurred");
+	}
 }
 
