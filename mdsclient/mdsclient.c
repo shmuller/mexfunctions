@@ -1,10 +1,10 @@
 /* mdsclient
  *
  * Compile on Linux: 
- * mex -v COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3 mdsclient.c
+ * mex -v mdsclient.c COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3 -I/usr/local/mdsplus/include -L/usr/local/mdsplus/lib -lMdsIpShr
  * 
- * Compile on Windows
- * mex -v OPTIMFLAGS=-O3 mdsclient.c
+ * Compile on Windows:
+ * mex -v mdsclient.c OPTIMFLAGS=-O3 -I"C:\Program Files\MDSplus\DEVTOOLS\include" -L"C:\Program Files\MDSplus\DEVTOOLS\lib" -lMdsIpShr
  *
  * S. H. Muller, 2008/02/05
  */
