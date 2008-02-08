@@ -10,4 +10,4 @@ t = 1000*mdsclient('mdsvalue',sock,expr);
 expr = '_i=dim_of(data(_t)); [_i[0],_i[size(_i)-1]]';
 i = mdsclient('mdsvalue',sock,expr);
 
-t = cast(i(1):i(2),class(t))*t(1)+t(2);
+t = cast((i(1):i(2))',class(t))*t(1)+t(2);
