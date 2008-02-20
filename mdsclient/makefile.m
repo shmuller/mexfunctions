@@ -1,5 +1,5 @@
 switch computer
-    case 'PC_WIN'
+    case 'PCWIN'
         opt = {'OPTIMFLAGS=-O3'};
         mds = {'-I"C:\Program Files\MDSplus\DEVTOOLS\include"','-L"C:\Program Files\MDSplus\DEVTOOLS\lib"'};
     case 'GLNX86'
