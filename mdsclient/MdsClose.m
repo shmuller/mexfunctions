@@ -11,4 +11,6 @@ if ~strcmp(expt,errstr)
     mdsclient('mdsclose',sock);
 end
 
-mdsclient('mdsdisconnect',sock);
+if isunix
+    mdsclient('mdsdisconnect',sock);
+end
