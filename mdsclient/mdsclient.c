@@ -55,7 +55,7 @@ void *getarg(const mxArray *r, char *ndims, int **dims, mxClassID *mxID, mxCompl
     
     if (*mxID != mxCHAR_CLASS) {
         /* remove singleton dimensions */
-        for(i=*ndims-1; i>=0; i--) if (dimsR[i]==1) (*ndims)--;
+        for(i=*ndims-1; i>=0; i--) if (dimsR[i]==1) (*ndims)--; else break;
         
         *dims  = calloc(*ndims,sizeof(int));
         for(i=0; i<*ndims; i++) (*dims)[i]=dimsR[i];
@@ -167,7 +167,7 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	mxComplexity mxCo;
 	
 	struct descrip exparg, *arg;
-	int i = 0, nargs = 1, numbytes = 0, stat = 0;
+	int i = 0, numbytes = 0, stat = 0;
 	void *mem = 0, *out = 0;
 
 	char dtype, ndims;
