@@ -4,7 +4,7 @@
  * mex -v mdsclient.c COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3 -I/usr/local/mdsplus/include -L/usr/local/mdsplus/lib -lMdsIpShr
  * 
  * Compile on Windows:
- * mex -v mdsclient.c OPTIMFLAGS=-O3 -I"C:\Program Files\MDSplus\DEVTOOLS\include" -L"C:\Program Files\MDSplus\DEVTOOLS\lib" -lMdsIpShr
+ * mex -v mdsclient.c OPTIMFLAGS=-O3 -I"C:\PROGRA~1\MDSplus\DEVTOOLS\include" -L"C:\PROGRA~1\MDSplus\DEVTOOLS\lib" -lMdsIpShr
  *
  * S. H. Muller, 2008/02/05
  */
@@ -30,8 +30,6 @@
 #define INVALID_SOCKET -1
 #endif
 
-
-
 void* getnumarg(const mxArray *r, mxClassID id) {
 	if (mxGetClassID(r) == id) { 
 		return((void*)mxGetPr(r));
@@ -46,6 +44,17 @@ char *getstringarg(const mxArray *r) {
 
 	mxGetString(r,str,len+1);
 	return(str);
+}
+
+void *getarg(const mxArray *r, mxClassID *mxID, char *ndims, const mwSize **dims) {
+    *mxID = mxGetClassID(r);
+    *ndims = mxGetNumberOfDimensions(r);
+    *dims = mxGetDimensions(r);
+    if (*mxID != mxCHAR_CLASS) {
+        return((void*)mxGetPr(r));
+    } else {
+        return((void*)getstringarg(r));
+    }
 }
 
 int mds2mex_type(struct descrip *d, mxClassID *mxID, mxComplexity *mxCo)
@@ -124,18 +133,21 @@ int sm_mdsdisconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 
 int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
-	char *expression = getstringarg(R[2]);
-
+	void *mxArg;
+    mxClassID mxID;
+	mxComplexity mxCo;
+	
 	struct descrip exparg, *arg;
 	int idx = 0, nargs = 1, numbytes = 0, stat = 0;
 	void *mem = 0, *out = 0;
 
-	mxClassID mxID;
-	mxComplexity mxCo;
 	char ndims;
-	mwSize *dims;
+	const mwSize *dimsR;
+    mwSize *dimsL;
 
-	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,expression);
+    mxArg = getarg(R[2],&mxID,&ndims,&dimsR);
+    
+	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,0,mxArg);
 	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
@@ -149,8 +161,8 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 		memcpy(out,arg->ptr,numbytes);
 		L[0] = mxCreateString((char*)out);
 	} else {
-		stat = mds2mex_dims(arg,&ndims,&dims);
-		L[0] = mxCreateNumericArray(ndims,dims,mxID,mxCo);
+		stat = mds2mex_dims(arg,&ndims,&dimsL);
+		L[0] = mxCreateNumericArray(ndims,dimsL,mxID,mxCo);
 		out = (void*) mxGetPr(L[0]);
 		memcpy(out,arg->ptr,numbytes);
 	}
