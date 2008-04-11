@@ -57,24 +57,43 @@ void *getarg(const mxArray *r, mxClassID *mxID, char *ndims, const mwSize **dims
     }
 }
 
+int mex2mds_type(mxClassID mxID, mxComplexity mxCo, char *dtype)
+{
+  switch (mxID)
+  {
+	case mxCHAR_CLASS    :  *dtype = DTYPE_CSTRING;    break;
+	case mxUINT8_CLASS   :  *dtype = DTYPE_UCHAR;      break;
+	case mxINT8_CLASS    :  *dtype = DTYPE_CHAR;       break;
+	case mxUINT16_CLASS  :  *dtype = DTYPE_USHORT;     break;
+	case mxINT16_CLASS   :  *dtype = DTYPE_SHORT;      break;
+	case mxUINT32_CLASS  :  *dtype = DTYPE_ULONG;      break;
+	case mxINT32_CLASS   :  *dtype = DTYPE_LONG;       break;
+	case mxUINT64_CLASS  :  *dtype = DTYPE_ULONGLONG;  break;
+	case mxINT64_CLASS   :  *dtype = DTYPE_LONGLONG;   break;
+	case mxSINGLE_CLASS  :  *dtype = (mxCo==mxREAL) ? DTYPE_FLOAT  : DTYPE_COMPLEX;        break;
+	case mxDOUBLE_CLASS  :  *dtype = (mxCo==mxREAL) ? DTYPE_DOUBLE : DTYPE_COMPLEX_DOUBLE; break;
+  }
+  return(1);
+}
+
 int mds2mex_type(struct descrip *d, mxClassID *mxID, mxComplexity *mxCo)
 {
   switch (d->dtype)
   {
-	case DTYPE_CSTRING		:  *mxID = mxCHAR_CLASS;    *mxCo = mxREAL; break;
-	case DTYPE_UCHAR		:  *mxID = mxUINT8_CLASS;   *mxCo = mxREAL; break;
-	case DTYPE_CHAR			:  *mxID = mxINT8_CLASS;    *mxCo = mxREAL; break;
-	case DTYPE_USHORT		:  *mxID = mxUINT16_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_SHORT		:  *mxID = mxINT16_CLASS;   *mxCo = mxREAL; break;
-	case DTYPE_ULONG		:  *mxID = mxUINT32_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_LONG			:  *mxID = mxINT32_CLASS;   *mxCo = mxREAL; break;
-	case DTYPE_ULONGLONG		:  *mxID = mxUINT64_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_LONGLONG		:  *mxID = mxINT64_CLASS;   *mxCo = mxREAL; break;
-	case DTYPE_FLOAT		:  *mxID = mxSINGLE_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_DOUBLE		:  *mxID = mxDOUBLE_CLASS;  *mxCo = mxREAL; break;
-	case DTYPE_COMPLEX		:  *mxID = mxSINGLE_CLASS;  *mxCo = mxCOMPLEX; break;
-	case DTYPE_COMPLEX_DOUBLE	:  *mxID = mxDOUBLE_CLASS;  *mxCo = mxCOMPLEX; break;
-	default				:  *mxID = mxUNKNOWN_CLASS; *mxCo = mxREAL; break;
+	case DTYPE_CSTRING         :  *mxID = mxCHAR_CLASS;    *mxCo = mxREAL;     break;
+	case DTYPE_UCHAR           :  *mxID = mxUINT8_CLASS;   *mxCo = mxREAL;     break;
+	case DTYPE_CHAR            :  *mxID = mxINT8_CLASS;    *mxCo = mxREAL;     break;
+	case DTYPE_USHORT          :  *mxID = mxUINT16_CLASS;  *mxCo = mxREAL;     break;
+	case DTYPE_SHORT           :  *mxID = mxINT16_CLASS;   *mxCo = mxREAL;     break;
+	case DTYPE_ULONG           :  *mxID = mxUINT32_CLASS;  *mxCo = mxREAL;     break;
+	case DTYPE_LONG            :  *mxID = mxINT32_CLASS;   *mxCo = mxREAL;     break;
+	case DTYPE_ULONGLONG       :  *mxID = mxUINT64_CLASS;  *mxCo = mxREAL;     break;
+	case DTYPE_LONGLONG        :  *mxID = mxINT64_CLASS;   *mxCo = mxREAL;     break;
+	case DTYPE_FLOAT           :  *mxID = mxSINGLE_CLASS;  *mxCo = mxREAL;     break;
+	case DTYPE_DOUBLE          :  *mxID = mxDOUBLE_CLASS;  *mxCo = mxREAL;     break;
+	case DTYPE_COMPLEX         :  *mxID = mxSINGLE_CLASS;  *mxCo = mxCOMPLEX;  break;
+	case DTYPE_COMPLEX_DOUBLE  :  *mxID = mxDOUBLE_CLASS;  *mxCo = mxCOMPLEX;  break;
+	default                    :  *mxID = mxUNKNOWN_CLASS; *mxCo = mxREAL;     break;
   }
   return(1);
 }
