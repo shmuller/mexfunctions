@@ -1,7 +1,7 @@
-function out = MdsValue(sock,expression)
-%out = MdsValue(sock,expression)
+function out = MdsValue(varargin)
+%out = MdsValue(sock,expression,var1,var2,...)
 %   Evaluates TDI expression
 %
 %   S. H. Muller, 2008/02/07
 
-out = mdsclient('mdsvalue',sock,expression);
+out = mdsclient('mdsvalue',varargin{:});

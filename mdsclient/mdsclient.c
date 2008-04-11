@@ -54,6 +54,9 @@ void *getarg(const mxArray *r, char *ndims, int **dims, mxClassID *mxID, mxCompl
     *mxCo  = (mxIsComplex(r)) ? mxCOMPLEX : mxREAL;
     
     if (*mxID != mxCHAR_CLASS) {
+        /* remove singleton dimensions */
+        for(i=*ndims-1; i>=0; i--) if (dimsR[i]==1) (*ndims)--;
+        
         *dims  = calloc(*ndims,sizeof(int));
         for(i=0; i<*ndims; i++) (*dims)[i]=dimsR[i];
         
@@ -164,19 +167,20 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	mxComplexity mxCo;
 	
 	struct descrip exparg, *arg;
-	int idx = 0, nargs = 1, numbytes = 0, stat = 0;
+	int i = 0, nargs = 1, numbytes = 0, stat = 0;
 	void *mem = 0, *out = 0;
 
 	char dtype, ndims;
 	int *dims;
     mwSize *dimsL;
 
-    mxArg = getarg(R[2],&ndims,&dims,&mxID,&mxCo);
-    stat = mex2mds_type(mxID,mxCo,&dtype);
+    for(i=2; i<nR; i++) {
+        mxArg = getarg(R[i],&ndims,&dims,&mxID,&mxCo);
+        stat = mex2mds_type(mxID,mxCo,&dtype);
     
-	arg = MakeDescrip(&exparg,dtype,ndims,dims,mxArg);
-	stat = SendArg(sock, idx, arg->dtype, nargs, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-
+        arg = MakeDescrip(&exparg,dtype,ndims,dims,mxArg);
+        stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+    }
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
 
 	stat = mds2mex_type(arg,&mxID,&mxCo);

@@ -1,7 +1,7 @@
-function out = sm_mdsvalue(sock,expression)
-%out = sm_mdsvalue(sock,expression)
+function out = sm_mdsvalue(varargin)
+%out = sm_mdsvalue(sock,expression,var1,var2,...)
 %   Wrapper for mdsclient mex file
 %
 %   S. H. Muller, 2008/02/07
 
-out = mdsclient('mdsvalue',sock,expression);
+out = mdsclient('mdsvalue',varargin{:});
