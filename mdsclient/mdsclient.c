@@ -32,18 +32,50 @@
 
 void* getnumarg(const mxArray *r, mxClassID id) {
 	if (mxGetClassID(r) == id) { 
-		return((void*)mxGetPr(r));
+		return mxGetData(r);
 	} else {
 		mexErrMsgTxt("Wrong argument type");
 	}
 }
 
-char *getstringarg(const mxArray *r) {
+void *getstringarg(const mxArray *r) {
 	short len = mxGetNumberOfElements(r);
-	char *str = malloc((len+1)*sizeof(char));
+	void *str = malloc((len+1)*sizeof(char));
 
 	mxGetString(r,str,len+1);
-	return(str);
+	return str;
+}
+
+void *mex2mds_cmplx(const mxArray *r) {
+    size_t i,num,siz;
+    void *pr,*pi,*buf,*b;
+    
+    num = mxGetNumberOfElements(r);
+    siz = mxGetElementSize(r);
+    pr  = mxGetData(r);
+    pi  = mxGetImagData(r);
+    buf = malloc(2*num*siz);
+    
+    for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
+        memcpy(b    ,pr,siz);
+        memcpy(b+siz,pi,siz);
+    }
+    return buf;
+}
+
+void mds2mex_cmplx(const mxArray *r, void *buf) {
+    size_t i,num,siz;
+    void *pr,*pi,*b;
+    
+    num = mxGetNumberOfElements(r);
+    siz = mxGetElementSize(r);
+    pr  = mxGetData(r);
+    pi  = mxGetImagData(r);
+    
+    for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
+        memcpy(pr,b    ,siz);
+        memcpy(pi,b+siz,siz);
+    }
 }
 
 void *getarg(const mxArray *r, char *ndims, int **dims, mxClassID *mxID, mxComplexity *mxCo) {
@@ -60,10 +92,17 @@ void *getarg(const mxArray *r, char *ndims, int **dims, mxClassID *mxID, mxCompl
         *dims  = calloc(*ndims,sizeof(int));
         for(i=0; i<*ndims; i++) (*dims)[i]=dimsR[i];
         
-        return((void*)mxGetPr(r));
+        if (*mxCo==mxREAL) {
+            return mxGetData(r);
+        } else {
+            if (*mxID != mxDOUBLE_CLASS && *mxID != mxSINGLE_CLASS) {
+                mexErrMsgTxt("Complex data must be single or double");
+            }
+            return mex2mds_cmplx(r);
+        }
     } else {
         *ndims = 0; *dims = NULL;
-        return((void*)getstringarg(r));
+        return getstringarg(r);
     }
 }
 
@@ -127,7 +166,7 @@ int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 		mexErrMsgTxt("Could not connect to server");
 	}
 	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
-	*((int*)mxGetPr(L[0])) = sock;
+	*((int*)mxGetData(L[0])) = sock;
 	return(1);
 }
 
@@ -194,8 +233,11 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	} else {
 		stat = mds2mex_dims(arg,&ndims,&dimsL);
 		L[0] = mxCreateNumericArray(ndims,dimsL,mxID,mxCo);
-		out = (void*) mxGetPr(L[0]);
-		memcpy(out,arg->ptr,numbytes);
+        if (mxCo==mxREAL) {
+            memcpy(mxGetData(L[0]),arg->ptr,numbytes);
+        } else {
+            mds2mex_cmplx(L[0],arg->ptr);
+        }   
 	}
 	if (mem) free(mem);
 	return(1);
