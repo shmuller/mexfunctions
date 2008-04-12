@@ -30,6 +30,10 @@
 #define INVALID_SOCKET -1
 #endif
 
+#ifdef COMPAT_V70
+typedef int mwSize;
+#endif
+
 void* getnumarg(const mxArray *r, mxClassID id) {
 	if (mxGetClassID(r) == id) { 
 		return mxGetData(r);
