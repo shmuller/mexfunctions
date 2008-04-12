@@ -216,12 +216,10 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
     for(i=2; i<nR; i++) {
         mxArg = getarg(R[i],&ndims,&dims,&mxID,&mxCo);
         stat = mex2mds_type(mxID,mxCo,&dtype);
-    
         arg = MakeDescrip(&exparg,dtype,ndims,dims,mxArg);
         stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
     }
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
-
 	stat = mds2mex_type(arg,&mxID,&mxCo);
 
 	if (mxID == mxUNKNOWN_CLASS) {

@@ -1,7 +1,7 @@
 switch computer
     case 'PCWIN'
         opt = {'OPTIMFLAGS=-O3'};
-        mds = {'-I"C:\Program Files\MDSplus\DEVTOOLS\include"','-L"C:\Program Files\MDSplus\DEVTOOLS\lib"'};
+        mds = {'-I"C:\PROGRA~1\MDSplus\DEVTOOLS\include"','-L"C:\PROGRA~1\MDSplus\DEVTOOLS\lib"'};
     case 'GLNX86'
         opt = {'COPTIMFLAGS=-O3','LDOPTIMFLAGS=-O3'};
         mds = {'-I/usr/local/mdsplus/include','-L/usr/local/mdsplus/lib'};
