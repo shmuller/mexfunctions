@@ -4,13 +4,15 @@ function [x,t] = MdsGetSig(sock,node)
 %
 %   S. H. Muller, 2008/02/07
 
-expr = ['getsigcal(',node,')'];
-f = mdsclient('mdsvalue',sock,expr);
+% expr = ['getsigcal(',node,')'];
+% f = mdsclient('mdsvalue',sock,expr);
+% 
+% expr = ['raw_of(',node,')'];
+% x = mdsclient('mdsvalue',sock,expr);
+% 
+% x = f(1)*cast(x,class(f))+f(2);
 
-expr = ['raw_of(',node,')'];
-x = mdsclient('mdsvalue',sock,expr);
-
-x = f(1)*cast(x,class(f))+f(2);
+x = mdsclient('mdsvalue',sock,node);
 
 if nargout > 1
     t = MdsGetTime(sock,node);
