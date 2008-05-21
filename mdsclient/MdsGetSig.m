@@ -27,6 +27,6 @@ switch mode
 end
 
 if nargout > 1
-    t = MdsGetTime(sock,node);
+    t = MdsGetTime(sock,node,mode);
     t = t(1:length(x));
 end
