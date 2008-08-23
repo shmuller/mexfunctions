@@ -191,58 +191,26 @@ int tcpopen(char *host, char *port) {
 	}
     setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,(void*)&one,sizeof(one));
     setsockopt(sock,SOL_SOCKET,SO_KEEPALIVE,(void*)&one,sizeof(one));
-    setsockopt(sock,SOL_SOCKET,SO_OOBINLINE,(void*)&one,sizeof(one));
+    setsockopt(sock,SOL_SOCKET,SO_OOBINLINE,(void*)&one,sizeof(one)); // only for Windows?
 	return(sock);
 }
 
-int tcpauth(sock) {
-    typedef struct _msghdr {
-        int msglen;
-        int status;
-        short length;
-        unsigned char nargs;
-        unsigned char descriptor_idx;
-        unsigned char message_id;
-        unsigned char dtype;
-        signed char client_type;
-        unsigned char ndims;
-        int dims[MAX_DIMS];
-        int fill;
-    } MsgHdr;
-    
-    typedef struct _mds_message {
-        MsgHdr h;
-        char bytes[1];
-    } Message;
-    
-    int SENDCAPABILITIES = 0xf, CompressionLevel = 0, bytes_sent = 0;
-    
-    char user_p[] = "smueller";
-    int numbytes;
-    
-    Message *m = calloc(1,sizeof(MsgHdr)+strlen(user_p));
-    m->h.client_type = SENDCAPABILITIES;
-    m->h.length = strlen(user_p);
-    m->h.msglen = sizeof(MsgHdr)+m->h.length;
-    m->h.dtype = DTYPE_CSTRING;
-    m->h.status = CompressionLevel;
-    m->h.ndims = 0;
-    memcpy(m->bytes,user_p,m->h.length);
-    
-    bytes_sent = send(sock,(char*)m,m->h.msglen,0);
-    printf("len = %d, bytes_sent = %d\n",m->h.msglen,bytes_sent);
-    
+int tcpauth(SOCKET sock) {
+    char user_p[] = "mdsuser";
+    struct descrip exparg, *arg;
+    int numbytes = 0, stat = 0;
+    void *mem = NULL;
+
+    arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
+    stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+    return(stat);
 }
 
 int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	char *serv, *port;
     SOCKET sock;
     
-    char user_p[] = "mdsuser";
-    struct descrip exparg, *arg;
-    int numbytes = 0, stat = 0;
-    void *mem = NULL;
-
 /*  if ((sock=ConnectToMds(serv)) == INVALID_SOCKET) {
         mexErrMsgTxt("Could not connect to server");
     }
@@ -256,11 +224,7 @@ int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
     if ((sock=tcpopen(serv,port)) < 0) {
         mexErrMsgTxt("Could not connect to server");
     }
-    
-    //tcpauth(sock);
-    arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
-    stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+    tcpauth(sock);
     
 	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
 	*((int*)mxGetData(L[0])) = sock;
@@ -289,7 +253,14 @@ int sm_mdsclose(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 
 int sm_mdsdisconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
-	int stat = DisconnectFromMds(sock);
+    int stat;
+    
+    if ((stat=shutdown(sock,2)) < 0) {
+        mexErrMsgTxt("Could not disconnect from server");
+    }
+    WSACleanup();
+    
+	//int stat = DisconnectFromMds(sock);
 /*	if (!status_ok(stat)) {
 		mexErrMsgTxt("Could not disconnect from server");
 	}
@@ -342,7 +313,7 @@ int sm_mdsvalue(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
-	char *cmd = getstringarg(R[0]);
+	char *cmd = getstringarg(R[0]), errstr[256];
 	int stat;
 
 	if (strcmp(cmd,"mdsvalue")==0) {
@@ -359,8 +330,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 		mexErrMsgTxt("Unknown command");
 	}
 
-	if (!status_ok(stat)) {
-		mexErrMsgTxt("Untrapped error occurred");
+	if (stat < 0) {
+        sprintf(errstr,"Untrapped error occurred: %d",stat);
+		mexErrMsgTxt(errstr);
 	}
 }
 
