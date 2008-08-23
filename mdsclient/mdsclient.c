@@ -197,11 +197,12 @@ int tcpopen(char *host, char *port) {
 }
 
 int tcpauth(SOCKET sock) {
-	char user_p[] = "mdsuser";
+	DWORD bsize = 128;
+	char user[128], *user_p = GetUserName(user,&bsize) ? user : "Windows User";
 	struct descrip exparg, *arg;
 	int numbytes = 0, stat = 0;
 	void *mem = NULL;
-
+	
 	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
 	stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
@@ -210,7 +211,7 @@ int tcpauth(SOCKET sock) {
 
 int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
 	char *host = getstringarg(R[1]), *port;
-	SOCKET sock;
+	int sock;
 
 	if ((port=strchr(host,':')) == NULL) {
 		port = strdup("8000");
