@@ -164,9 +164,9 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 	return(1);
 }
 
-
 int tcpopen(char *host, char *port) {   
 	int sock;
+    int one = 1;
 	struct sockaddr_in sin;
 	struct hostent *hp;
 
@@ -174,8 +174,7 @@ int tcpopen(char *host, char *port) {
 	if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {
 		return(-1);
 	}		
-	
-    	if ((hp=gethostbyname(host)) == NULL) {
+	if ((hp=gethostbyname(host)) == NULL) {
 		return(-2);
 	}
 
@@ -188,18 +187,73 @@ int tcpopen(char *host, char *port) {
 		return(-3);
 	}
 	if (connect(sock,(struct sockaddr*)&sin,sizeof(sin)) < 0) {
-    		return(-4);
+        return(-4);
 	}
+    setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,(void*)&one,sizeof(one));
+    setsockopt(sock,SOL_SOCKET,SO_KEEPALIVE,(void*)&one,sizeof(one));
+    setsockopt(sock,SOL_SOCKET,SO_OOBINLINE,(void*)&one,sizeof(one));
 	return(sock);
 }
 
 
+int tcpauth(sock) {
+    typedef struct _msghdr {
+        int msglen;
+        int status;
+        short length;
+        unsigned char nargs;
+        unsigned char descriptor_idx;
+        unsigned char message_id;
+        unsigned char dtype;
+        signed char client_type;
+        unsigned char ndims;
+        int dims[MAX_DIMS];
+        int fill;
+    } MsgHdr;
+    
+    typedef struct _mds_message {
+        MsgHdr h;
+        char bytes[1];
+    } Message;
+    
+    int SENDCAPABILITIES = 0xf, CompressionLevel = 0, bytes_sent = 0;
+    
+    char user_p[] = "smueller";
+    int numbytes;
+    
+    Message *m = calloc(1,sizeof(MsgHdr)+strlen(user_p));
+    m->h.client_type = SENDCAPABILITIES;
+    m->h.length = strlen(user_p);
+    m->h.msglen = sizeof(MsgHdr)+m->h.length;
+    m->h.dtype = DTYPE_CSTRING;
+    m->h.status = CompressionLevel;
+    m->h.ndims = 0;
+    memcpy(m->bytes,user_p,m->h.length);
+    
+    bytes_sent = send(sock,(char*)m,m->h.msglen,0);
+    printf("len = %d, bytes_sent = %d\n",m->h.msglen,bytes_sent);
+    
+}
+
 int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
-	char *serv = getstringarg(R[1]);
-	SOCKET sock = ConnectToMds(serv);
-	if (sock == INVALID_SOCKET) {
-		mexErrMsgTxt("Could not connect to server");
-	}
+	char *serv,*port;
+    SOCKET sock;
+
+/*  if ((sock=ConnectToMds(serv)) == INVALID_SOCKET) {
+        mexErrMsgTxt("Could not connect to server");
+    }
+*/
+    serv = getstringarg(R[1]);
+	if ((port=strchr(serv,':')) == NULL) {
+        port = strdup("8000");
+    } else {
+        *port++ = 0;
+    }
+    if ((sock=tcpopen(serv,port)) < 0) {
+        mexErrMsgTxt("Could not connect to server");
+    }
+    //tcpauth(sock);
+    
 	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
 	*((int*)mxGetData(L[0])) = sock;
 	return(1);
