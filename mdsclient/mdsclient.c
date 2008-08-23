@@ -9,13 +9,15 @@
  * S. H. Muller, 2008/02/05
  */
 
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "mex.h"
-#include "matrix.h"
-#include "ipdesc.h"
-#include "string.h"
+#include <mex.h>
+#include <matrix.h>
+#include <ipdesc.h>
+#include <string.h>
+
+#include <winsock2.h>
 
 #ifndef min
 #define min(a,b) ((a)<(b) ? (a) : (b))
@@ -160,6 +162,35 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 	for(i=0; i<d->ndims; i++) (*dims)[i] = max(d->dims[i],1);
 	for(; i<*ndims; i++) (*dims)[i] = 1;
 	return(1);
+}
+
+
+int tcpopen(char *host, char *port) {   
+	int sock;
+	struct sockaddr_in sin;
+	struct hostent *hp;
+
+	WSADATA wsadata;
+	if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR) {
+		return(-1);
+	}		
+	
+    	if ((hp=gethostbyname(host)) == NULL) {
+		return(-2);
+	}
+
+	memset(&sin,0,sizeof(sin));
+	sin.sin_family=AF_INET;
+	memcpy(&sin.sin_addr,hp->h_addr,hp->h_length);
+	sin.sin_port = htons(atoi(port));
+	
+	if ((sock=socket(AF_INET,SOCK_STREAM,0)) < 0) {
+		return(-3);
+	}
+	if (connect(sock,(struct sockaddr*)&sin,sizeof(sin)) < 0) {
+    		return(-4);
+	}
+	return(sock);
 }
 
 

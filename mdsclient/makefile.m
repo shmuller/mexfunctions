@@ -7,13 +7,16 @@ end
 switch computer
     case 'PCWIN'
         opt = {'-O'};
-        mds = {'-IC:\PROGRA~1\MDSplus\DEVTOOLS\include','C:\PROGRA~1\MDSplus\DEVTOOLS\lib\MdsIpShr.lib'};
+        inc = {'-IC:\PROGRA~1\MDSplus\DEVTOOLS\include'};
+        lib = {'C:\PROGRA~1\MDSplus\DEVTOOLS\lib\MdsIpShr.lib','C:\MinGW\lib\libws2_32.a'};
     case 'GLNX86'
         opt = {'COPTIMFLAGS=-O3','LDOPTIMFLAGS=-O3'};
-        mds = {'-I/usr/local/mdsplus/include','/usr/local/mdsplus/lib32/libMdsIpShr.a'};
+        inc = {'-I/usr/local/mdsplus/include'};
+        lib = {'/usr/local/mdsplus/lib32/libMdsIpShr.a'};
     case 'GLNXA64'
         opt = {'COPTIMFLAGS=-O3','LDOPTIMFLAGS=-O3'};
-        mds = {'-I/usr/local/mdsplus/include','/usr/local/mdsplus/lib64/libMdsIpShr.a'};
+        inc = {'-I/usr/local/mdsplus/include'};
+        lib = {'/usr/local/mdsplus/lib64/libMdsIpShr.a'};
 end
 
-mex('-v','mdsclient.c',def{:},opt{:},mds{:});
+mex('-v','mdsclient.c',def{:},opt{:},inc{:},lib{:});
