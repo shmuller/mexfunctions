@@ -195,7 +195,6 @@ int tcpopen(char *host, char *port) {
 	return(sock);
 }
 
-
 int tcpauth(sock) {
     typedef struct _msghdr {
         int msglen;
@@ -236,8 +235,13 @@ int tcpauth(sock) {
 }
 
 int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
-	char *serv,*port;
+	char *serv, *port;
     SOCKET sock;
+    
+    char user_p[] = "mdsuser";
+    struct descrip exparg, *arg;
+    int numbytes = 0, stat = 0;
+    void *mem = NULL;
 
 /*  if ((sock=ConnectToMds(serv)) == INVALID_SOCKET) {
         mexErrMsgTxt("Could not connect to server");
@@ -252,7 +256,11 @@ int sm_mdsconnect(int nL, mxArray *L[], int nR, const mxArray *R[]) {
     if ((sock=tcpopen(serv,port)) < 0) {
         mexErrMsgTxt("Could not connect to server");
     }
+    
     //tcpauth(sock);
+    arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
+    stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
     
 	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
 	*((int*)mxGetData(L[0])) = sock;
