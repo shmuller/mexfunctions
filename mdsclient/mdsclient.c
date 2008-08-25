@@ -206,6 +206,11 @@ int tcpauth(SOCKET sock) {
 	arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
 	stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
 	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+	if (!status_ok(stat)) {
+		shutdown(sock,2);
+		WSACleanup();
+		mexErrMsgTxt("Could not authenticate user");
+	}
 	return(stat);
 }
 
