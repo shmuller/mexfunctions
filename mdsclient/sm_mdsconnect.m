@@ -5,3 +5,5 @@ function sock = sm_mdsconnect(serv)
 %   S. H. Muller, 2008/02/07
 
 sock = mdsclient('mdsconnect',serv);
+
+addsock(sock);

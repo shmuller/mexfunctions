@@ -4,7 +4,9 @@ function out = sm_mdsvalue(varargin)
 %
 %   S. H. Muller, 2008/02/07
 
-out = mdsclient('mdsvalue',varargin{:});
+[sock,args] = getsock(varargin);
+
+out = mdsclient('mdsvalue',sock,args{:});
 
 if ischar(out) && any(strfind(out,'TDI Error'))
     error(out);
