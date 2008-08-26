@@ -14,7 +14,7 @@ if strcmp(args{1},'..')
 else
     args{1} = strrep(args{1},'\','\\');
 end
-cmd = sprintf('%s ',args{:})
+cmd = sprintf('%s ',args{:});
 
 stat = sm_mdsvalue(sock,sprintf('Tcl("set def %s")',cmd));
 if ~bitand(uint32(stat),1)
