@@ -17,6 +17,10 @@ switch computer
         opt = {'COPTIMFLAGS=-O3','LDOPTIMFLAGS=-O3'};
         inc = {'-I/usr/local/mdsplus/include'};
         lib = {'/usr/local/mdsplus/lib64/libMdsIpShr.a'};
+    case {'MAC','MACI'}
+        opt = {'COPTIMFLAGS=-O3','LDOPTIMFLAGS=-O3'};
+        inc = {'-I/usr/local/mdsplus/include'};
+        lib = {'/usr/local/mdsplus/lib/libMdsIpShr.a'};
 end
 
 mex('-v','mdsclient.c',def{:},opt{:},inc{:},lib{:});
