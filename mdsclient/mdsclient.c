@@ -105,7 +105,7 @@ int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 	*ndims = max(d->ndims,2);
 	*dims = malloc(*ndims*sizeof(mwSize));
 
-	for(i=0; i<d->ndims; i++) (*dims)[i] = max(d->dims[i],1);
+	for(i=0; i<d->ndims; i++) (*dims)[i] = d->dims[i];
 	for(; i<*ndims; i++) (*dims)[i] = 1;
 	return(1);
 }
