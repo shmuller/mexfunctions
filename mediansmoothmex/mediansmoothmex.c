@@ -27,24 +27,13 @@
 #undef torben
 #undef elem_type
 
-typedef int (*comparfcn) (const void*, const void*);
+#define torben median_int
+#define elem_type int
+#include "torben.c"
+#undef torben
+#undef elem_type
 
-int compar_int(const void *a, const void *b)
-{
-    return *(const int*)b - *(const int*)a;
-}
-
-int compar_float(const void *a, const void *b)
-{
-    float d = *(const float*)b - *(const float*)a;
-    return (d<0)-(d>0);
-}
-
-int compar_double(const void *a, const void *b)
-{
-    double d = *(const double*)b - *(const double*)a;
-    return (d<0)-(d>0);
-}
+typedef int (*medianfcn) (const void*, const int);
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
@@ -59,28 +48,32 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     
     const int *w = mxGetData(R[1]);
     
-    comparfcn compar;
+    medianfcn median;
     
     switch (mxID) {
-        case mxDOUBLE_CLASS: compar = compar_double; break;
-        case mxSINGLE_CLASS: compar = compar_float;  break;
-        case mxINT32_CLASS:  compar = compar_int;    break;
+        case mxDOUBLE_CLASS: median = median_double; break;
+        case mxSINGLE_CLASS: median = median_float;  break;
+        case mxINT32_CLASS:  median = median_int;    break;
         default:
             mexErrMsgTxt("Unsupported data type");
     }
     
-    L[0] = mxCreateNumericArray(ndims,dims,mxID,mxREAL);
-    void *y = mxGetData(L[0]);
+    L[0] = mxCreateNumericArray(ndims,dims,mxINT32_CLASS,mxREAL);
+    int *ind = mxGetData(L[0]);
     
-    memcpy(y,x,N*bytes);
-    
-    qsort(y,N,bytes,compar);
-    
-    switch (mxID) {
-        case mxDOUBLE_CLASS:
-            *(double*)y = median_double(y,N);
-        case mxSINGLE_CLASS:
-            *(float*)y = median_float(y,N);
+    if (*w+1 >= N) {
+        int t = median(x,N);
+        for (i=0; i<N; i++) *ind++ = t;
+    } else {
+        for (i=0; i<*w; i++) {
+            *ind++ = median(x, i+1+*w);
+        }
+        for (i=0; i<N-2*(*w); i++) {
+            *ind++ = i + median(x+i*bytes, 2*(*w)+1);
+        }
+        for (; i<N-*w; i++) {
+            *ind++ = i + median(x+i*bytes, N-i);
+        }
     }
     
 }
