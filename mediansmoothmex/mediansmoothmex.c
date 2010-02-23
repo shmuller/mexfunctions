@@ -17,6 +17,17 @@
 
 typedef double elem_type;
 
+void print(const elem_type **C, const int M, const elem_type *x)
+{
+    register int i;
+    const elem_type **c;
+    
+    for (i=0,c=C; i<M; i++,c++) {
+        printf("%i: %f\n", *c-x, *(*c));
+    }
+    printf("\n");
+}
+
 int compar(const void *a, const void *b)
 {
     elem_type d = *(*(const elem_type**)b) - *(*(const elem_type**)a);
@@ -36,39 +47,35 @@ int median(const elem_type **C, const int M, const elem_type *x)
     return C[M/2]-x;
 }
 
+const elem_type **find_spot(const elem_type **seed, const elem_type xi)
+{
+    if (*(*seed) < xi) {
+        for (; *(*seed) < xi; seed++);
+    } else {
+        for (; *(*seed) > xi; seed--);
+        if (*(*seed) < xi) seed++;
+    }
+    return seed;
+}
+
 int median_replace(const elem_type **C, const int M, const elem_type *x, 
     const int del, const int ind)
 {
     register int i;
-    const elem_type **b, **e;
-    elem_type xd = x[del], xi = x[ind];
+    const elem_type **pd, **pi;
     
-    /* find element to be replaced or position of new element */
-    for (i=0,b=C; i<M && *(*b) < xd && *(*b) < xi; i++,b++);
+    pd = find_spot(C,x[del]);
+    pi = find_spot(C,x[ind]);
     
-    if (*(*b) >= xd) {
-        /* found element to be replaced - find new element now */
-        for (e=b+1,i++; i<M && *(*e) < xi; i++,e++); e--;
-        if (e > b) memmove(b,b+1,(e-b)*sizeof(elem_type*));
-        *e = x+ind;
-    } else {
-        /* found position of new element - find old element now */
-        for (e=b; i<M && *(*e) < xd; i++,e++);
-        if (e > b) memmove(b+1,b,(e-b)*sizeof(elem_type*));
-        *b = x+ind;
+    if (pd < pi) {
+        memmove(pd,pd+1,(pi-pd)*sizeof(elem_type*));
+        pi--;
+    } else if (pi < pd) {
+        memmove(pi+1,pi,(pd-pi)*sizeof(elem_type*));
     }
+    *pi = x+ind;
+    
     return C[M/2]-x;
-}
-
-void print(const elem_type **C, const int M, const elem_type *x)
-{
-    register int i;
-    const elem_type **c;
-    
-    for (i=0,c=C; i<M; i++,c++) {
-        printf("%i: %f\n", *c-x, *(*c));
-    }
-    printf("\n");
 }
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
@@ -90,7 +97,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     ind += *w+1;
     
     M = 2*(*w)+1;
-    const elem_type **C = malloc(M*sizeof(elem_type*));
+    const elem_type sent[] = {-DBL_MAX, DBL_MAX};
+    const elem_type **C = malloc((M+2)*sizeof(elem_type*)) + 1;
+    C[-1] = &sent[0]; C[M] = &sent[1];
     
     ind[-1] = median(C,M,x);
     print(C,M,x);
@@ -101,7 +110,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
         print(C,M,x);
     }
     
-    free(C);
+    free(C-1);
     
     /*
     if (*w+1 >= N) {
