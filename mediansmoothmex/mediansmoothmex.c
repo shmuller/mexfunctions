@@ -35,7 +35,7 @@ int compar(const void *a, const void *b)
     return (d<0)-(d>0);
 }
 
-int median(elem_ptr * const C, const int M, const elem_ptr x)
+int median_init(elem_ptr * const C, const int M, const elem_ptr x)
 {
     register int i;
     elem_ptr *c;
@@ -106,11 +106,46 @@ int median_replace(elem_ptr * const C, const int M, const elem_ptr x,
     return C[(M-1)/2]-x;
 }
 
-void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
+int median(const elem_ptr x, const size_t N, const int w, int *ind)
 {
     register int i;
-    size_t M;
+    const size_t M = 2*w+1;
     
+    elem_type sent[] = {-DBL_MAX, DBL_MAX};
+    elem_ptr * const C = malloc((M+2)*sizeof(elem_ptr)) + 1;
+    C[-1] = &sent[0]; C[w+1] = &sent[1];
+    
+    elem_ptr *save[] = {C,C};
+    
+    //printf("Initialize...\n");
+    *ind++ = median_init(C,w+1,x);
+    //print(C,w+1,x);
+    
+    //printf("Add...\n");
+    for (i=0; i<w; i++) {
+        *ind++ = median_add(C,w+2+i,x,w+1+i,save);
+        //print(C,w+2+i,x);
+    }
+        
+    //printf("Replace...\n");
+    for (i=0; i<N-M; i++) {
+        *ind++ = median_replace(C,M,x,i,i+M,save);
+        //print(C,M,x);
+    }
+    
+    //printf("Remove...\n");
+    for (i=0; i<w; i++) {
+        *ind++ = median_remove(C,M-i-1,x,N-M+i,save);
+        //print(C,M-i-1,x);
+    }
+    
+    free(C-1);
+    return 0;
+}
+
+
+void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
+{
     const mwSize ndims = mxGetNumberOfDimensions(R[0]);
     const mwSize *dims = mxGetDimensions(R[0]);
     const mxClassID mxID = mxGetClassID(R[0]);
@@ -123,51 +158,5 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     L[0] = mxCreateNumericArray(ndims,dims,mxINT32_CLASS,mxREAL);
     int *ind = mxGetData(L[0]);
     
-    M = 2*(*w)+1;
-    elem_type sent[] = {-DBL_MAX, DBL_MAX};
-    elem_ptr * const C = malloc((M+2)*sizeof(elem_ptr)) + 1;
-    C[-1] = &sent[0]; C[*w+1] = &sent[1];
-    
-    elem_ptr *save[] = {C,C};
-    
-    printf("Initialize...\n");
-    *ind++ = median(C,*w+1,x);
-    print(C,*w+1,x);
-    
-    printf("Add...\n");
-    for (i=0; i<*w; i++) {
-        *ind++ = median_add(C,*w+2+i,x,*w+1+i,save);
-        print(C,*w+2+i,x);
-    }
-        
-    printf("Replace...\n");
-    for (i=0; i<N-M; i++) {
-        *ind++ = median_replace(C,M,x,i,i+M,save);
-        print(C,M,x);
-    }
-    
-    printf("Remove...\n");
-    for (i=0; i<*w; i++) {
-        *ind++ = median_remove(C,M-i-1,x,N-M+i,save);
-        print(C,M-i-1,x);
-    }
-    
-    free(C-1);
-    
-    /*
-    if (*w+1 >= N) {
-        int t = median(x,N);
-        for (i=0; i<N; i++) *ind++ = t;
-    } else {
-        for (i=0; i<*w; i++) {
-            *ind++ = median(x, i+1+*w);
-        }
-        for (i=0; i<N-2*(*w); i++) {
-            *ind++ = i + median(x+i*bytes, 2*(*w)+1);
-        }
-        for (; i<N-*w; i++) {
-            *ind++ = i + median(x+i*bytes, N-i);
-        }
-    }
-    */
+    median(x,N,*w,ind);
 }
