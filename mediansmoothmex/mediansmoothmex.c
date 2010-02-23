@@ -15,64 +15,58 @@
 #include "matrix.h"
 #include "math.h"
 
-typedef struct {
-    int ind;
-    const double *elem;
-} container;
+typedef double elem_type;
 
 int compar(const void *a, const void *b)
 {
-    double d = *((const container*)b)->elem - *((const container*)a)->elem;
+    elem_type d = *(*(const elem_type**)b) - *(*(const elem_type**)a);
     return (d<0)-(d>0);
 }
 
-int median(container *C, const int M, const double *x)
+int median(const elem_type **C, const int M, const elem_type *x)
 {
     register int i;
-    container *c;
+    const elem_type **c;
     
-    for (i=0,c=C; i<M; i++,c++) {
-        c->ind = i;
-        c->elem = x+i;
+    for (i=0,c=C; i<M; i++) {
+        *c++ = x+i;
     }
     
-    qsort(C,M,sizeof(container),compar);
-    return C[M/2].ind;
+    qsort(C,M,sizeof(elem_type*),compar);
+    return C[M/2]-x;
 }
 
-int median_replace(container *C, const int M, const double *x, 
+int median_replace(const elem_type **C, const int M, const elem_type *x, 
     const int del, const int ind)
 {
     register int i;
-    container *b, *e;
-    double xi = x[ind];
+    const elem_type **b, **e;
+    elem_type xd = x[del], xi = x[ind];
     
     /* find element to be replaced or position of new element */
-    for (i=0,b=C; i<M && b->ind != del && *b->elem < xi; i++,b++);
+    for (i=0,b=C; i<M && *(*b) < xd && *(*b) < xi; i++,b++);
     
-    if (b->ind == del) {
+    if (*(*b) >= xd) {
         /* found element to be replaced - find new element now */
-        for (e=b+1,i++; i<M && *e->elem < xi; i++,e++); e--;
-        if (e > b) memmove(b,b+1,(e-b)*sizeof(container));
-        e->ind = ind;
-        e->elem = x+ind;
+        for (e=b+1,i++; i<M && *(*e) < xi; i++,e++); e--;
+        if (e > b) memmove(b,b+1,(e-b)*sizeof(elem_type*));
+        *e = x+ind;
     } else {
         /* found position of new element - find old element now */
-        for (e=b; i<M && e->ind != del; i++,e++);
-        if (e > b) memmove(b+1,b,(e-b)*sizeof(container));
-        b->ind = ind;
-        b->elem = x+ind;
+        for (e=b; i<M && *(*e) < xd; i++,e++);
+        if (e > b) memmove(b+1,b,(e-b)*sizeof(elem_type*));
+        *b = x+ind;
     }
-    return C[M/2].ind;
+    return C[M/2]-x;
 }
 
-void print(const container *C, const int M)
+void print(const elem_type **C, const int M, const elem_type *x)
 {
     register int i;
-    const container *c;
+    const elem_type **c;
     
-    for (i=0, c=C; i<M; i++,c++) {
-        printf("%i: %f\n", c->ind, *c->elem);
+    for (i=0,c=C; i<M; i++,c++) {
+        printf("%i: %f\n", *c-x, *(*c));
     }
     printf("\n");
 }
@@ -96,16 +90,15 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     ind += *w+1;
     
     M = 2*(*w)+1;
-    container *C, *c;
-    C = malloc(M*sizeof(container));
+    const elem_type **C = malloc(M*sizeof(elem_type*));
     
     ind[-1] = median(C,M,x);
-    /* print(C,M); */
+    print(C,M,x);
     
     for (i=0; i<N-M; i++) {
         ind[i] = median_replace(C,M,x,i,i+M);
         /* ind[i] = i+1 + median(C,M,x+i+1); */
-        /* print(C,M); */
+        print(C,M,x);
     }
     
     free(C);
