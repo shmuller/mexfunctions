@@ -26,7 +26,21 @@ int compar(const void *a, const void *b)
     return (d<0)-(d>0);
 }
 
-void replace(container *C, const int M, const double *x, 
+int median(container *C, const int M, const double *x)
+{
+    register int i;
+    container *c;
+    
+    for (i=0,c=C; i<M; i++,c++) {
+        c->ind = i;
+        c->elem = x+i;
+    }
+    
+    qsort(C,M,sizeof(container),compar);
+    return C[M/2].ind;
+}
+
+int median_replace(container *C, const int M, const double *x, 
     const int del, const int ind)
 {
     register int i;
@@ -49,6 +63,7 @@ void replace(container *C, const int M, const double *x,
         b->ind = ind;
         b->elem = x+ind;
     }
+    return C[M/2].ind;
 }
 
 void print(const container *C, const int M)
@@ -78,27 +93,18 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     
     L[0] = mxCreateNumericArray(ndims,dims,mxINT32_CLASS,mxREAL);
     int *ind = mxGetData(L[0]);
+    ind += *w+1;
     
     M = 2*(*w)+1;
     container *C, *c;
     C = malloc(M*sizeof(container));
     
-    for (i=0, c=C; i<M; i++,c++) {
-        c->ind = i;
-        c->elem = x+i;
-    }
-    
-    ind += *w+1;
-    
-    qsort(C,M,sizeof(container),compar);
-    ind[-1] = C[M/2].ind;
-    
+    ind[-1] = median(C,M,x);
     /* print(C,M); */
     
     for (i=0; i<N-M; i++) {
-        replace(C,M,x,i,i+M);
-        ind[i] = C[*w].ind;
-        
+        ind[i] = median_replace(C,M,x,i,i+M);
+        /* ind[i] = i+1 + median(C,M,x+i+1); */
         /* print(C,M); */
     }
     
