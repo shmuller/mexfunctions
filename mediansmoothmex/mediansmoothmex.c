@@ -60,9 +60,9 @@ elem_ptr* find_spot(elem_ptr *seed, const elem_type xi)
 }
 
 int median_replace(elem_ptr * const C, const int M, const elem_ptr x, 
-    const int del, const int ind, int *save)
+    const int del, const int ind, elem_ptr **save)
 {
-    elem_ptr *pd = C+save[0], *pi=C+save[1];
+    elem_ptr *pd = save[0], *pi = save[1];
     
     pd = find_spot(pd,x[del]);
     pi = find_spot(pi,x[ind]);
@@ -75,8 +75,8 @@ int median_replace(elem_ptr * const C, const int M, const elem_ptr x,
     }
     *pi = x+ind;
     
-    save[0] = pd-C;
-    save[1] = pi-C;
+    save[0] = pd;
+    save[1] = pi;
     
     return C[M/2]-x;
 }
@@ -104,7 +104,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     elem_ptr * const C = malloc((M+2)*sizeof(elem_ptr)) + 1;
     C[-1] = &sent[0]; C[M] = &sent[1];
     
-    int save[] = {0,0};
+    elem_ptr *save[] = {C,C};
     
     ind[-1] = median(C,M,x);
     print(C,M,x);
