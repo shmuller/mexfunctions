@@ -15,12 +15,13 @@
 #include "matrix.h"
 #include "math.h"
 
-typedef double elem_type;
+typedef const double elem_type;
+typedef elem_type* elem_ptr;
 
-void print(const elem_type **C, const int M, const elem_type *x)
+void print(const elem_ptr * const C, const int M, const elem_ptr x)
 {
     register int i;
-    const elem_type **c;
+    const elem_ptr *c;
     
     for (i=0,c=C; i<M; i++,c++) {
         printf("%i: %f\n", *c-x, *(*c));
@@ -30,24 +31,24 @@ void print(const elem_type **C, const int M, const elem_type *x)
 
 int compar(const void *a, const void *b)
 {
-    elem_type d = *(*(const elem_type**)b) - *(*(const elem_type**)a);
+    elem_type d = *(*(const elem_ptr*)b) - *(*(const elem_ptr*)a);
     return (d<0)-(d>0);
 }
 
-int median(const elem_type **C, const int M, const elem_type *x)
+int median(elem_ptr * const C, const int M, const elem_ptr x)
 {
     register int i;
-    const elem_type **c;
+    elem_ptr *c;
     
     for (i=0,c=C; i<M; i++) {
         *c++ = x+i;
     }
     
-    qsort(C,M,sizeof(elem_type*),compar);
+    qsort(C,M,sizeof(elem_ptr),compar);
     return C[M/2]-x;
 }
 
-const elem_type **find_spot(const elem_type **seed, const elem_type xi)
+elem_ptr* find_spot(elem_ptr *seed, const elem_type xi)
 {
     if (*(*seed) < xi) {
         for (; *(*seed) < xi; seed++);
@@ -58,22 +59,24 @@ const elem_type **find_spot(const elem_type **seed, const elem_type xi)
     return seed;
 }
 
-int median_replace(const elem_type **C, const int M, const elem_type *x, 
-    const int del, const int ind)
+int median_replace(elem_ptr * const C, const int M, const elem_ptr x, 
+    const int del, const int ind, int *save)
 {
-    register int i;
-    const elem_type **pd, **pi;
+    elem_ptr *pd = C+save[0], *pi=C+save[1];
     
-    pd = find_spot(C,x[del]);
-    pi = find_spot(C,x[ind]);
+    pd = find_spot(pd,x[del]);
+    pi = find_spot(pi,x[ind]);
     
     if (pd < pi) {
-        memmove(pd,pd+1,(pi-pd)*sizeof(elem_type*));
+        memmove(pd,pd+1,(pi-pd)*sizeof(elem_ptr));
         pi--;
     } else if (pi < pd) {
-        memmove(pi+1,pi,(pd-pi)*sizeof(elem_type*));
+        memmove(pi+1,pi,(pd-pi)*sizeof(elem_ptr));
     }
     *pi = x+ind;
+    
+    save[0] = pd-C;
+    save[1] = pi-C;
     
     return C[M/2]-x;
 }
@@ -97,15 +100,17 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     ind += *w+1;
     
     M = 2*(*w)+1;
-    const elem_type sent[] = {-DBL_MAX, DBL_MAX};
-    const elem_type **C = malloc((M+2)*sizeof(elem_type*)) + 1;
+    elem_type sent[] = {-DBL_MAX, DBL_MAX};
+    elem_ptr * const C = malloc((M+2)*sizeof(elem_ptr)) + 1;
     C[-1] = &sent[0]; C[M] = &sent[1];
+    
+    int save[] = {0,0};
     
     ind[-1] = median(C,M,x);
     print(C,M,x);
     
     for (i=0; i<N-M; i++) {
-        ind[i] = median_replace(C,M,x,i,i+M);
+        ind[i] = median_replace(C,M,x,i,i+M,save);
         /* ind[i] = i+1 + median(C,M,x+i+1); */
         print(C,M,x);
     }
