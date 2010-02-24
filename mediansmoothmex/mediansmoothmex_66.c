@@ -41,8 +41,22 @@ int median_replace(elem_ptr *C, const int M, const elem_ptr x,
     const int del, const int ind)
 {
     register int i;
-    elem_ptr *b, *e;
+    elem_ptr *b, *e, *pd, *pi, *pb, *pe;
     elem_type xi = x[ind], xd = x[del], xm = (xi < xd) ? xi : xd;
+    
+    /*
+    for (i=0,pd=C; i<M && *(*pd) < xd; i++,pd++);
+    for (i=0,pi=C; i<M && *(*pi) < xi; i++,pi++);
+    */
+    for (pd=C; *(*pd) < xd; pd++);
+    for (pi=C; *(*pi) < xi; pi++);
+    
+    if (pd < pi) {
+        pi--;
+        pb = pd; pe = pi;
+    } else {
+        pb = pi; pe = pd;
+    }
     
     /* find element to be replaced or position of new element */
     for (i=0,b=C; i<M && *(*b) < xm; i++,b++);
@@ -58,6 +72,11 @@ int median_replace(elem_ptr *C, const int M, const elem_ptr x,
         if (e > b) memmove(b+1,b,(e-b)*sizeof(elem_ptr));
         *b = x+ind;
     }
+    
+    if (pb != b || pe != e) {
+        mexErrMsgTxt("Error calculating memmove block!!!");
+    }
+    
     return C[M/2]-x;
 }
 
@@ -90,20 +109,21 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     int *ind = mxGetData(L[0]);
     
     M = 2*(*w)+1;
-    elem_ptr *C;
-    C = malloc(M*sizeof(elem_ptr));
+    elem_type sent[] = {-111., 111.};
+    elem_ptr *C = (elem_ptr*) malloc((M+2)*sizeof(elem_ptr)) + 1;
+    C[-1] = &sent[0]; C[M] = &sent[1];
     
     ind += *w;
     *ind++ = median(C,M,x);
-    /* print(C,M,x); */
+    print(C,M,x);
     
     for (i=0; i<N-M; i++) {
         *ind++ = median_replace(C,M,x,i,i+M);
         /* *ind++ = i+1 + median(C,M,x+i+1); */
-        /* print(C,M,x); */
+        print(C,M,x);
     }
     
-    free(C);
+    free(C-1);
     
     /*
     if (*w+1 >= N) {
