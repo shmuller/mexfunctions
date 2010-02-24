@@ -24,7 +24,7 @@ void print(const elem_ptr * const C, const int M, const elem_ptr x)
     const elem_ptr *c;
     
     for (i=0,c=C; i<M; i++,c++) {
-        printf("%i: %f\n", *c-x, *(*c));
+        printf("%03d: %f\n", *c-x, *(*c));
     }
     printf("\n");
 }
@@ -93,15 +93,21 @@ int median_replace(elem_ptr * const C, const int M, const elem_ptr x,
     pi = find_spot(pi,x[ind]);
     
     if (pd < pi) {
-        memmove(pd,pd+1,(pi-pd)*sizeof(elem_ptr));
         pi--;
+        if (pi > pd) memmove(pd,pd+1,(pi-pd)*sizeof(elem_ptr));
     } else if (pi < pd) {
         memmove(pi+1,pi,(pd-pi)*sizeof(elem_ptr));
     }
+    
+    if (pi < C || pi >= C+M) {
+        printf("Error: Index out of bounds!\n");
+        exit(1);
+    }
+    
     *pi = x+ind;
     
-    save[0] = pd;
-    save[1] = pi;
+    //save[0] = pd;
+    //save[1] = pi;
     
     return C[(M-1)/2]-x;
 }
@@ -111,34 +117,40 @@ int median(const elem_ptr x, const size_t N, const int w, int *ind)
     register int i;
     const size_t M = 2*w+1;
     
-    elem_type sent[] = {-DBL_MAX, DBL_MAX};
+    //elem_type sent[] = {-DBL_MAX, DBL_MAX};
+    elem_type sent[] = {-111., 111.};
     elem_ptr * const C = malloc((M+2)*sizeof(elem_ptr)) + 1;
-    C[-1] = &sent[0]; C[w+1] = &sent[1];
+    C[-1] = &sent[0]; C[w+1] = C[M] = &sent[1];
     
     elem_ptr *save[] = {C,C};
-    
-    //printf("Initialize...\n");
+    /*
+    printf("Initialize...\n");
     *ind++ = median_init(C,w+1,x);
-    //print(C,w+1,x);
+    print(C,w+1,x);
     
-    //printf("Add...\n");
+    printf("Add...\n");
     for (i=0; i<w; i++) {
         *ind++ = median_add(C,w+2+i,x,w+1+i,save);
-        //print(C,w+2+i,x);
+        print(C,w+2+i,x);
     }
-        
+    */
+    ind += w;
+    *ind++ = median_init(C,M,x);
+    print(C,M,x);
+    
     //printf("Replace...\n");
     for (i=0; i<N-M; i++) {
         *ind++ = median_replace(C,M,x,i,i+M,save);
-        //print(C,M,x);
+        print(C,M,x);
     }
     
-    //printf("Remove...\n");
+    /*
+    printf("Remove...\n");
     for (i=0; i<w; i++) {
         *ind++ = median_remove(C,M-i-1,x,N-M+i,save);
-        //print(C,M-i-1,x);
+        print(C,M-i-1,x);
     }
-    
+    */
     free(C-1);
     return 0;
 }
