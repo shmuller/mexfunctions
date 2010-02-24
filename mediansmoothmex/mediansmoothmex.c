@@ -113,10 +113,10 @@ int median_replace(elem_ptr * const C, const int M, const elem_ptr x,
     return C[(M-1)/2]-x;
 }
 
-int median_filt(const elem_ptr x, const size_t N, const int w, int *ind)
+int median_filt(const elem_ptr x, const int N, const int w, int *ind)
 {
     register int i;
-    const size_t M = 2*w+1;
+    const int M = 2*w+1, m = (w+1 < N) ? w+1 : N;
     
     elem_type sent[] = {-DBL_MAX, DBL_MAX};
     elem_ptr * const C = (elem_ptr*) malloc((M+2)*sizeof(elem_ptr)) + 1;
@@ -124,36 +124,32 @@ int median_filt(const elem_ptr x, const size_t N, const int w, int *ind)
     
     elem_ptr *save[] = {C,C};
     
-    if (N <= w+1) {
-        ind[0] = median_init(C,N,x);
-        for (i=1; i<N; i++) {
-            ind[i] = ind[0];
-        }
-    } else {
-        /*
-        ind += w;
-        *ind++ = median_init(C,M,x);
-        */
-        
-        *ind++ = median_init(C,w+1,x);
-        //print(C,w+1,x);
-        
-        for (i=0; i<w; i++) {
-            *ind++ = median_add(C,w+2+i,x,w+1+i,save);
-            //print(C,w+2+i,x);
-        }
-        
-        for (i=0; i<N-M; i++) {
-            *ind++ = median_replace(C,M,x,i,i+M,save);
-            // print(C,M,x);
-        }
-        
-        for (i=0; i<w; i++) {
-            *ind++ = median_remove(C,M-i-1,x,N-M+i,save);
-            // print(C,M-i-1,x);
-        }
+    /*
+    ind += w;
+    *ind++ = median_init(C,M,x);
+    */
+    
+    ind[0] = median_init(C,m,x);
+    // print(C,m,x);
+    printf("m = %d, ind[0] = %d\n", m, ind[0]);
+    
+    for (i=1; i<m; i++) {
+        ind[i] = (i < N-m+1) ? median_add(C,w+1+i,x,i+w,save) : ind[i-1];
+        // print(C,w+1+i,x);
+        printf("i = %d, M = %d, add = %d\n", i, w+1+i, i+w);
     }
-
+    
+    for (; i<N-m+1; i++) {
+        ind[i] = median_replace(C,M,x,i-w-1,i+w,save);
+        // print(C,M,x);
+    }
+    
+    for (; i<N; i++) {
+        ind[i] = (i >= m) ? median_remove(C,w+N-i,x,i-w-1,save) : ind[i-1];
+        // print(C,w+N-i,x);
+        printf("i = %d, M = %d, del = %d\n", i, w+N-i, i-w-1);
+    }
+    
     free(C-1);
     return 0;
 }
