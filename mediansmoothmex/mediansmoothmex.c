@@ -1,4 +1,4 @@
-/* y = mediansmoothmex(x,w)
+/* y = mediansmoothmex(double(x),int32(w))
  *
  * Compile on Linux: 
  * mex -v COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3 mediansmoothmex.c
@@ -14,13 +14,6 @@
 #include "mex.h"
 #include "matrix.h"
 #include "math.h"
-
-#ifndef min
-#define min(a,b) ((a)<(b) ? (a) : (b))
-#endif
-#ifndef max
-#define max(a,b) ((a)>(b) ? (a) : (b))
-#endif
 
 typedef const double elem_type;
 typedef elem_type* elem_ptr;
@@ -124,19 +117,12 @@ int median_filt(const elem_ptr x, const int N, const int w, int *ind)
     
     elem_ptr *save[] = {C,C};
     
-    /*
-    ind += w;
-    *ind++ = median_init(C,M,x);
-    */
-    
     ind[0] = median_init(C,m,x);
     // print(C,m,x);
-    printf("m = %d, ind[0] = %d\n", m, ind[0]);
     
     for (i=1; i<m; i++) {
         ind[i] = (i < N-m+1) ? median_add(C,w+1+i,x,i+w,save) : ind[i-1];
         // print(C,w+1+i,x);
-        printf("i = %d, M = %d, add = %d\n", i, w+1+i, i+w);
     }
     
     for (; i<N-m+1; i++) {
@@ -147,7 +133,6 @@ int median_filt(const elem_ptr x, const int N, const int w, int *ind)
     for (; i<N; i++) {
         ind[i] = (i >= m) ? median_remove(C,w+N-i,x,i-w-1,save) : ind[i-1];
         // print(C,w+N-i,x);
-        printf("i = %d, M = %d, del = %d\n", i, w+N-i, i-w-1);
     }
     
     free(C-1);
