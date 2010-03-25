@@ -5,7 +5,7 @@ function y = mediansmooth(x,w)
 %   S. H. Muller, 2010/02/23
 
 [N,J] = size(x);
-y = zeros(size(x));
+y = zeros(size(x),class(x));
 
 for j = 1:J
     ind = mediansmoothmex(x(:,j),int32(w));
