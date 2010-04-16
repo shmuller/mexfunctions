@@ -8,19 +8,19 @@ if nargin < 3
     corr_bdry = 1;
 end
 
-[N,J] = size(x);
-y = zeros(size(x),class(x));
+y = NaN(size(x),class(x));
+J = find(all(isfinite(x)));
 
 if corr_bdry
-    for j = 1:J
+    for j = J(:).'
         [x0,x1] = sm_extrap(x(:,j),w,'polyfit',1);
         xj = [x0; x(:,j); x1];
 
         ind = mediansmoothmex(xj,int32(w));
-        y(:,j) = xj(ind(w+1:w+N)+1);
+        y(:,j) = xj(ind(w+1:end-w)+1);
     end
 else
-    for j = 1:J
+    for j = J(:).'
         ind = mediansmoothmex(x(:,j),int32(w));
         y(:,j) = x(ind+1,j);
     end
