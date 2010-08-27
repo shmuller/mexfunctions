@@ -11,7 +11,7 @@ end
 y = NaN(size(x),class(x));
 J = find(all(isfinite(x)));
 
-if corr_bdry
+if corr_bdry && w > 0
     for j = J(:).'
         [x0,x1] = sm_extrap(x(:,j),w,'polyfit',1);
         xj = [x0; x(:,j); x1];
