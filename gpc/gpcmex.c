@@ -18,37 +18,46 @@
 #include "math.h"
 #include "gpc.h"
 
-void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
+void mxExport(mxArray **L, gpc_polygon *p)
 {
-    register int i;
+    mwSize dims[2];
+    double *d;
+    int *n, nc, N, i;
     
+    dims[0] = N = p->num_contours;
+    L[1] = mxCreateNumericArray(1, dims, mxINT32_CLASS, mxREAL);
+    n = (int*) mxGetPr(L[1]);
+    for(i=0,nc=0; i<N; i++) {
+        nc += n[i] = p->contour[i].num_vertices;
+    }
+    dims[0] = 2; dims[1] = nc;
+    L[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
+    for(i=0,d=mxGetPr(L[0]); i<N; d+=2*n[i],i++) {
+        memcpy(d, p->contour[i].vertex, 2*n[i]*sizeof(double));
+    }
+}
+
+void mexFunction(int nL, mxArray **L, int nR, const mxArray **R)
+{
     const int n1 = mxGetNumberOfElements(R[0])/2;
     const int n2 = mxGetNumberOfElements(R[1])/2;
     
     gpc_vertex_list l1 = {n1, (gpc_vertex*) mxGetPr(R[0])};
     gpc_vertex_list l2 = {n2, (gpc_vertex*) mxGetPr(R[1])};
     
-    gpc_polygon p1 = {1, NULL, &l1}, p2 = {1, NULL, &l2}, p3;
+    gpc_polygon p1 = {1, NULL, &l1}, p2 = {1, NULL, &l2}, p;
     
-    int N, *n, nc;
-    double *d;
-    mwSize dims[2];
+    gpc_polygon_clip(GPC_INT, &p1, &p2, &p);
+    mxExport(L, &p);
+    gpc_free_polygon(&p);
     
-    gpc_polygon_clip(GPC_INT, &p1, &p2, &p3);
-    N = p3.num_contours;
+    if (nL == 6) {
+        gpc_polygon_clip(GPC_DIFF, &p1, &p2, &p);
+        mxExport(L+2, &p);
+        gpc_free_polygon(&p);
     
-    dims[0] = N;
-    L[1] = mxCreateNumericArray(1, dims, mxINT32_CLASS, mxREAL);
-    n = (int*) mxGetPr(L[1]);
-    for(i=0,nc=0; i<N; i++) {
-        nc += n[i] = p3.contour[i].num_vertices;
-    }
-    
-    dims[0] = 2; dims[1] = nc;
-    L[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
-    for(i=0,d=mxGetPr(L[0]); i<N; d+=2*n[i],i++) {
-        memcpy(d, p3.contour[i].vertex, 2*n[i]*sizeof(double));
-    }
-    
-    gpc_free_polygon(&p3);
+        gpc_polygon_clip(GPC_DIFF, &p2, &p1, &p);
+        mxExport(L+4, &p);
+        gpc_free_polygon(&p);
+    }    
 }
