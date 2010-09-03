@@ -18,42 +18,37 @@
 #include "math.h"
 #include "gpc.h"
 
-gpc_vertex *mk_gpc_vertex(int n, const double *x, const double *y)
-{
-    register int i;
-    gpc_vertex *v = malloc(n*sizeof(gpc_vertex));
-    gpc_vertex *p;
-    
-    for(i=n+1,p=v; --i; ++p) {
-        p->x = *x++;
-        p->y = *y++;
-    }
-    return v;
-}
-
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
     register int i;
     
-    const int n1 = mxGetNumberOfElements(R[0]);
-    const double *x1=mxGetPr(R[0]), *y1=mxGetPr(R[1]);
+    const int n1 = mxGetNumberOfElements(R[0])/2;
+    const int n2 = mxGetNumberOfElements(R[1])/2;
     
-    const int n2 = mxGetNumberOfElements(R[2]);
-    const double *x2=mxGetPr(R[2]), *y2=mxGetPr(R[3]);
-    
-    gpc_vertex_list l1 = {n1, mk_gpc_vertex(n1,x1,y1)};
-    gpc_vertex_list l2 = {n2, mk_gpc_vertex(n2,x2,y2)};
+    gpc_vertex_list l1 = {n1, (gpc_vertex*) mxGetPr(R[0])};
+    gpc_vertex_list l2 = {n2, (gpc_vertex*) mxGetPr(R[1])};
     
     gpc_polygon p1 = {1, NULL, &l1}, p2 = {1, NULL, &l2}, p3;
     
+    int N, *n, nc;
+    double *d;
+    mwSize dims[2];
+    
     gpc_polygon_clip(GPC_INT, &p1, &p2, &p3);
+    N = p3.num_contours;
     
-    mwSize dims[] = {2, p3.contour[0].num_vertices};
+    dims[0] = N;
+    L[1] = mxCreateNumericArray(1, dims, mxINT32_CLASS, mxREAL);
+    n = (int*) mxGetPr(L[1]);
+    for(i=0,nc=0; i<N; i++) {
+        nc += n[i] = p3.contour[i].num_vertices;
+    }
+    
+    dims[0] = 2; dims[1] = nc;
     L[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
-    
-    memcpy(mxGetPr(L[0]),p3.contour[0].vertex,2*dims[1]*sizeof(double));
+    for(i=0,d=mxGetPr(L[0]); i<N; d+=2*n[i],i++) {
+        memcpy(d, p3.contour[i].vertex, 2*n[i]*sizeof(double));
+    }
     
     gpc_free_polygon(&p3);
-    free(l2.vertex);
-    free(l1.vertex);
 }
