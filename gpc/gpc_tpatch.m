@@ -10,49 +10,40 @@ for j = 1:length(n)
     jj = jj+n(j);
 end
 
-S = struct('xy',{},'c',{});
+E = struct('xy',{},'c',{});
+S = E;
 for j = 1:length(S0)
-    sj.xy = S0(j).xy;
-    sj.c = S0(j).c;
+    sj = S0(j);
+    ih = 0;
     for i = 1:length(S)
-        si.xy = S(i).xy;
-        si.c = S(i).c;
-        [sji.xy,nji,si.xy,ni,sj.xy,nj] = gpcmex(si.xy,sj.xy);
+        si = S(i);
+        [sji.xy,nji,xyi,ni,xyj,nj] = gpcmex(si.xy,sj.xy);
         sji.c = alphablend(si.c,sj.c,a(j));
-        S(i) = si;
-        S = [S,sji];
+            
+        nji, ni, nj
+        if length(ni) == 1
+            S(i).xy = xyi;
+        end
+        if length(nj) == 1
+            sj.xy = xyj;
+        end
+        if length(ni) == 0
+            %ih = i;
+        end
+        S = [S,split(sji,nji)];
     end
-    S = [S,sj];
+    if ih == 0
+        S = [S,sj];
+    else
+        S(ih) = sj;
+    end
 end
 
 for i = 1:length(S)
     s = S(i);
-    patch(s.xy(1,:),s.xy(2,:),0,'FaceColor',s.c);
+    z = i(ones(1,size(s.xy,2)));
+    patch(s.xy(1,:),s.xy(2,:),z,0,'FaceColor',s.c,'EdgeColor','none');
 end
-
-% [XY,N,C] = deal([]);
-% jj = 0;
-% for j = 1:length(n);
-%     xyj = xy(:,jj+(1:n(j)));
-%     jj = jj+n(j);
-%     cj = alphablend(bc,c(j,:),a(j));
-%     XY = [XY,xyj];
-%     N = [N; n(j)];
-%     C = [C; cj];
-%     
-%     ii = 0;
-%     for i = 1:length(N)-1
-%         xyi = XY(:,ii+(1:N(i)));
-%         ii = ii+N(i);
-%         cji = alphablend(C(i,:),cj,a(j));
-%         [xyji,nji] = gpcmex(xyj,xyi);
-%         XY = [XY,xyji];
-%         N = [N; nji];
-%         C = [C; cji(ones(length(nji),1),:)];
-%     end
-% end
-%
-% h = patchgroup(XY,N,C);
 
 
 %--------------------------------------------------------------------------
@@ -63,7 +54,6 @@ c = ct.*at+cb.*(1-at);
 function S = split(s,n)
 jj = 0;
 S = struct('xy',{},'c',{});
-n = abs(n);
 for j = 1:length(n)
     if n(j) > 0
         sj.xy = s.xy(:,jj+(1:n(j)));
@@ -73,17 +63,5 @@ for j = 1:length(n)
     else
         jj = jj-n(j);
     end
-end
-
-
-%--------------------------------------------------------------------------
-function h = patchgroup(xy,n,c)
-xy = xy.';
-N = length(n);
-h = zeros(1,N);
-ii = 0;
-for i = 1:N
-    h(i) = patch(xy(ii+1:ii+n(i),1),xy(ii+1:ii+n(i),2),0,'FaceColor',c(i,:));
-    ii = ii+n(i);
 end
 
