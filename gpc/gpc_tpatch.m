@@ -1,13 +1,16 @@
-function h = gpc_tpatch(x,y,c,a)
+function h = gpc_tpatch(xyca)
 
 bc = get(gca,'Color');
 
-c1 = alphablend(bc,c(1,:),a(1));
-c2 = alphablend(bc,c(2,:),a(2));
-ci = alphablend(c1,c2,a(2));
+[xy1,N1,c1,a1] = deal(xyca{1}{:});
+[xy2,N2,c2,a2] = deal(xyca{2}{:});
 
-xy1 = [x{1}(:),y{1}(:)].';
-xy2 = [x{2}(:),y{2}(:)].';
+xy1 = xy1(:,1:N1(1));
+xy2 = xy2(:,1:N2(1));
+
+c1 = alphablend(bc,c1,a1);
+c2 = alphablend(bc,c2,a2);
+ci = alphablend(c1,c2,a2);
 
 tic
 [xyi,ni,xy1,n1,xy2,n2] = gpcmex(xy1,xy2);
