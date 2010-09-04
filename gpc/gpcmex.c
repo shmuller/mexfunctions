@@ -27,13 +27,16 @@ void mxExport(mxArray **L, gpc_polygon *p)
     dims[0] = N = p->num_contours;
     L[1] = mxCreateNumericArray(1, dims, mxINT32_CLASS, mxREAL);
     n = (int*) mxGetPr(L[1]);
-    for(i=0,nc=0; i<N; i++) {
+    for(i=0,nc=0; i<N; ++i) {
         nc += n[i] = p->contour[i].num_vertices;
     }
     dims[0] = 2; dims[1] = nc;
     L[0] = mxCreateNumericArray(2, dims, mxDOUBLE_CLASS, mxREAL);
-    for(i=0,d=mxGetPr(L[0]); i<N; d+=2*n[i],i++) {
+    for(i=0,d=mxGetPr(L[0]); i<N; d+=2*n[i],++i) {
         memcpy(d, p->contour[i].vertex, 2*n[i]*sizeof(double));
+    }
+    for(i=0; i<N; ++i) {
+        if (p->hole[i]) n[i] = -n[i]; 
     }
 }
 
