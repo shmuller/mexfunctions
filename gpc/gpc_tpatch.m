@@ -1,26 +1,30 @@
-function h = gpc_tpatch(xyca)
+function h = gpc_tpatch(xy,n,c,a)
 
 bc = get(gca,'Color');
 
-[xy1,N1,c1,a1] = deal(xyca{1}{:});
-[xy2,N2,c2,a2] = deal(xyca{2}{:});
+[XY,N,C] = deal([]);
+jj = 0;
+for j = 1:length(n);
+    xyj = xy(:,jj+(1:n(j)));
+    jj = jj+n(j);
+    cj = alphablend(bc,c(j,:),a(j));
+    XY = [XY,xyj];
+    N = [N; n(j)];
+    C = [C; cj];
+    
+    ii = 0;
+    for i = 1:length(N)-1
+        xyi = XY(:,ii+(1:N(i)));
+        ii = ii+N(i);
+        cji = alphablend(C(i,:),cj,a(j));
+        [xyji,nji] = gpcmex(xyj,xyi);
+        XY = [XY,xyji];
+        N = [N; nji];
+        C = [C; cji(ones(length(nji),1),:)];
+    end
+end
 
-xy1 = xy1(:,1:N1(1));
-xy2 = xy2(:,1:N2(1));
-
-c1 = alphablend(bc,c1,a1);
-c2 = alphablend(bc,c2,a2);
-ci = alphablend(c1,c2,a2);
-
-tic
-[xyi,ni,xy1,n1,xy2,n2] = gpcmex(xy1,xy2);
-toc
-
-xy = [xy1.'; xy2.'; xyi.'];
-n = [n1; n2; ni];
-c = [c1(ones(length(n1),1),:); c2(ones(length(n2),1),:); ci(ones(length(ni),1),:)];
-
-h = patchgroup(xy,n,c);
+h = patchgroup(XY,N,C);
 
 
 %--------------------------------------------------------------------------
@@ -29,6 +33,7 @@ c = ct.*at+cb.*(1-at);
 
 %--------------------------------------------------------------------------
 function h = patchgroup(xy,n,c)
+xy = xy.';
 N = length(n);
 h = zeros(1,N);
 ii = 0;
