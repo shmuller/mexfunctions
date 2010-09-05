@@ -50,6 +50,13 @@ void mxExport(mxArray **L, gpc_polygon *p, int J)
     }
 }
 
+void mkpoly(gpc_polygon *p, gpc_vertex_list *v)
+{
+    p->num_contours = 1;
+    p->hole = NULL;
+    p->contour = v;
+}
+
 void cut(gpc_polygon *p, gpc_polygon *q, gpc_polygon *pi)
 {
     gpc_polygon pp, qq;
@@ -69,26 +76,23 @@ void mexFunction(int nL, mxArray **L, int nR, const mxArray **R)
     const int *n, *N = (const int*) mxGetPr(R[1]);
     const double *xy, *XY = mxGetPr(R[0]);
     
-    int M = m*(m+1)/2;
+    int M = (1 << m) - 1;
     gpc_vertex_list *v, *V = malloc(m*sizeof(gpc_vertex_list));
-    gpc_polygon *p, *q, *pi, *P = malloc(M*sizeof(gpc_polygon)), *Pi = P+m;
+    gpc_polygon *p, *q, *pi, *P = malloc(M*sizeof(gpc_polygon));
     
     for(i=0,xy=XY,v=V,p=P; i<m; xy+=2*N[i],++v,++p,++i) {
         v->num_vertices = N[i];
         v->vertex = (gpc_vertex*) xy;
-        p->num_contours = 1;
-        p->hole = NULL;
-        p->contour = v;
     }
     
-    for(i=0,p=P,q=p+1,pi=Pi; i<m-1; ++i,++p,++q) {
-        cut(p, q, pi++);
-        for(j=0; j<i; ++j) {
-            cut(Pi+j, q, pi++);
+    for(i=0,v=V,p=P; i<m; ++i,p=pi) {
+        mkpoly(p, v++);
+        for(q=P,pi=p+1; q<p; ) {
+            cut(p, q++, pi++);
         }
     }
-    
-    printf("%d, %d\n", pi-Pi, m*(m-1)/2);
+        
+    printf("%d, %d\n", pi-P, M);
     
     mxExport(L, P, M);
     

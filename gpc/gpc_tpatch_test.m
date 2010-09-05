@@ -2,11 +2,11 @@ m = 20;
 phi = (0:m-1)*(2*pi/m);
 cph = cos(phi); sph = sin(phi);
 
-n1 = 4;
+n1 = 5;
 %x1 = 2*rand(n1,1);
 %y1 = 2*rand(n1,1);
-x1 = [1.2,1,2,2].';
-y1 = [1,1,1,1].';
+x1 = [1,1,2,2,2].';
+y1 = [1,1,1,1,1].';
 r1 = (1:n1).'./n1;
 
 [xy,n] = deal([]);
@@ -14,7 +14,7 @@ for j = 1:n1
     xy = [xy, [x1(j)+r1(j)*cph; y1(j)+r1(j)*sph]];
     n = [n; m];
 end
-c = [0,0,1; 0,1,0; 1,0,0; 0,0,0];
+c = [0,0,1; 0,1,0; 1,0,0; 0,0,0; 1,1,1];
 %c = jet(n1);
 a = 0.9*ones(n1,1);
 
@@ -48,7 +48,8 @@ for j = 1:J
         else
             sty = {'LineStyle','--'};
         end
-        line(xyc{i,j}(1,:),xyc{i,j}(2,:),c(ones(1,nji)),sty{:});
+        patch(xyc{i,j}(1,:),xyc{i,j}(2,:),c(ones(1,nji)),c);
+        %line(xyc{i,j}(1,:),xyc{i,j}(2,:),c(ones(1,nji)),sty{:});
     end
 end
 
