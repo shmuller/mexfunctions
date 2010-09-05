@@ -1,9 +1,12 @@
 function h = gpc_tpatch(xy,n,c,a)
+%h = gpc_tpatch(xy,n,c,a)
+%   Transparent patches.
+%
+%   S. H. Muller, 2010/09/04
 
 [XY,N,M] = gpc_cut_mex(xy,int32(n));
 
-%bc = get(gca,'Color');
-bc = [1,1,1];
+bc = get(gca,'Color');
 
 m = length(n);
 L = pow2(m)-1;
@@ -19,7 +22,7 @@ for j = 1:length(n)
     p = pi;
 end
 
-tpatch(XY,N,M,C);
+h = tpatch(XY,N,M,C);
 
 
 %--------------------------------------------------------------------------
@@ -28,20 +31,29 @@ c = ct.*at+cb.*(1-at);
 
 
 %--------------------------------------------------------------------------
-function tpatch(XY,N,M,C)
+function h = tpatch(XY,N,M,C)
 jj = 0;
 ii = 0;
+k = 0;
 J = length(M);
+h = zeros(1,length(N));
+% loop over polygon groups
 for j = 1:J
     nj = N(ii+(1:M(j)));
     ii = ii+M(j);
     cj = C(j,:);
     
+    % loop over polygon parts
     for i = 1:M(j)
         nji = abs(nj(i));
         xyji = XY(:,jj+(1:nji));
         jj = jj+nji;
         
-        patch(xyji(1,:),xyji(2,:),j(ones(1,nji)),0,'FaceColor',cj,'EdgeColor','none');
+        % don't plot holes
+        if nj(i) > 0
+            k = k+1;
+            h(k) = patch(xyji(1,:),xyji(2,:),0,'FaceColor',cj);
+        end
     end
 end
+h(k+1:end) = [];

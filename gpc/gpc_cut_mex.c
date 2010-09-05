@@ -71,20 +71,22 @@ void cut(gpc_polygon *p, gpc_polygon *q, gpc_polygon *pi)
 
 void mexFunction(int nL, mxArray **L, int nR, const mxArray **R)
 {
-    int i,j;
+    int i;
     const int m = mxGetNumberOfElements(R[1]);
     const int *n, *N = (const int*) mxGetPr(R[1]);
     const double *xy, *XY = mxGetPr(R[0]);
     
-    int M = (1 << m) - 1;
+    int M = (1 << m) - 1;   /* 2^m - 1 */
     gpc_vertex_list *v, *V = malloc(m*sizeof(gpc_vertex_list));
     gpc_polygon *p, *q, *pi, *P = malloc(M*sizeof(gpc_polygon));
     
-    for(i=0,xy=XY,v=V,p=P; i<m; xy+=2*N[i],++v,++p,++i) {
+    /* read vertex list */
+    for(i=0,xy=XY,v=V; i<m; xy+=2*N[i],++v,++i) {
         v->num_vertices = N[i];
         v->vertex = (gpc_vertex*) xy;
     }
     
+    /* cut polygons */
     for(i=0,v=V,p=P; i<m; ++i,p=pi) {
         mkpoly(p, v++);
         for(q=P,pi=p+1; q<p; ) {
@@ -92,7 +94,7 @@ void mexFunction(int nL, mxArray **L, int nR, const mxArray **R)
         }
     }
         
-    printf("%d, %d\n", pi-P, M);
+    /* printf("%d, %d\n", pi-P, M); */
     
     mxExport(L, P, M);
     
