@@ -1,8 +1,12 @@
-function h = gpc_tpatch(xy,n,c,a)
-%h = gpc_tpatch(xy,n,c,a)
+function h = gpc_tpatch(xy,n,c,a,varargin)
+%h = gpc_tpatch(xy,n,c,a,...)
 %   Transparent patches.
 %
 %   S. H. Muller, 2010/09/04
+
+if ~isa(xy,'double')
+    xy = double(xy);
+end
 
 [XY,N,M] = gpc_cut_mex(xy,int32(n));
 
@@ -22,7 +26,7 @@ for j = 1:length(n)
     p = pi;
 end
 
-h = tpatch(XY,N,M,C);
+h = tpatch(XY,N,M,C,varargin{:});
 
 
 %--------------------------------------------------------------------------
@@ -31,7 +35,7 @@ c = ct.*at+cb.*(1-at);
 
 
 %--------------------------------------------------------------------------
-function h = tpatch(XY,N,M,C)
+function h = tpatch(XY,N,M,C,varargin)
 jj = 0;
 ii = 0;
 k = 0;
@@ -52,7 +56,7 @@ for j = 1:J
         % don't plot holes
         if nj(i) > 0
             k = k+1;
-            h(k) = patch(xyji(1,:),xyji(2,:),0,'FaceColor',cj);
+            h(k) = patch(xyji(1,:),xyji(2,:),0,'FaceColor',cj,varargin{:});
         end
     end
 end
