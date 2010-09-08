@@ -99,7 +99,7 @@ void mexFunction(int nL, mxArray **L, int nR, const mxArray **R)
     mxExport(L, P, M);
     
     for(i=0,p=P; i<M; ++i,++p) {
-        gpc_free_polygon(p);
+        if (p->hole) gpc_free_polygon(p);
     }
     free(P);
     free(V);

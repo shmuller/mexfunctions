@@ -2,7 +2,7 @@ m = 50;
 phi = (0:m-1)*(2*pi/m);
 cph = cos(phi); sph = sin(phi);
 
-n1 = 5;
+n1 = 1;
 x1 = 2*rand(n1,1);
 y1 = 2*rand(n1,1);
 % x1 = [1,1,2,2,1].';
