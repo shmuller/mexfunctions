@@ -213,7 +213,9 @@ int main(void) {
   return 0;
 }
 
-#endif
+#else
+
+#define drand48() (((double)rand())/RAND_MAX)
 
 void mrand(int N, int pitch, double M[]) {
   const double r = 10.0;
@@ -278,3 +280,5 @@ int main(void) {
 
   return 0;
 }
+
+#endif
