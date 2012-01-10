@@ -19,33 +19,35 @@
 
 typedef double real;
 
+typedef real (func)(real *);
+
 typedef struct {
     char *name;
-    real (*fun)(real *);
+    func *fun;
 } pair;
 
-extern real besei0(real *);   // exponentially scaled Bessel I0(X) function
-extern real besei1(real *);   // exponentially scaled Bessel I1(X) function
-extern real besek0(real *);   // exponentially scaled Bessel K0(X) function
-extern real besek1(real *);   // exponentially scaled Bessel K1(X) function
-extern real besi0(real *);    // Bessel I0(X) function
-extern real besi1(real *);    // Bessel I1(X) function
-extern real besj0(real *);    // Bessel J0(X) function
-extern real besj1(real *);    // Bessel J1(X) function
-extern real besk0(real *);    // Bessel K0(X) function
-extern real besk1(real *);    // Bessel K1(X) function
-extern real besy0(real *);    // Bessel Y0(X) function
-extern real besy1(real *);    // Bessel Y1(X) function
-extern real daw(real *);      // Dawson's integral function
-extern real dlgama(real *);   // log ( Gamma ( X ) ) for a real argument
-extern real ei(real *);       // exponential integral Ei(X)
-extern real eone(real *);     // exponential integral E1(X)
-extern real expei(real *);    // scaled exponential integral exp(-X) * Ei(X)
-extern real r8_erf(real *);   // error function
-extern real r8_erfc(real *);  // complementary error function
-extern real r8_erfcx(real *); // exponentially scaled complementary error function
-extern real r8_gamma(real *); // Gamma(X) for a real argument
-extern real r8_psi(real *);   // Psi(X)
+extern func besei0;   // exponentially scaled Bessel I0(X) function
+extern func besei1;   // exponentially scaled Bessel I1(X) function
+extern func besek0;   // exponentially scaled Bessel K0(X) function
+extern func besek1;   // exponentially scaled Bessel K1(X) function
+extern func besi0;    // Bessel I0(X) function
+extern func besi1;    // Bessel I1(X) function
+extern func besj0;    // Bessel J0(X) function
+extern func besj1;    // Bessel J1(X) function
+extern func besk0;    // Bessel K0(X) function
+extern func besk1;    // Bessel K1(X) function
+extern func besy0;    // Bessel Y0(X) function
+extern func besy1;    // Bessel Y1(X) function
+extern func daw;      // Dawson's integral function
+extern func dlgama;   // log ( Gamma ( X ) ) for a real argument
+extern func ei;       // exponential integral Ei(X)
+extern func eone;     // exponential integral E1(X)
+extern func expei;    // scaled exponential integral exp(-X) * Ei(X)
+extern func r8_erf;   // error function
+extern func r8_erfc;  // complementary error function
+extern func r8_erfcx; // exponentially scaled complementary error function
+extern func r8_gamma; // Gamma(X) for a real argument
+extern func r8_psi;   // Psi(X)
 
 static const pair P[] = {
     "besei0", besei0,
@@ -81,18 +83,18 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     const int npts = mxGetNumberOfElements(R[1]);
     
     double *x=mxGetData(R[1]), *y;
-    real (*f)(real *) = NULL;
+    func *fun = NULL;
     const pair *p;
     
     mxGetString(R[0],name,STRLEN);
     
     for(i=sizeof(P)/sizeof(pair),p=P; i--; p++) {
         if (strcmp(name,p->name)==0) {
-            f = p->fun;
+            fun = p->fun;
             break;
         }
     }
-    if (f == NULL) {
+    if (fun == NULL) {
         mexErrMsgTxt("specfunmex: Unknown function name");
     }
         
@@ -100,7 +102,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     y = mxGetData(L[0]);
     
     for(i=npts; i--; )
-        *y++ = f(x++);
+        *y++ = fun(x++);
     
 }
 
