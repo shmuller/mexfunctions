@@ -15,14 +15,10 @@
 
 #include "gauss_legendre.h"
 
-typedef double real;
-
-typedef real (fun1)(real);
-typedef real (fun2)(real, void *);
-
-
-double gauss_legendre_matlab(int n, double (*f)(double,void*), void* data, double a, double b)
+double gauss_legendre_matlab(int n, mxArray *fun, double a, double b)
 {
+    static mxArray *R[] = {NULL, NULL};
+    
 	double* x = NULL;
 	double* w = NULL;
 	double A,B,Ax,s=0.;
@@ -32,6 +28,18 @@ double gauss_legendre_matlab(int n, double (*f)(double,void*), void* data, doubl
 
     double *X = malloc(n*sizeof(double));
     double *p;
+    
+    if (R[1] == NULL) {
+        R[1] = mxCreateNumericArray(0,NULL,mxDOUBLE_CLASS,mxREAL);
+        mexMakeArrayPersistent(R[1]);
+    }
+    
+    R[0] = fun;
+    
+    mwSize dims[] = {n};
+    mxSetDimensions(R[1], dims, 1);
+    mxSetData(R[1], X);
+    mxArray *L;
     
     dtbl = gauss_legendre_load_tbl(n, &x, &w);
     
@@ -50,12 +58,10 @@ double gauss_legendre_matlab(int n, double (*f)(double,void*), void* data, doubl
         *p++ = B-Ax;
     }
     
-    for(i=0; i<n; i++) {
-        X[i] = (*f)(X[i],data);
-    }
+    mexCallMATLAB(1, &L, 2, R, "feval");
     
     i = 0;
-    p = X;
+    p = mxGetData(L);
     if(n&1) {
         s = w[0]*(*p++);
         i = 1;
@@ -65,6 +71,7 @@ double gauss_legendre_matlab(int n, double (*f)(double,void*), void* data, doubl
         p += 2;
     }
     
+    mxDestroyArray(L);
     free(X);
     
 	if (dtbl) {
@@ -75,31 +82,6 @@ double gauss_legendre_matlab(int n, double (*f)(double,void*), void* data, doubl
 }
 
 
-real wrap(real x, void *fun)
-{
-    static mxArray *R[2] = {NULL,NULL};
-    static double *p = NULL;
-    double y;
-    mxArray *L;
-    
-    if (p == NULL) {
-        R[1] = mxCreateDoubleScalar(0.);
-        mexMakeArrayPersistent(R[1]);
-        p = mxGetData(R[1]);
-    }
-    
-    R[0] = (mxArray*) fun;
-    *p = x;
-            
-    mexCallMATLAB(1, &L, 2, R, "feval");
-    y = *((double*)mxGetData(L));
-    
-    mxDestroyArray(L);
-    return y;
-    
-    //return (*(fun1*)fun)(x);
-}
-
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {   
     register int i;
@@ -108,18 +90,13 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     const int npts = mxGetNumberOfElements(R[1]);
     
     double *x=mxGetData(R[1]), *y;
-    
-    int n = 33;
         
-    //L[0] = mxCreateNumericArray(ndims,dims,mxDOUBLE_CLASS,mxREAL);
+    int n = 256;
+        
     L[0] = mxCreateDoubleScalar(0.);
     y = mxGetData(L[0]);
     
-    *y = gauss_legendre_matlab(n, wrap, (void*)R[0], x[0], x[1]);
-    
-    //*y = wrap(x[0], (void*)R[0]);
-    
-    //mexCallMATLAB(1, L, 2, R, "feval");
+    *y = gauss_legendre_matlab(n, (mxArray*)R[0], x[0], x[1]);
     
 }
 
