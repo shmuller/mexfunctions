@@ -58,6 +58,9 @@ extern "C"
 {
 #endif
 
+    /* Load x and w table */
+    int gauss_legendre_load_tbl(int n, double **x, double **w);
+
 	/* Numerical computation of int(f(x),x=a..b) by Gauss-Legendre n-th order high precision quadrature 
 		[in]n     - quadrature order
 		[in]f     - integrand

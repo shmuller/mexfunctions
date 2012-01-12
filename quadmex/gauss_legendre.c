@@ -211,6 +211,36 @@ static GLAW glaw[] = {
 
 static const int GLAWSIZE = sizeof(glaw)/sizeof(glaw[0]);
 
+
+/*
+Load x and w table
+*/
+int gauss_legendre_load_tbl(int n, double **x, double **w)
+{
+	for i, m = (n+1)>>1;
+	
+	/* Load appropriate predefined table */
+	for (i = 0; i<GLAWSIZE;i++)
+	{
+		if(n==glaw[i].n)
+		{
+			*x = glaw[i].x;
+			*w = glaw[i].w;
+			return 0;
+		}
+	}
+	
+	/* Generate new if non-predefined table is required */
+	/* with precision of 1e-10 */
+	
+	*x = (double*)malloc(m*sizeof(double));
+	*w = (double*)malloc(m*sizeof(double));
+	
+	gauss_legendre_tbl(n,*x,*w,1e-10);
+	return 1;
+}
+
+
 /* 
 Gauss-Legendre n-points quadrature, exact for polynomial of degree <=2n-1
 
