@@ -23,8 +23,9 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 	double* x = NULL;
 	double* w = NULL;
 	double A,B,Ax,wi;
-	int i, j, dtbl, m, M;
+	int i, j, dtbl, o, m, M, M2, Mo, Mm;
 
+    o = n&1;
 	m = (n+1)>>1;
 
     double *ab = mxGetData(AB);
@@ -34,26 +35,29 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     double *p, *q, *y, *X = malloc(n*sizeof(double));
     
     if (Rd == NULL) {
+        // make empty mxArray and keep it
         Rd = mxCreateNumericMatrix(1,0,mxDOUBLE_CLASS,mxREAL);
         mexMakeArrayPersistent(Rd);
     }
+    // link Rd to abscissae vector X
     mxSetN(Rd, n);
     mxSetData(Rd, X);
     
+    // load abscissae and weight table
     dtbl = gauss_legendre_load_tbl(n, &x, &w);
 
-    i = 0;
-    p = X; q = p+n-1;
-    if(n&1) {
-        *p++ = B;
-        i = 1;
+    // populate X with scaled abscissae
+    p = X+m; q = p-1;
+    if(o) {
+        *q-- = B;
     }
-    for(;i<m;i++) {
+    for(i=o; i<m; i++) {
         Ax = A*x[i];
         *p++ = B+Ax;
         *q-- = B-Ax;
     }
     
+    // replace dimension d by abscissae vector X and evaluate function
     R[d] = Rd;
     mexCallMATLAB(1, &Y, nR, R, "feval");
     R[d] = AB;
@@ -61,20 +65,28 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     M = mxGetM(Y);
     y = mxGetData(Y);
     
-    for(i=n&1,p=y+i*M,q=y+(n-1)*M; i<m; i++,q-=2*M) {
+    M2 = M*2;
+    Mo = M*o;
+    Mm = M*m;
+    
+    // add symmetric pairs
+    for(i=o,p=y+Mm,q=p-M-Mo; i<m; i++,q-=M2) {
         for(j=0; j<M; j++) {
             *p++ += *q++;
         }
     }
     
+    // create output matrix
     L = mxCreateNumericMatrix(M,1,mxDOUBLE_CLASS,mxREAL);
     p = mxGetData(L);
     
-    for(i=0,q=y; i<m; i++,p-=M) {
+    // populate output matrix with weighted sums
+    for(i=0,q=y+Mm-Mo; i<m; i++,p-=M) {
         for(j=0,wi=w[i]; j<M; j++) {
             *p++ += wi*(*q++);
         }
     }
+    // apply final scaling
     for(j=0; j<M; j++) {
         *p++ *= A;
     }
