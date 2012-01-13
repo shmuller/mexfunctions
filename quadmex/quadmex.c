@@ -15,9 +15,10 @@
 
 #include "gauss_legendre.h"
 
-double gauss_legendre_matlab(int n, mxArray *fun, double a, double b)
+double gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 {
-    static mxArray *R[] = {NULL, NULL};
+    static mxArray *Rd = NULL;
+    mxArray *L, *AB = R[d];
     
 	double* x = NULL;
 	double* w = NULL;
@@ -26,25 +27,22 @@ double gauss_legendre_matlab(int n, mxArray *fun, double a, double b)
 
 	m = (n+1)>>1;
 
-    double *X = malloc(n*sizeof(double));
-    double *p;
+    double *ab = mxGetData(AB);
+    A = 0.5*(ab[1]-ab[0]);
+	B = 0.5*(ab[1]+ab[0]);
     
-    if (R[1] == NULL) {
-        R[1] = mxCreateNumericArray(0,NULL,mxDOUBLE_CLASS,mxREAL);
-        mexMakeArrayPersistent(R[1]);
+    double *p, *X = malloc(n*sizeof(double));
+    
+    if (Rd == NULL) {
+        Rd = mxCreateNumericArray(0,NULL,mxDOUBLE_CLASS,mxREAL);
+        mexMakeArrayPersistent(Rd);
     }
     
-    R[0] = fun;
-    
     mwSize dims[] = {n};
-    mxSetDimensions(R[1], dims, 1);
-    mxSetData(R[1], X);
-    mxArray *L;
+    mxSetDimensions(Rd, dims, 1);
+    mxSetData(Rd, X);
     
     dtbl = gauss_legendre_load_tbl(n, &x, &w);
-    
-	A = 0.5*(b-a);
-	B = 0.5*(b+a);
 
     i = 0;
     p = X;
@@ -58,7 +56,9 @@ double gauss_legendre_matlab(int n, mxArray *fun, double a, double b)
         *p++ = B-Ax;
     }
     
-    mexCallMATLAB(1, &L, 2, R, "feval");
+    R[d] = Rd;
+    mexCallMATLAB(1, &L, nR, R, "feval");
+    R[d] = AB;
     
     i = 0;
     p = mxGetData(L);
@@ -89,14 +89,15 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     const mwSize *dims = mxGetDimensions(R[1]);
     const int npts = mxGetNumberOfElements(R[1]);
     
-    double *x=mxGetData(R[1]), *y;
-        
-    int n = 256;
-        
+    double *y;
+    
+    int n = *((int*)mxGetData(R[0]));
+    int d = *((int*)mxGetData(R[1]));    
+    
     L[0] = mxCreateDoubleScalar(0.);
     y = mxGetData(L[0]);
     
-    *y = gauss_legendre_matlab(n, (mxArray*)R[0], x[0], x[1]);
+    *y = gauss_legendre_matlab(n, d, nR-2, (mxArray**)(R+2));
     
 }
 
