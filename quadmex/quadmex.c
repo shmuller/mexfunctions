@@ -22,7 +22,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     
 	double* x = NULL;
 	double* w = NULL;
-	double A,B,Ax,s;
+	double A,B,Ax,wi;
 	int i, j, dtbl, m, M;
 
 	m = (n+1)>>1;
@@ -61,18 +61,23 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     M = mxGetM(Y);
     y = mxGetData(Y);
     
-    for(i=n&1,p=y+i,q=y+n-1; i<m; i++) {
-        *p++ += *q--;
+    for(i=n&1,p=y+i*M,q=y+(n-1)*M; i<m; i++,q-=2*M) {
+        for(j=0; j<M; j++) {
+            *p++ += *q++;
+        }
     }
     
     L = mxCreateNumericMatrix(M,1,mxDOUBLE_CLASS,mxREAL);
     p = mxGetData(L);
     
-    *p = 0.;
-    for(i=0,q=y; i<m; i++) {
-        *p += w[i]*(*q++);
+    for(i=0,q=y; i<m; i++,p-=M) {
+        for(j=0,wi=w[i]; j<M; j++) {
+            *p++ += wi*(*q++);
+        }
     }
-    *p *= A;
+    for(j=0; j<M; j++) {
+        *p++ *= A;
+    }
     
     mxDestroyArray(Y);
     free(X);
