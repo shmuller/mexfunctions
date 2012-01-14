@@ -15,26 +15,36 @@
 
 #include "gauss_legendre.h"
 
-mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
+typedef struct {
+    int M;
+    int N;
+    double *data;
+} Data;
+
+void getData(mxArray *R, Data *D)
 {
-    mxArray *L, *Y, *Rd = R[d];
+    D->M = mxGetM(R);
+    D->N = mxGetN(R);
+    D->data = mxGetData(R);
+}
+
+void setData(mxArray *R, Data *D)
+{
+    mxSetM(R, D->M);
+    mxSetN(R, D->N);
+    mxSetData(R, D->data);
+}
+
+double getScaledX(int n, double *ab, double *X, int *dtbl, double **x, double **w)
+{
+    int i, m=(n+1)>>1, o=n&1;
+    double A, B, Ax, *p, *q;
     
-	double* x = NULL;
-	double* w = NULL;
-	double A,B,Ax,wi;
-	int i, j, dtbl, o, m, M, M2, Mo, Mm, nn, mm;
-
-    o = n&1;
-	m = (n+1)>>1;
-
-    double *ab = mxGetData(Rd);
     A = 0.5*(ab[1]-ab[0]);
 	B = 0.5*(ab[1]+ab[0]);
     
-    double *p, *q, *y, *X = malloc(n*sizeof(double));
-    
     // load abscissae and weight table
-    dtbl = gauss_legendre_load_tbl(n, &x, &w);
+    *dtbl = gauss_legendre_load_tbl(n, x, w);
 
     // populate X with scaled abscissae
     p = X+m; q = p-1;
@@ -42,25 +52,43 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
         *q-- = B;
     }
     for(i=o; i<m; i++) {
-        Ax = A*x[i];
+        Ax = A*(*x)[i];
         *p++ = B+Ax;
         *q-- = B-Ax;
     }
+    return A;
+}
+
+
+mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
+{
+    mxArray *L, *Y, *Rd = R[d];
+    
+	double* x = NULL;
+	double* w = NULL;
+	double A, wi;
+	int i, j, dtbl, o, m, M, M2, Mo, Mm;
+
+    o = n&1;
+	m = (n+1)>>1;
+
+    double *p, *q, *y;
+    
+    Data AB;
+    getData(R[d], &AB);
+    
+    Data X = {1, n, malloc(n*sizeof(double))};
+    
+    A = getScaledX(n, AB.data, X.data, &dtbl, &x, &w);
     
     // attach abscissa vector X to Rd
-    mm = mxGetM(Rd);
-    nn = mxGetN(Rd);
-    mxSetM(Rd, 1);
-    mxSetN(Rd, n);
-    mxSetData(Rd, X);
+    setData(Rd, &X);
     
     // evaluate function at abscissa vector X
     mexCallMATLAB(1, &Y, nR, R, "feval");
     
     // re-attach ab to Rd
-    mxSetM(Rd, mm);
-    mxSetN(Rd, nn);
-    mxSetData(Rd, ab);
+    setData(Rd, &AB);
     
     M = mxGetM(Y);
     y = mxGetData(Y);
@@ -92,7 +120,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     }
     
     mxDestroyArray(Y);
-    free(X);
+    free(X.data);
     
 	if (dtbl) {
 		free(x);
