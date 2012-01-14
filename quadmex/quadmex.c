@@ -17,31 +17,21 @@
 
 mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 {
-    static mxArray *Rd = NULL;
-    mxArray *L, *Y, *AB = R[d];
+    mxArray *L, *Y, *Rd = R[d];
     
 	double* x = NULL;
 	double* w = NULL;
 	double A,B,Ax,wi;
-	int i, j, dtbl, o, m, M, M2, Mo, Mm;
+	int i, j, dtbl, o, m, M, M2, Mo, Mm, nn, mm;
 
     o = n&1;
 	m = (n+1)>>1;
 
-    double *ab = mxGetData(AB);
+    double *ab = mxGetData(Rd);
     A = 0.5*(ab[1]-ab[0]);
 	B = 0.5*(ab[1]+ab[0]);
     
     double *p, *q, *y, *X = malloc(n*sizeof(double));
-    
-    if (Rd == NULL) {
-        // make empty mxArray and keep it
-        Rd = mxCreateNumericMatrix(1,0,mxDOUBLE_CLASS,mxREAL);
-        mexMakeArrayPersistent(Rd);
-    }
-    // link Rd to abscissae vector X
-    mxSetN(Rd, n);
-    mxSetData(Rd, X);
     
     // load abscissae and weight table
     dtbl = gauss_legendre_load_tbl(n, &x, &w);
@@ -57,10 +47,20 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
         *q-- = B-Ax;
     }
     
-    // replace dimension d by abscissae vector X and evaluate function
-    R[d] = Rd;
+    // attach abscissa vector X to Rd
+    mm = mxGetM(Rd);
+    nn = mxGetN(Rd);
+    mxSetM(Rd, 1);
+    mxSetN(Rd, n);
+    mxSetData(Rd, X);
+    
+    // evaluate function at abscissa vector X
     mexCallMATLAB(1, &Y, nR, R, "feval");
-    R[d] = AB;
+    
+    // re-attach ab to Rd
+    mxSetM(Rd, mm);
+    mxSetN(Rd, nn);
+    mxSetData(Rd, ab);
     
     M = mxGetM(Y);
     y = mxGetData(Y);
