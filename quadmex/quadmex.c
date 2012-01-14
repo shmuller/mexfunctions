@@ -21,7 +21,14 @@ typedef struct {
     double *data;
 } Data;
 
-void getData(mxArray *R, Data *D)
+void initData(Data *D, int M, int N, double *data)
+{
+    D->M = M;
+    D->N = N;
+    D->data = data;
+}
+
+void getData(Data *D, mxArray *R)
 {
     D->M = mxGetM(R);
     D->N = mxGetN(R);
@@ -62,33 +69,41 @@ double getScaledX(int n, double *ab, double *X, int *dtbl, double **x, double **
 
 mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 {
-    mxArray *L, *Y, *Rd = R[d];
+    mxArray *L, *Y;
     
 	double* x = NULL;
 	double* w = NULL;
 	double A, wi;
-	int i, j, dtbl, o, m, M, M2, Mo, Mm;
+	int i, j, dtbl, o, m, M, M2, Mo, Mm, D = nR-1;
 
     o = n&1;
 	m = (n+1)>>1;
 
     double *p, *q, *y;
     
-    Data AB;
-    getData(R[d], &AB);
+    Data *ND = malloc(2*D*sizeof(Data));
+    Data *OD = ND+D, *od, *nd;
     
-    Data X = {1, n, malloc(n*sizeof(double))};
+    for(i=1,od=OD,nd=ND; i<=D; i++,od++,nd++) {
+        getData(od, R[i]);
+        
+        if (i == d) {
+            initData(nd, 1, n, malloc(n*sizeof(double)));
     
-    A = getScaledX(n, AB.data, X.data, &dtbl, &x, &w);
+            A = getScaledX(n, od->data, nd->data, &dtbl, &x, &w);
     
-    // attach abscissa vector X to Rd
-    setData(Rd, &X);
+            setData(R[i], nd);
+        }
+        
+    }
     
     // evaluate function at abscissa vector X
     mexCallMATLAB(1, &Y, nR, R, "feval");
     
-    // re-attach ab to Rd
-    setData(Rd, &AB);
+    // re-attach old data
+    for(i=1,od=OD; i<=D; i++,od++) {
+        setData(R[i], od);   
+    }
     
     M = mxGetM(Y);
     y = mxGetData(Y);
@@ -120,7 +135,8 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     }
     
     mxDestroyArray(Y);
-    free(X.data);
+    free(ND->data);
+    free(ND);
     
 	if (dtbl) {
 		free(x);
