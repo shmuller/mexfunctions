@@ -18,6 +18,7 @@
 typedef struct {
     int M;
     int N;
+    int L;
     double *data;
 } Data;
 
@@ -25,6 +26,7 @@ void initData(Data *D, int M, int N, double *data)
 {
     D->M = M;
     D->N = N;
+    D->L = M*N;
     D->data = data;
 }
 
@@ -32,6 +34,7 @@ void getData(Data *D, mxArray *R)
 {
     D->M = mxGetM(R);
     D->N = mxGetN(R);
+    D->L = D->M*D->N;
     D->data = mxGetData(R);
 }
 
@@ -42,27 +45,34 @@ void setData(mxArray *R, Data *D)
     mxSetData(R, D->data);
 }
 
-double getScaledX(int n, double *ab, double *X, int *dtbl, double **x, double **w)
+double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **w, int M)
 {
-    int i, m=(n+1)>>1, o=n&1;
-    double A, B, Ax, *p, *q;
+    int i, j, m=(n+1)>>1, o=n&1, M2=M*2, Mo=M*o, Mm = M*m;
+    double A, B, Ax, BpAx, BmAx, *p, *q;
     
     A = 0.5*(ab[1]-ab[0]);
 	B = 0.5*(ab[1]+ab[0]);
-    
+     
     // load abscissae and weight table
     *dtbl = gauss_legendre_load_tbl(n, x, w);
-
+    
     // populate X with scaled abscissae
-    p = X+m; q = p-1;
     if(o) {
-        *q-- = B;
+        q = X+Mm-M;
+        for(j=0; j<M; j++) {
+            *q++ = B;
+        }
     }
-    for(i=o; i<m; i++) {
+    for(i=o,p=X+Mm,q=p-M-Mo; i<m; i++,q-=M2) {
         Ax = A*(*x)[i];
-        *p++ = B+Ax;
-        *q-- = B-Ax;
+        BpAx = B+Ax;
+        BmAx = B-Ax;
+        for(j=0; j<M; j++) {
+            *p++ = BpAx;
+            *q++ = BmAx;
+        }
     }
+    
     return A;
 }
 
@@ -84,20 +94,48 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     Data *ND = malloc(2*D*sizeof(Data));
     Data *OD = ND+D, *od, *nd;
     
-    for(i=1,od=OD,nd=ND; i<=D; i++,od++,nd++) {
+    int Lm, Ln, Lmn;
+    
+    // find total lengths of parameter and integral dimensions
+    for(i=1,od=OD,Lm=Ln=1; i<=D; i++,od++) {
         getData(od, R[i]);
-        
         if (i == d) {
-            initData(nd, 1, n, malloc(n*sizeof(double)));
-    
-            A = getScaledX(n, od->data, nd->data, &dtbl, &x, &w);
-    
-            setData(R[i], nd);
+            Ln *= n;
+        } else {
+            Lm *= od->L;
         }
-        
+    }
+    Lmn = Lm*Ln;
+    double *mem = malloc(Lmn*D*sizeof(double));
+    
+    //printf("D = %d, Lm = %d, Ln = %d\n", D, Lm, Ln);
+    
+    // generate tensor product arguments
+    for(i=1,od=OD,nd=ND,p=mem; i<=D; i++,od++,nd++,p+=Lmn) {
+        if (od->L == 1) {
+            continue;  // do not expand scalar parameter
+        }
+        initData(nd, Lm, Ln, p);
+        if (i == d) {
+            A = getScaledX(n, nd->data, od->data, &dtbl, &x, &w, Lm);
+            //printf("A = %f\n", A);
+        } else {
+            for(j=0,q=nd->data; j<Ln; j++,q+=Lm) {
+                memcpy(q, od->data, Lm*sizeof(double));
+            }
+        }
+        /*
+        for(j=0; j<Lmn; j++) {
+            printf("%f\n", nd->data[j]);
+        }
+        printf("\n");
+        */  
+        setData(R[i], nd);
     }
     
-    // evaluate function at abscissa vector X
+    //return R[d];
+    
+    // evaluate function at tensor product arguments
     mexCallMATLAB(1, &Y, nR, R, "feval");
     
     // re-attach old data
@@ -135,7 +173,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     }
     
     mxDestroyArray(Y);
-    free(ND->data);
+    free(mem);
     free(ND);
     
 	if (dtbl) {
