@@ -59,14 +59,14 @@ void looppar(const int rank, const int *N, int *s, int *no, int *ni, const int d
 void filldim(const int rank, const int *N, double *X, const double *x, const int dim)
 {
     int i,j,k,s,no,ni;
-    double *p, *q, xk;
+    double *p, *q, xi;
     
     looppar(rank,N,&s,&no,&ni,dim);
     
-    for(k=N[dim-1],q=X; k--; q+=ni) {
-        xk = *x++;
-        for(j=no,p=q; j--; p+=s) for(i=ni; i--; ) {
-            *p++ = xk;
+    for(i=N[dim-1],q=X; i--; q+=ni) {
+        xi = *x++;
+        for(j=no,p=q; j--; p+=s) for(k=ni; k--; ) {
+            *p++ = xi;
         }
     }
 }
@@ -107,24 +107,6 @@ double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **
     
     free(xx);
     
-    /*
-    if(o) {
-        q = X+Mm-M;
-        for(j=0; j<M; j++) {
-            *q++ = B;
-        }
-    }
-    for(i=o,p=X+Mm,q=p-M-Mo; i<m; i++,q-=M2) {
-        Ax = A*(*x)[i];
-        BpAx = B+Ax;
-        BmAx = B-Ax;
-        for(j=0; j<M; j++) {
-            *p++ = BpAx;
-            *q++ = BmAx;
-        }
-    }
-     */
-    
     return A;
 }
 
@@ -136,7 +118,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 	double* x = NULL;
 	double* w = NULL;
 	double A, wi;
-	int i, j, dtbl, o, m, M, M2, Mo, Mm, D = nR-1;
+	int i, j, k, dtbl, o, m, M, M2, Mo, Mm, D = nR-1;
 
     o = n&1;
 	m = (n+1)>>1;
@@ -158,9 +140,10 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
         }
     }
     Lmn = Lm*Ln;
-    double *mem = malloc(Lmn*D*sizeof(double));
     
-    //printf("D = %d, Lm = %d, Ln = %d\n", D, Lm, Ln);
+    int N[] = {Lm,Ln};
+    
+    double *mem = malloc(Lmn*D*sizeof(double));
     
     // generate tensor product arguments
     for(i=1,od=OD,nd=ND,p=mem; i<=D; i++,od++,nd++,p+=Lmn) {
@@ -170,57 +153,47 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
         initData(nd, Lm, Ln, p);
         if (i == d) {
             A = getScaledX(n, nd->data, od->data, &dtbl, &x, &w, Lm);
-            //printf("A = %f\n", A);
         } else {
-            for(j=0,q=nd->data; j<Ln; j++,q+=Lm) {
-                memcpy(q, od->data, Lm*sizeof(double));
-            }
-        }
-        /*
-        for(j=0; j<Lmn; j++) {
-            printf("%f\n", nd->data[j]);
-        }
-        printf("\n");
-        */  
+            filldim(2,N,nd->data,od->data,1);
+        }  
         setData(R[i], nd);
     }
     
-    //return R[d];
-    
     // evaluate function at tensor product arguments
     mexCallMATLAB(1, &Y, nR, R, "feval");
+    y = mxGetData(Y);
     
     // re-attach old data
     for(i=1,od=OD; i<=D; i++,od++) {
         setData(R[i], od);   
     }
     
-    M = mxGetM(Y);
-    y = mxGetData(Y);
+    int s, no, ni;
+    double *P, *Q, *W;
     
-    M2 = M*2;
-    Mo = M*o;
-    Mm = M*m;
+    looppar(2,N,&s,&no,&ni,2);
     
     // add symmetric pairs
-    for(i=o,p=y+Mm,q=p-M-Mo; i<m; i++,q-=M2) {
-        for(j=0; j<M; j++) {
-            *p++ += *q++;
+    for(i=m-o,P=y,Q=y+(n-1)*ni; i--; P+=ni,Q-=ni) {
+        for(j=no,p=P,q=Q; j--; p+=s,q+=s) for(k=ni; k--; ) {
+            *q++ += *p++;
         }
     }
     
     // create output matrix
+    M = mxGetM(Y);
     L = mxCreateNumericMatrix(M,1,mxDOUBLE_CLASS,mxREAL);
-    p = mxGetData(L);
+    P = mxGetData(L);
     
     // populate output matrix with weighted sums
-    for(i=0,q=y+Mm-Mo; i<m; i++,p-=M) {
-        for(j=0,wi=w[i]; j<M; j++) {
+    for(i=m,Q=y+(m-o)*ni,W=w; i--; Q+=ni,W++) {
+        for(j=no,p=P,q=Q,wi=*W; j--; q+=s) for(k=ni; k--; ) {
             *p++ += wi*(*q++);
         }
     }
+    
     // apply final scaling
-    for(j=0; j<M; j++) {
+    for(j=0,p=P; j<M; j++) {
         *p++ *= A;
     }
     
