@@ -76,14 +76,14 @@ double *scaleX(int n, double *x, double A, double B)
     int i, m=(n+1)>>1, o=n&1;
     double Ax, *p, *q, *X = malloc(n*sizeof(double));
     
-    p = X+m; q = p-1;
+    p = X; q = X+m;
     if (o) {
-        *q-- = B;
+        *p++ = B;
     }
     for(i=o; i<m; i++) {
         Ax = A*x[i];
         *p++ = B+Ax;
-        *q-- = B-Ax;
+        *q++ = B-Ax;
     }
     return X;
 }
@@ -174,9 +174,9 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     looppar(2,N,&s,&no,&ni,2);
     
     // add symmetric pairs
-    for(i=m-o,P=y,Q=y+(n-1)*ni; i--; P+=ni,Q-=ni) {
+    for(i=m-o,P=y+o*ni,Q=y+m*ni; i--; P+=ni,Q+=ni) {
         for(j=no,p=P,q=Q; j--; p+=s,q+=s) for(k=ni; k--; ) {
-            *q++ += *p++;
+            *p++ += *q++;
         }
     }
     
@@ -186,7 +186,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     P = mxGetData(L);
     
     // populate output matrix with weighted sums
-    for(i=m,Q=y+(m-o)*ni,W=w; i--; Q+=ni,W++) {
+    for(i=m,Q=y,W=w; i--; Q+=ni,W++) {
         for(j=no,p=P,q=Q,wi=*W; j--; q+=s) for(k=ni; k--; ) {
             *p++ += wi*(*q++);
         }
