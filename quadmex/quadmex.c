@@ -45,6 +45,49 @@ void setData(mxArray *R, Data *D)
     mxSetData(R, D->data);
 }
 
+void looppar(const int rank, const int *N, int *s, int *no, int *ni, const int dim)
+{
+    int i, j=dim-1, r=rank-1;
+    
+    for(i=0,*ni=1;i<j;i++) *ni *= N[i];        // length of inner loop
+    for(i=r,*no=1;i>j;i--) *no *= N[i];        // length of outer loop
+	
+    // stride of outer loop (minus 1 due to start at end of inner loop)
+    *s = *ni*(N[j]-1);
+}
+ 
+void filldim(const int rank, const int *N, double *X, const double *x, const int dim)
+{
+    int i,j,k,s,no,ni;
+    double *p, *q, xk;
+    
+    looppar(rank,N,&s,&no,&ni,dim);
+    
+    for(k=N[dim-1],q=X; k--; q+=ni) {
+        xk = *x++;
+        for(j=no,p=q; j--; p+=s) for(i=ni; i--; ) {
+            *p++ = xk;
+        }
+    }
+}
+
+double *scaleX(int n, double *x, double A, double B)
+{
+    int i, m=(n+1)>>1, o=n&1;
+    double Ax, *p, *q, *X = malloc(n*sizeof(double));
+    
+    p = X+m; q = p-1;
+    if (o) {
+        *q-- = B;
+    }
+    for(i=o; i<m; i++) {
+        Ax = A*x[i];
+        *p++ = B+Ax;
+        *q-- = B-Ax;
+    }
+    return X;
+}
+
 double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **w, int M)
 {
     int i, j, m=(n+1)>>1, o=n&1, M2=M*2, Mo=M*o, Mm = M*m;
@@ -57,6 +100,14 @@ double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **
     *dtbl = gauss_legendre_load_tbl(n, x, w);
     
     // populate X with scaled abscissae
+    double *xx = scaleX(n, *x, A, B);
+    int N[] = {M,n};
+    
+    filldim(2,N,X,xx,2);
+    
+    free(xx);
+    
+    /*
     if(o) {
         q = X+Mm-M;
         for(j=0; j<M; j++) {
@@ -72,6 +123,7 @@ double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **
             *q++ = BmAx;
         }
     }
+     */
     
     return A;
 }
@@ -185,8 +237,7 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
 
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
-{   
-    register int i;
+{
     const mwSize ndims = mxGetNumberOfDimensions(R[1]);
     const mwSize *dims = mxGetDimensions(R[1]);
     const int npts = mxGetNumberOfElements(R[1]);
@@ -195,6 +246,5 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     int d = *((int*)mxGetData(R[1]));
     
     L[0] = gauss_legendre_matlab(n, d, nR-2, (mxArray**)(R+2));
-    
 }
 
