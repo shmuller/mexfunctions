@@ -56,7 +56,7 @@ void looppar(const int rank, const int *N, int *s, int *no, int *ni, const int d
     *s = *ni*(N[j]-1);
 }
  
-void filldim(const int rank, const int *N, double *X, const double *x, const int dim)
+void filldim(int rank, const int *N, double *X, const double *x, int dim)
 {
     int i,j,k,s,no,ni;
     double *p, *q, xi;
@@ -64,13 +64,35 @@ void filldim(const int rank, const int *N, double *X, const double *x, const int
     looppar(rank,N,&s,&no,&ni,dim);
     
     for(i=N[dim-1],q=X; i--; q+=ni) {
-        xi = *x++;
-        for(j=no,p=q; j--; p+=s) for(k=ni; k--; ) {
+        for(j=no,p=q,xi=*x++; j--; p+=s) for(k=ni; k--; ) {
             *p++ = xi;
         }
     }
 }
 
+void weighted_sum(double *y, const double *w, int m, int o, int ni)
+{
+    int i, k;
+    double *p, *q, wi;
+    
+    // add symmetric pairs for outermost dimension
+    for(i=m-o,p=y+o*ni,q=y+m*ni; i--; ) {
+        for(k=ni; k--; ) {
+            *p++ += *q++;
+        }
+    }
+    
+    // store weighted sum on first element
+    for(k=ni,q=y,wi=*w++; k--; ) {
+        *q++ *= wi;
+    }
+    for(i=m-1; i--; ) {
+        for(k=ni,p=y,wi=*w++; k--; ) {
+            *p++ += wi*(*q++);
+        }
+    }
+}
+    
 double *scaleX(int n, double *x, double A, double B)
 {
     int i, m=(n+1)>>1, o=n&1;
@@ -169,32 +191,20 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     }
     
     int s, no, ni;
-    double *P, *Q, *W;
-    
     looppar(2,N,&s,&no,&ni,2);
     
-    // add symmetric pairs
-    for(i=m-o,P=y+o*ni,Q=y+m*ni; i--; P+=ni,Q+=ni) {
-        for(j=no,p=P,q=Q; j--; p+=s,q+=s) for(k=ni; k--; ) {
-            *p++ += *q++;
-        }
-    }
+    //printf("s = %d, no = %d, ni = %d\n", s, no, ni);
+    
+    weighted_sum(y,w,m,o,ni);
     
     // create output matrix
     M = mxGetM(Y);
     L = mxCreateNumericMatrix(M,1,mxDOUBLE_CLASS,mxREAL);
-    P = mxGetData(L);
-    
-    // populate output matrix with weighted sums
-    for(i=m,Q=y,W=w; i--; Q+=ni,W++) {
-        for(j=no,p=P,q=Q,wi=*W; j--; q+=s) for(k=ni; k--; ) {
-            *p++ += wi*(*q++);
-        }
-    }
+    p = mxGetData(L);
     
     // apply final scaling
-    for(j=0,p=P; j<M; j++) {
-        *p++ *= A;
+    for(j=0,q=y; j<M; j++) {
+        *p++ = A*(*q++);
     }
     
     mxDestroyArray(Y);
