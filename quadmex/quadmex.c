@@ -15,6 +15,8 @@
 
 #include "gauss_legendre.h"
 
+#define max(a,b) ((b) > (a) ? (b) : (a))
+
 typedef struct {
     int M;
     int N;
@@ -70,9 +72,9 @@ void filldim(int rank, const int *N, double *X, const double *x, int dim)
     }
 }
 
-void weighted_sum(double *y, const double *w, int m, int o, int ni)
+void weighted_sum(double *y, const double *w, int n, int ni)
 {
-    int i, k;
+    int i, k, m=(n+1)>>1, o=n&1;
     double *p, *q, wi;
     
     // add symmetric pairs for outermost dimension
@@ -110,22 +112,18 @@ double *scaleX(int n, double *x, double A, double B)
     return X;
 }
 
-double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **w, int M)
+double getScaledX(int nI, int *L, double *X, double *ab, int *dtbl, double **x, double **w, int d)
 {
-    int i, j, m=(n+1)>>1, o=n&1, M2=M*2, Mo=M*o, Mm = M*m;
-    double A, B, Ax, BpAx, BmAx, *p, *q;
-    
-    A = 0.5*(ab[1]-ab[0]);
-	B = 0.5*(ab[1]+ab[0]);
+    double A = 0.5*(ab[1]-ab[0]);
+	double B = 0.5*(ab[1]+ab[0]);
      
     // load abscissae and weight table
-    *dtbl = gauss_legendre_load_tbl(n, x, w);
+    *dtbl = gauss_legendre_load_tbl(L[d], x, w);
     
     // populate X with scaled abscissae
-    double *xx = scaleX(n, *x, A, B);
-    int N[] = {M,n};
+    double *xx = scaleX(L[d], *x, A, B);
     
-    filldim(2,N,X,xx,2);
+    filldim(nI+1,L,X,xx,d+1);
     
     free(xx);
     
@@ -133,51 +131,62 @@ double getScaledX(int n, double *X, double *ab, int *dtbl, double **x, double **
 }
 
 
-mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
+mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArray **R)
 {
-    mxArray *L, *Y;
+    mxArray *res, *Y;
     
 	double* x = NULL;
 	double* w = NULL;
-	double A, wi;
-	int i, j, k, dtbl, o, m, M, M2, Mo, Mm, D = nR-1;
+	double A;
+	int i, c, dtbl, D = nR-1;
 
-    o = n&1;
-	m = (n+1)>>1;
-
+    const int *dd;
     double *p, *q, *y;
     
     Data *ND = malloc(2*D*sizeof(Data));
     Data *OD = ND+D, *od, *nd;
     
+    int *L = malloc((nI+1)*sizeof(int));
     int Lm, Ln, Lmn;
     
     // find total lengths of parameter and integral dimensions
-    for(i=1,od=OD,Lm=Ln=1; i<=D; i++,od++) {
+    for(i=1,od=OD,Lm=Ln=1,c=0; i<=D; i++,od++) {
         getData(od, R[i]);
-        if (i == d) {
-            Ln *= n;
+        if (c < nI && i == d[c]) {
+            L[c+1] = n[c];
+            Ln *= n[c];
+            ++c;
         } else {
-            Lm *= od->L;
+            Lm = max(Lm,od->L);
         }
     }
+    L[0] = Lm;
     Lmn = Lm*Ln;
     
-    int N[] = {Lm,Ln};
+    // create output matrix
+    res = mxCreateNumericMatrix(Lm,1,mxDOUBLE_CLASS,mxREAL);
+    
+    /*
+    for(i=0; i<=nI; i++) {
+        printf("L[%d] = %d\n",i,L[i]);
+    }
+    printf("d = %d\n", *d);
+    */
     
     double *mem = malloc(Lmn*D*sizeof(double));
     
     // generate tensor product arguments
-    for(i=1,od=OD,nd=ND,p=mem; i<=D; i++,od++,nd++,p+=Lmn) {
+    for(i=1,od=OD,nd=ND,p=mem,A=1.0,c=0; i<=D; i++,od++,nd++,p+=Lmn) {
         if (od->L == 1) {
             continue;  // do not expand scalar parameter
         }
         initData(nd, Lm, Ln, p);
-        if (i == d) {
-            A = getScaledX(n, nd->data, od->data, &dtbl, &x, &w, Lm);
+        if (c < nI && i == d[c]) {
+            A *= getScaledX(nI, L, nd->data, od->data, &dtbl, &x, &w, c+1);
+            ++c;
         } else {
-            filldim(2,N,nd->data,od->data,1);
-        }  
+            filldim(2,L,nd->data,od->data,1);
+        }
         setData(R[i], nd);
     }
     
@@ -191,43 +200,37 @@ mxArray *gauss_legendre_matlab(int n, int d, int nR, mxArray **R)
     }
     
     int s, no, ni;
-    looppar(2,N,&s,&no,&ni,2);
+    looppar(2,L,&s,&no,&ni,2);
     
     //printf("s = %d, no = %d, ni = %d\n", s, no, ni);
     
-    weighted_sum(y,w,m,o,ni);
-    
-    // create output matrix
-    M = mxGetM(Y);
-    L = mxCreateNumericMatrix(M,1,mxDOUBLE_CLASS,mxREAL);
-    p = mxGetData(L);
+    weighted_sum(y,w,*n,ni);
     
     // apply final scaling
-    for(j=0,q=y; j<M; j++) {
+    p = mxGetData(res);
+    for(i=Lm,q=y; i--; ) {
         *p++ = A*(*q++);
     }
     
     mxDestroyArray(Y);
     free(mem);
+    free(L);
     free(ND);
     
 	if (dtbl) {
 		free(x);
 		free(w);
 	}
-	return L;
+	return res;
 }
 
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
-    const mwSize ndims = mxGetNumberOfDimensions(R[1]);
-    const mwSize *dims = mxGetDimensions(R[1]);
-    const int npts = mxGetNumberOfElements(R[1]);
+    const int nI = mxGetNumberOfElements(R[0]);
+    const int *d = mxGetData(R[0]);
+    const int *n = mxGetData(R[1]);
     
-    int n = *((int*)mxGetData(R[0]));
-    int d = *((int*)mxGetData(R[1]));
-    
-    L[0] = gauss_legendre_matlab(n, d, nR-2, (mxArray**)(R+2));
+    L[0] = gauss_legendre_matlab(nI, d, n, nR-2, (mxArray**)(R+2));
 }
 
