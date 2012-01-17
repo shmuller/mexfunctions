@@ -57,17 +57,35 @@ void looppar(const int rank, const int *N, int *s, int *no, int *ni, const int d
     // stride of outer loop (minus 1 due to start at end of inner loop)
     *s = *ni*(N[j]-1);
 }
- 
+
 void filldim(int rank, const int *N, double *X, const double *x, int dim)
 {
-    int i,j,k,s,no,ni;
-    double *p, *q, xi;
+    int i,j,k,s,no,ni,nj=N[dim-1];
+    const double *p;
+    double *q, xj;
     
     looppar(rank,N,&s,&no,&ni,dim);
     
-    for(i=N[dim-1],q=X; i--; q+=ni) {
-        for(j=no,p=q,xi=*x++; j--; p+=s) for(k=ni; k--; ) {
-            *p++ = xi;
+    for(k=no,q=X; k--; ) for(j=nj,p=x; j--; ) for(i=ni,xj=*p++; i--; ) {
+        *q++ = xj;
+    }
+}
+
+void filldim2(int rank, const int *N, double *X, const double *x, int dim)
+{
+    int i,j,k,s,no,ni,nj=N[dim-1],siz;
+    double *q, xj;
+    
+    looppar(rank,N,&s,&no,&ni,dim);
+    s = ni*nj;
+    siz = s*sizeof(double);
+    
+    for(j=nj,q=X; j--; ) for(i=ni,xj=*x++; i--; ) {
+        *q++ = xj;
+    }
+    if (no > 1) {
+        for(k=no; k--; q+=s) {
+            memcpy(q,X,siz);
         }
     }
 }
@@ -123,7 +141,7 @@ double getScaledX(int N, int *L, double *X, double *ab, int *dtbl, double **x, d
     // populate X with scaled abscissae
     double *xx = scaleX(L[d], *x, A, B);
     
-    filldim(N, L, X, xx, d+1);
+    filldim2(N, L, X, xx, d+1);
     
     free(xx);
     
@@ -141,7 +159,7 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
 	int i, c, dtbl, D = nR-1;
 
     const int *dd;
-    double *p, *q, *y;
+    double *mem, *p, *q, *y;
     
     Data *ND = malloc(2*D*sizeof(Data));
     Data *OD = ND+D, *od, *nd;
@@ -166,7 +184,11 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
     // create output matrix
     res = mxCreateNumericMatrix(Lm,1,mxDOUBLE_CLASS,mxREAL);
     
-    double *mem = malloc(Lmn*D*sizeof(double));
+    if ((mem=malloc(Lmn*D*sizeof(double)))==NULL) {
+        free(L);
+        free(ND);
+        mxErrMsgTxt("Out of memory");
+    }
     
     // generate tensor product arguments
     for(i=1,od=OD,nd=ND,p=mem,A=1.0,c=0; i<=D; i++,od++,nd++,p+=Lmn) {
@@ -178,11 +200,14 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
             A *= getScaledX(nI+1, L, nd->data, od->data, &dtbl, &x, &w, c+1);
             ++c;
         } else {
-            filldim(nI+1, L, nd->data, od->data, 1);
+            filldim2(nI+1, L, nd->data, od->data, 1);
         }
         setData(R[i], nd);
     }
-     
+    
+    //free(mem); free(L); free(ND);
+    //return res;
+    
     // evaluate function at tensor product arguments
     mexCallMATLAB(1, &Y, nR, R, "feval");
     y = mxGetData(Y);
