@@ -18,11 +18,10 @@
 typedef double (func)(double, void*);
 
 typedef struct {
-    int n;
     func *fun;
     void *data;
+    int n;
     double *ab;
-    int pos;
     double *par;
 } intpar;
 
@@ -35,28 +34,52 @@ double Fun(double x, void *data)
 
 double integrate(double x, void *data)
 {
-    intpar *IP = (intpar*)data;
-    IP->par[IP->pos] = x;
+    intpar *IP = data;
+    *IP->par = x;
     return gauss_legendre(IP->n, IP->fun, IP->data, IP->ab[0], IP->ab[1]);
 }
 
 
 mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray **R)
 {
+    int i;
     mxArray *res;
     double y;
-    double par[2];
+    double *par = malloc((nR-1)*sizeof(double));
     
+    double *ab;
+    intpar *ip, *IP = malloc((nR-1)*sizeof(intpar));
+    
+    for(i=0,ip=IP; i<nR-1; i++,ip++) {
+        if (i == 0) {
+            ip->fun = Fun;
+            ip->data = par;
+        } else {
+            ip->fun = integrate;
+            ip->data = ip-1;
+        }
+        ip->n = n[i];
+        ip->ab = mxGetData(R[i]);
+        ip->par = par+i;
+    }
+    
+    ab = mxGetData(R[i]);
+    y = gauss_legendre(n[i], integrate, ip-1, ab[0], ab[1]);
+    
+    /*
     double *ab1 = mxGetData(R[0]);
     double *ab2 = mxGetData(R[1]);
     double *ab3 = mxGetData(R[2]);
     
-    intpar IP = {*n, Fun, par, ab1, 0, par};
-    intpar IP2 = {*n, integrate, &IP, ab2, 1, par};
-    
+    intpar IP1 = {Fun, par, *n, ab1, par};
+    intpar IP2 = {integrate, &IP1, *n, ab2, par+1};
     y = gauss_legendre(*n, integrate, &IP2, ab3[0], ab3[1]);
+    */
     
     res = mxCreateDoubleScalar(y);
+    
+    free(IP);
+    free(par);
     
     return res;
 }
