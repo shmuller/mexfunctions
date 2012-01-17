@@ -112,7 +112,7 @@ double *scaleX(int n, double *x, double A, double B)
     return X;
 }
 
-double getScaledX(int nI, int *L, double *X, double *ab, int *dtbl, double **x, double **w, int d)
+double getScaledX(int N, int *L, double *X, double *ab, int *dtbl, double **x, double **w, int d)
 {
     double A = 0.5*(ab[1]-ab[0]);
 	double B = 0.5*(ab[1]+ab[0]);
@@ -123,7 +123,7 @@ double getScaledX(int nI, int *L, double *X, double *ab, int *dtbl, double **x, 
     // populate X with scaled abscissae
     double *xx = scaleX(L[d], *x, A, B);
     
-    filldim(nI+1,L,X,xx,d+1);
+    filldim(N, L, X, xx, d+1);
     
     free(xx);
     
@@ -147,7 +147,7 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
     Data *OD = ND+D, *od, *nd;
     
     int *L = malloc((nI+1)*sizeof(int));
-    int Lm, Ln, Lmn;
+    int Lm, Ln, Lmn, ni;
     
     // find total lengths of parameter and integral dimensions
     for(i=1,od=OD,Lm=Ln=1,c=0; i<=D; i++,od++) {
@@ -166,13 +166,6 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
     // create output matrix
     res = mxCreateNumericMatrix(Lm,1,mxDOUBLE_CLASS,mxREAL);
     
-    /*
-    for(i=0; i<=nI; i++) {
-        printf("L[%d] = %d\n",i,L[i]);
-    }
-    printf("d = %d\n", *d);
-    */
-    
     double *mem = malloc(Lmn*D*sizeof(double));
     
     // generate tensor product arguments
@@ -182,29 +175,28 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
         }
         initData(nd, Lm, Ln, p);
         if (c < nI && i == d[c]) {
-            A *= getScaledX(nI, L, nd->data, od->data, &dtbl, &x, &w, c+1);
+            A *= getScaledX(nI+1, L, nd->data, od->data, &dtbl, &x, &w, c+1);
             ++c;
         } else {
-            filldim(2,L,nd->data,od->data,1);
+            filldim(nI+1, L, nd->data, od->data, 1);
         }
         setData(R[i], nd);
     }
-    
+     
     // evaluate function at tensor product arguments
     mexCallMATLAB(1, &Y, nR, R, "feval");
     y = mxGetData(Y);
     
     // re-attach old data
     for(i=1,od=OD; i<=D; i++,od++) {
-        setData(R[i], od);   
+        setData(R[i], od);
     }
     
-    int s, no, ni;
-    looppar(2,L,&s,&no,&ni,2);
-    
-    //printf("s = %d, no = %d, ni = %d\n", s, no, ni);
-    
-    weighted_sum(y,w,*n,ni);
+    // calculated weighted sums
+    for(i=c,ni=Lmn; i>0; i--) {
+        ni/=L[i];
+        weighted_sum(y,w,L[i],ni);
+    }
     
     // apply final scaling
     p = mxGetData(res);
