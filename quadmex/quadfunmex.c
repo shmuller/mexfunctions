@@ -43,61 +43,73 @@ double integrate(double x, void *data)
     }
 }
 
+typedef struct {
+    double *x;
+    int N;
+    int o;
+} link;
 
 mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray **R)
 {
-    int i, j, l, L=1, c, C, nP = nR-nI;
+    int i, j, N, Np, Ns;
     mxArray *res;
     double *y;
-    double **P, **p;
+    
+    // prepare input permutations
+    link *li, *lp, *ls, *LI = malloc(nR*sizeof(link));
+    
+    int *isI = malloc(nR*sizeof(int));
+    for(i=0; i<nR; i++) isI[i] = -1;
+    for(i=0; i<nI; i++) isI[d[i]-1] = i;
+    
+    for(i=0,lp=LI+nI,ls=LI+nR-1; i<nR; i++) {
+        N = mxGetNumberOfElements(R[i]);
+        li = (isI[i] < 0) ? ((N > 1) ? lp++ : ls--) : LI+isI[i];
+        li->x = mxGetData(R[i]);
+        li->N = N;
+        li->o = i;
+    }
+    Np = lp-LI-nI;
+    Ns = LI+nR-1-ls;
+    free(isI);
+    
+    
+    N = (LI+nI)->N;
+    res = mxCreateNumericMatrix(N,1,mxDOUBLE_CLASS,mxREAL);
+    y = mxGetData(res);
+    
     
     intpar *ip, *IP = malloc(nI*sizeof(intpar)+nR*sizeof(double));
     double *ab, *par = (double*)(IP+nI);
     
-    // get parameters
-    if (nP > 0) {
-        P = malloc(2*nP*sizeof(double*));
-        p = P+nP;
-        for(j=0,C=0; j<nR; j++) {
-            for(i=0; i<nI; i++) if (j==d[i]-1) break;
-            if (i == nI) {
-                P[C] = mxGetData(R[j]);
-                l = mxGetNumberOfElements(R[j]);
-                if (l == 1) {
-                    par[j] = *P[C];  // write singleton parameters
-                } else {
-                    L = max(L,l);
-                    p[C] = par+j;
-                    C++;
-                }
-            }
-        }
-    }
-    
-    res = mxCreateNumericMatrix(L,1,mxDOUBLE_CLASS,mxREAL);
-    y = mxGetData(res);
-    
     // get integration variables
-    for(i=1,ip=IP; i<nI; i++,ip++) {
+    ab = LI->x;
+    for(i=1,ip=IP,li=LI; i<nI; i++,ip++,li++) {
         ip->fun = NULL;
         ip->n = n[i];
-        ip->ab = mxGetData(R[d[i]-1]);
-        ip->par = par+d[i-1]-1;
+        ip->ab = (li+1)->x;
+        ip->par = par + li->o;
     }
     ip->fun = Fun;
-    ip->par = par+d[i-1]-1;
-    ab = mxGetData(R[d[0]-1]);
+    ip->par = par + li->o;
+    
+    
+    // write singleton parameters
+    for(i=0,ls=LI+nR-1; i<Ns; i++,ls--) {
+        par[ls->o] = *ls->x;
+    }
     
     // perform integrations
-    for(i=0; i<L; i++) {
-        for(c=0; c<C; c++) {
-            *p[c] = P[c][i];
+    for(i=0; i<N; i++) {
+        for(j=0,lp=LI+nI; j<Np; j++,lp++) {
+            par[lp->o] = lp->x[i];
         }
         *y++ = gauss_legendre(n[0], integrate, IP, ab[0], ab[1]);
     }
     
-    if (nP > 0) free(P);
     free(IP);
+    
+    free(LI);
     
     return res;
 }
