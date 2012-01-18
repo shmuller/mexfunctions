@@ -19,16 +19,15 @@ typedef double (func)(double, void*);
 
 typedef struct {
     func *fun;
-    void *data;
     int n;
     double *ab;
     double *par;
 } intpar;
 
-double Fun(double x, void *data)
+double Fun(double z, void *data)
 {
     double *par = data;
-    double y=par[0], z=par[1];
+    double x=par[0], y=par[1];
     return x*y*y*z*z*z;
 }
 
@@ -36,35 +35,28 @@ double integrate(double x, void *data)
 {
     intpar *IP = data;
     *IP->par = x;
-    return gauss_legendre(IP->n, IP->fun, IP->data, IP->ab[0], IP->ab[1]);
+    return gauss_legendre(IP->n, IP->fun, IP+1, IP->ab[0], IP->ab[1]);
 }
 
 
 mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray **R)
 {
-    int i;
+    int i, j, m = nR-1;
     mxArray *res;
     double y;
-    double *par = malloc((nR-1)*sizeof(double));
     
-    double *ab;
-    intpar *ip, *IP = malloc((nR-1)*sizeof(intpar));
+    intpar *ip, *IP = malloc(m*(sizeof(intpar)+sizeof(double)));
+    double *ab, *par = (double*)(IP+m);
     
-    for(i=0,ip=IP; i<nR-1; i++,ip++) {
-        if (i == 0) {
-            ip->fun = Fun;
-            ip->data = par;
-        } else {
-            ip->fun = integrate;
-            ip->data = ip-1;
-        }
+    for(i=1,ip=IP; i<=m; i++,ip++) {
+        ip->fun = (i < m) ? integrate : Fun;
         ip->n = n[i];
         ip->ab = mxGetData(R[i]);
-        ip->par = par+i;
+        ip->par = par++;
     }
     
-    ab = mxGetData(R[i]);
-    y = gauss_legendre(n[i], integrate, ip-1, ab[0], ab[1]);
+    ab = mxGetData(R[0]);
+    y = gauss_legendre(n[0], integrate, IP, ab[0], ab[1]);
     
     /*
     double *ab1 = mxGetData(R[0]);
@@ -79,7 +71,6 @@ mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray 
     res = mxCreateDoubleScalar(y);
     
     free(IP);
-    free(par);
     
     return res;
 }
