@@ -13,18 +13,8 @@
 #include "math.h"
 #include "string.h"
 
-#include "gauss_legendre.h"
+#include "quadfun.h"
 
-#define max(a,b) ((b) > (a) ? (b) : (a))
-
-typedef double (func)(double *);
-
-typedef struct {
-    func *fun;
-    int n;
-    double *ab;
-    double *par;
-} intpar;
 
 double Fun(double *par)
 {
@@ -32,28 +22,13 @@ double Fun(double *par)
     return x*y*y*z*z*z;
 }
 
-double integrate(double x, void *data)
-{
-    intpar *IP = data;
-    *IP->par = x;
-    if (IP->fun != NULL) {
-        return IP->fun((double*)(IP+1));
-    } else {
-        return gauss_legendre(IP->n, integrate, IP+1, IP->ab[0], IP->ab[1]);
-    }
-}
-
-typedef struct {
-    double *x;
-    int N;
-    int o;
-} link;
 
 mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray **R)
 {
     int i, j, N, Np, Ns;
     mxArray *res;
     double *y;
+    func *fun = Fun;
     
     // prepare input permutations
     link *li, *lp, *ls, *LI = malloc(nR*sizeof(link));
@@ -74,40 +49,11 @@ mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray 
     free(isI);
     
     
-    N = (LI+nI)->N;
+    N = (nI==nR) ? 1 : (LI+nI)->N;
     res = mxCreateNumericMatrix(N,1,mxDOUBLE_CLASS,mxREAL);
     y = mxGetData(res);
     
-    
-    intpar *ip, *IP = malloc(nI*sizeof(intpar)+nR*sizeof(double));
-    double *ab, *par = (double*)(IP+nI);
-    
-    // get integration variables
-    ab = LI->x;
-    for(i=1,ip=IP,li=LI; i<nI; i++,ip++,li++) {
-        ip->fun = NULL;
-        ip->n = n[i];
-        ip->ab = (li+1)->x;
-        ip->par = par + li->o;
-    }
-    ip->fun = Fun;
-    ip->par = par + li->o;
-    
-    
-    // write singleton parameters
-    for(i=0,ls=LI+nR-1; i<Ns; i++,ls--) {
-        par[ls->o] = *ls->x;
-    }
-    
-    // perform integrations
-    for(i=0; i<N; i++) {
-        for(j=0,lp=LI+nI; j<Np; j++,lp++) {
-            par[lp->o] = lp->x[i];
-        }
-        *y++ = gauss_legendre(n[0], integrate, IP, ab[0], ab[1]);
-    }
-    
-    free(IP);
+    quadfun(fun, LI, nI, Np, Ns, N, y, n);
     
     free(LI);
     
