@@ -14,7 +14,7 @@ typedef struct {
     int o;
 } link;
 
-void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, double *y, const int *n);
+void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, double *y);
 
 #ifdef __cplusplus
 }

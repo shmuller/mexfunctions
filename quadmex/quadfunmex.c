@@ -1,11 +1,12 @@
-/* y = quadmex(int32([di,dj]),int32([ni,nj]),@fun,p1,...,li,...,lj,...,pn)
- * Use gauss_legendre() to calculate integral over Matlab function fun.
+/* y = quadfunmex(int32([di,dj]),int32([ni,nj]),'fun',p1,...,li,...,lj,...,pn)
+ * Use gauss_legendre() to calculate integral over function 'fun' in
+ * functions.c
  *
  * Compile mex file with (using gnumex):
  *
- * mex -v quadmex.c quad.o gauss_legendre.o
+ * mex -v quadfunmex.c quadfun.o gauss_legendre.o
  *
- * S. H. Muller, 2012/01/12
+ * S. H. Muller, 2012/01/18
  */
 
 #include "mex.h"
@@ -15,22 +16,14 @@
 
 #include "quadfun.h"
 
+#include "functions.c"
 
-double Fun(double *par)
+#define STRLEN 1024
+
+link *mk_link(int nI, const int *d, const int *n, int nR, mxArray **R, 
+    int *Np, int *Ns)
 {
-    double x=par[0], y=par[1], z=par[2];
-    return x*y*y*z*z*z;
-}
-
-
-mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray **R)
-{
-    int i, j, N, Np, Ns;
-    mxArray *res;
-    double *y;
-    func *fun = Fun;
-    
-    // prepare input permutations
+    int i, N;
     link *li, *lp, *ls, *LI = malloc(nR*sizeof(link));
     
     int *isI = malloc(nR*sizeof(int));
@@ -39,21 +32,38 @@ mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray 
     
     for(i=0,lp=LI+nI,ls=LI+nR-1; i<nR; i++) {
         N = mxGetNumberOfElements(R[i]);
-        li = (isI[i] < 0) ? ((N > 1) ? lp++ : ls--) : LI+isI[i];
+        if (isI[i] < 0) {
+            li = (N > 1) ? lp++ : ls--;
+        } else {
+            li = LI+isI[i];
+            N = n[isI[i]];
+        }
         li->x = mxGetData(R[i]);
         li->N = N;
         li->o = i;
     }
-    Np = lp-LI-nI;
-    Ns = LI+nR-1-ls;
-    free(isI);
+    *Np = lp-LI-nI;
+    *Ns = LI+nR-1-ls;
     
+    free(isI);
+    return LI;
+}
+
+mxArray *gauss_legendre_fun(func *fun, int nI, const int *d, const int *n, 
+    int nR, mxArray **R)
+{
+    int i, j, N, Np, Ns;
+    mxArray *res;
+    double *y;
+    
+    // prepare input permutations
+    link *LI = mk_link(nI, d, n, nR, R, &Np, &Ns);
     
     N = (nI==nR) ? 1 : (LI+nI)->N;
     res = mxCreateNumericMatrix(N,1,mxDOUBLE_CLASS,mxREAL);
     y = mxGetData(res);
     
-    quadfun(fun, LI, nI, Np, Ns, N, y, n);
+    quadfun(fun, LI, nI, Np, Ns, N, y);
     
     free(LI);
     
@@ -63,9 +73,26 @@ mxArray *gauss_legendre_fun(int nI, const int *d, const int *n, int nR, mxArray 
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
+    int i;
+    char name[STRLEN];
     const int nI = mxGetNumberOfElements(R[0]);
     const int *d = mxGetData(R[0]);
     const int *n = mxGetData(R[1]);
+
+    mxGetString(R[2],name,STRLEN);
+
+    func *fun = NULL;
+    const pair *p;
     
-    L[0] = gauss_legendre_fun(nI, d, n, nR-2, (mxArray**)(R+2));
+    for(i=sizeof(P)/sizeof(pair),p=P; i--; p++) {
+        if (strcmp(name,p->name)==0) {
+            fun = p->fun;
+            break;
+        }
+    }
+    if (fun == NULL) {
+        mexErrMsgTxt("specfunmex: Unknown function name");
+    }
+     
+    L[0] = gauss_legendre_fun(fun, nI, d, n, nR-3, (mxArray**)(R+3));
 }
