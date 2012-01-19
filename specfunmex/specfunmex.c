@@ -15,7 +15,7 @@
 #include "math.h"
 #include "string.h"
 
-#include "specfunmex.h"
+#include "specfun.h"
 
 #define STRLEN 1024
 
@@ -33,7 +33,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     
     mxGetString(R[0],name,STRLEN);
     
-    for(i=sizeof(P)/sizeof(pair),p=P; i--; p++) {
+    for(i=sizeof(specfun)/sizeof(specfun[0]),p=specfun; i--; p++) {
         if (strcmp(name,p->name)==0) {
             fun = p->fun;
             break;
