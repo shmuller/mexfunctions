@@ -12,30 +12,30 @@
 typedef struct {
     func *fun;
     int n;
-    double *ab;
-    double *par;
+    real *ab;
+    real *par;
 } intpar;
 
 
-double integrate(double x, void *data)
+real integrate(real x, void *data)
 {
     intpar *IP = data;
     *IP->par = x;
     if (IP->fun != NULL) {
-        return IP->fun((double*)(IP+1));  // note contiguous memory!
+        return IP->fun((real*)(IP+1));  // note contiguous memory!
     } else {
         return gauss_legendre(IP->n, integrate, IP+1, IP->ab[0], IP->ab[1]);
     }
 }
 
-void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, double *y)
+void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, real *y)
 {
     int i, j, nR=nI+Np+Ns, n;
     link *li, *lp, *ls;
     
     // allocate contiguous memory
-    intpar *ip, *IP = malloc(nI*sizeof(intpar)+nR*sizeof(double));
-    double *ab, *par = (double*)(IP+nI);
+    intpar *ip, *IP = malloc(nI*sizeof(intpar)+nR*sizeof(real));
+    real *ab, *par = (real*)(IP+nI);
     
     // get integration variables
     n = LI->N;

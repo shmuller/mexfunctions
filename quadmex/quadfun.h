@@ -6,15 +6,25 @@ extern "C"
 {
 #endif
 
-typedef double (func)(double *);
+#ifndef __COMMON__
+#define __COMMON__
+typedef double real;
+
+typedef real (func)(real*);
 
 typedef struct {
-    double *x;
+    char *name;
+    void *fun;
+} pair;
+#endif /* __COMMON__ */
+
+typedef struct {
+    real *x;
     int N;
     int o;
 } link;
 
-void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, double *y);
+void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, real *y);
 
 #ifdef __cplusplus
 }

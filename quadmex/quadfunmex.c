@@ -4,7 +4,7 @@
  *
  * Compile mex file with (using gnumex):
  *
- * mex -v quadfunmex.c quadfun.o gauss_legendre.o
+ * mex quadfunmex.c quadfun.o gauss_legendre.o ../specfunmex/specfun.o
  *
  * S. H. Muller, 2012/01/18
  */
@@ -84,14 +84,14 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     func *fun = NULL;
     const pair *p;
     
-    for(i=sizeof(P)/sizeof(pair),p=P; i--; p++) {
+    for(i=sizeof(functions)/sizeof(functions[0]),p=functions; i--; p++) {
         if (strcmp(name,p->name)==0) {
             fun = p->fun;
             break;
         }
     }
     if (fun == NULL) {
-        mexErrMsgTxt("specfunmex: Unknown function name");
+        mexErrMsgTxt("quadfunmex: Unknown function name");
     }
      
     L[0] = gauss_legendre_fun(fun, nI, d, n, nR-3, (mxArray**)(R+3));
