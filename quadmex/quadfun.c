@@ -37,30 +37,39 @@ void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, real *y)
     intpar *ip, *IP = malloc(nI*sizeof(intpar)+nR*sizeof(real));
     real *ab, *par = (real*)(IP+nI);
     
-    // get integration variables
-    n = LI->N;
-    ab = LI->x;
-    for(i=1,ip=IP,li=LI; i<nI; i++,ip++,li++) {
-        ip->fun = NULL;
-        ip->n = (li+1)->N;
-        ip->ab = (li+1)->x;
-        ip->par = par + li->o;
-    }
-    ip->fun = fun;
-    ip->par = par + li->o;
-    
-    
     // write singleton parameters
     for(i=0,ls=LI+nR-1; i<Ns; i++,ls--) {
         par[ls->o] = *ls->x;
     }
     
-    // perform integrations
-    for(i=0; i<N; i++) {
-        for(j=0,lp=LI+nI; j<Np; j++,lp++) {
-            par[lp->o] = lp->x[i];
+    if (nI == 0) {
+        // don't integrate, just evaluate
+        for(i=0; i<N; i++) {
+            for(j=0,lp=LI+nI; j<Np; j++,lp++) {
+                par[lp->o] = lp->x[i];
+            }
+            *y++ = fun(par);
         }
-        *y++ = gauss_legendre(n, integrate, IP, ab[0], ab[1]);
+    } else {
+        // get integration variables
+        n = LI->N;
+        ab = LI->x;
+        for(i=1,ip=IP,li=LI; i<nI; i++,ip++,li++) {
+            ip->n = (li+1)->N;
+            ip->ab = (li+1)->x;
+            ip->fun = NULL;
+            ip->par = par + li->o;
+        }
+        ip->fun = fun;
+        ip->par = par + li->o;
+        
+        // perform integrations
+        for(i=0; i<N; i++) {
+            for(j=0,lp=LI+nI; j<Np; j++,lp++) {
+                par[lp->o] = lp->x[i];
+            }
+            *y++ = gauss_legendre(n, integrate, IP, ab[0], ab[1]);
+        }
     }
     
     free(IP);
