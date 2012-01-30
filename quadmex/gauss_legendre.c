@@ -217,7 +217,7 @@ Load x and w table
 */
 int gauss_legendre_load_tbl(int n, double **x, double **w)
 {
-	for i, m = (n+1)>>1;
+	int i, m = (n+1)>>1;
 	
 	/* Load appropriate predefined table */
 	for (i = 0; i<GLAWSIZE;i++)

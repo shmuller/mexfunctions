@@ -3,6 +3,7 @@
  * S. H. Muller, 2012/01/12
  */
 
+/*
 #ifndef __COMMON__
 #define __COMMON__
 typedef double real;
@@ -13,8 +14,10 @@ typedef struct {
     char *name;
     void *fun;
 } pair;
-#endif /* __COMMON__ */
+#endif
+*/
 
+#include "../common/common.h"
 
 extern func besei0;   // exponentially scaled Bessel I0(X) function
 extern func besei1;   // exponentially scaled Bessel I1(X) function
@@ -39,7 +42,7 @@ extern func r8_erfcx; // exponentially scaled complementary error function
 extern func r8_gamma; // Gamma(X) for a real argument
 extern func r8_psi;   // Psi(X)
 
-static const pair specfun[] = {
+static const keyval specfun[] = {
     "besei0", besei0,
     "besei1", besei1,
     "besek0", besek0,

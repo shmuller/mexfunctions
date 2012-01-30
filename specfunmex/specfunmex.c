@@ -5,7 +5,7 @@
  *
  * Compile mex file with (using gnumex with gfortran as linker):
  *
- * mex -v specfunmex.c specfun.o
+ * mex -v specfunmex.c specfun.o ../common/common.o
  *
  * S. H. Muller, 2012/01/09
  */
@@ -15,6 +15,7 @@
 #include "math.h"
 #include "string.h"
 
+#include "../common/common.h"
 #include "specfun.h"
 
 #define STRLEN 1024
@@ -28,21 +29,15 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     const int npts = mxGetNumberOfElements(R[1]);
     
     double *x=mxGetData(R[1]), *y;
-    func *fun = NULL;
-    const pair *p;
+    func *fun;
     
     mxGetString(R[0],name,STRLEN);
     
-    for(i=sizeof(specfun)/sizeof(specfun[0]),p=specfun; i--; p++) {
-        if (strcmp(name,p->name)==0) {
-            fun = p->fun;
-            break;
-        }
-    }
+    fun = select(LENGTH(specfun), specfun, name);
     if (fun == NULL) {
         mexErrMsgTxt("specfunmex: Unknown function name");
     }
-        
+    
     L[0] = mxCreateNumericArray(ndims,dims,mxDOUBLE_CLASS,mxREAL);
     y = mxGetData(L[0]);
     

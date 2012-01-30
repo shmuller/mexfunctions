@@ -1,5 +1,6 @@
 #include "math.h"
 
+#include "../common/common.h"
 #include "../specfunmex/specfun.h"
 
 #include "gauss_legendre.h"
@@ -96,7 +97,7 @@ real angle_int_iso(real *par)
 
 real angle_int_Z(real *par)
 {
-    real r=par[0], w=par[1], z0=fabs(par[2]), a2=1./(w*w);
+    real r=par[0], a=par[1], z0=fabs(par[2]), a2=a*a;
 
     if (a2 == 1.) {
         return _I_a_eq_1(r,z0);
@@ -109,7 +110,7 @@ real angle_int_Z(real *par)
 
 real angle_int_RZ(real *par)
 {
-    real r=par[0], w=par[1], z0=par[2], R0=par[3], a=1./w, ar=a*r, aR0=a*R0;
+    real r=par[0], a=par[1], z0=par[2], R0=par[3], ar=a*r, aR0=a*R0;
     real par2[] = {r,ar,z0,aR0};
     
     return ISQRT2PI*ar*ar*gauss_legendre(32, _cos_th_int, par2, -1., 1.);
@@ -126,7 +127,7 @@ real angle_int(real *par)
     }
 }
 
-static const pair functions[] = {
+static const keyval functions[] = {
     "Fun", Fun,
     "dim1", dim1,
     "dim2", dim2,

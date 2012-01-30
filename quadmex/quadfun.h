@@ -6,17 +6,7 @@ extern "C"
 {
 #endif
 
-#ifndef __COMMON__
-#define __COMMON__
-typedef double real;
-
-typedef real (func)(real*);
-
-typedef struct {
-    char *name;
-    void *fun;
-} pair;
-#endif /* __COMMON__ */
+#include "../common/common.h"
 
 typedef struct {
     real *x;

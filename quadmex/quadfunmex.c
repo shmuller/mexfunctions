@@ -14,6 +14,8 @@
 #include "math.h"
 #include "string.h"
 
+#include "../common/common.h"
+
 #include "quadfun.h"
 
 #include "functions.c"
@@ -81,15 +83,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
     mxGetString(R[2],name,STRLEN);
 
-    func *fun = NULL;
-    const pair *p;
-    
-    for(i=sizeof(functions)/sizeof(functions[0]),p=functions; i--; p++) {
-        if (strcmp(name,p->name)==0) {
-            fun = p->fun;
-            break;
-        }
-    }
+    func *fun = select(LENGTH(functions), functions, name);
     if (fun == NULL) {
         mexErrMsgTxt("quadfunmex: Unknown function name");
     }
