@@ -5,17 +5,13 @@
 
 #include "gauss_legendre.h"
 
+#define TWOPI    6.28318530717958647692528676655901
+#define I2PI     0.15915494309189533576888376337251
 #define ISQRT2   0.70710678118654752440084436210485
 #define ISQRTPI  0.56418958354775628694807945156077
 #define SQRT2_PI 0.79788456080286535587989211986876
+#define SQRT2PI  2.50662827463100050241576528481105
 #define ISQRT2PI 0.39894228040143267793994605993438
-
-
-real Fun(real *par)
-{
-    real x=par[0], y=par[1], z=par[2];
-    return x*y*y*z*z*z;
-}
 
 real dim1(real *par)
 {
@@ -127,13 +123,66 @@ real angle_int(real *par)
     }
 }
 
+
+/* tests */
+real Maxw(real *par)
+{
+    real x=par[0], y=par[1], z=par[2];
+    real a=par[3], b=par[4], c=par[5], v=par[6];
+    real r2=x*x+y*y+z*z, f, M;
+    
+    x -= a; y -= b; z -= c;
+    
+    M = exp(-0.5*(x*x+y*y+z*z)/(v*v));
+    f = SQRT2PI*v;
+    M /= f*f*f;
+    return sqrt(r2)*M;
+}
+
+real Maxw_r(real *par)
+{
+    real r=par[0];
+    real a=par[1], b=par[2], c=par[3], v=par[4];
+    real R0=hypot(a,b), z0=c;
+    
+    real par2[] = {r/v, 1., z0/v, R0/v};
+    
+    return r*angle_int(par2)/v;
+}
+
+
+real dblMaxw(real *par)
+{
+    real x=par[ 0], y=par[ 1], z=par[ 2];
+    real a=par[ 3], b=par[ 4], c=par[ 5], v=par[ 6];
+   
+    real X=par[ 7], Y=par[ 8], Z=par[ 9];
+    real A=par[10], B=par[11], C=par[12], V=par[13];
+    
+    real dx, dy, dz, vrel, f, M;
+    
+    dx = x-X; dy = y-Y; dz = z-Z;
+    vrel = sqrt(dx*dx+dy*dy+dz*dz);
+    
+    x -= a; y -= b; z -= c;
+    X -= A; Y -= B; Z -= C;
+    
+    M = exp(-0.5*((x*x+y*y+z*z)/(v*v)+(X*X+Y*Y+Z*Z)/(V*V)));
+    f = TWOPI*v*V;
+    M /= f*f*f;
+    
+    return vrel*M;
+}
+
 static const keyval functions[] = {
-    "Fun", Fun,
     "dim1", dim1,
     "dim2", dim2,
     "angle_int_iso", angle_int_iso,
     "angle_int_Z", angle_int_Z,
     "angle_int_RZ", angle_int_RZ,
-    "angle_int", angle_int
+    "angle_int", angle_int,
+    "Maxw", Maxw,
+    "Maxw_r", Maxw_r,
+    "dblMaxw", dblMaxw
 };
 

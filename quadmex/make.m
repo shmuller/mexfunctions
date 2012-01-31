@@ -1,0 +1,1 @@
+mex quadfunmex.c quadfun.o gauss_legendre.o ../specfunmex/specfun.o ../common/common.o

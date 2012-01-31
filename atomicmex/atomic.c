@@ -20,10 +20,10 @@ function AP = atomic_params(target)
 #include "atomic.h"
 #include "atomic_param.h"
 
-#define MQ_E 5.685557358631881E-012
-#define MQ_P 1.043939583073274E-008
+#define ME_Q 5.685557358631881E-012
+#define MP_Q 1.043939583073274E-008
 
-
+/* differential oscillator strengths */
 typedef void (diff_osc_fun)(double, const atomic_param *, double *, double *);
 
 void diff_osc_BEQ(double t, const atomic_param *AP, double *D0, double *K)
@@ -43,12 +43,14 @@ const keyval kv_diff_osc[] = {
     "BEB", diff_osc_BEB
 };
 
-
 diff_osc_fun *get_diff_osc(const char *model)
 {
     return select(LENGTH(kv_diff_osc), kv_diff_osc, model);  
 }
 
+
+/* total integrated cross sections */
+typedef double (TICS_fun)(double, const atomic_desc *);
 
 double TICS_ion_shell(double T, const atomic_param *AP, diff_osc_fun *diff_osc)
 {
@@ -60,27 +62,79 @@ double TICS_ion_shell(double T, const atomic_param *AP, diff_osc_fun *diff_osc)
     return (t < 1.) ? 0. : A*((D0-K/(t+1))*log(t)+K*(1-1./t));
 }
 
-double TICS_ion(double T, int shells, const atomic_param *AP, diff_osc_fun *diff_osc)
+double TICS_ion(double T, const atomic_desc *D)
 {
     int i;
     double s = 0.;
+    const atomic_param *AP = D->AP;
+    diff_osc_fun *diff_osc = D->diff_osc;
     
-    for(i=0; i<shells; i++) {
+    for(i=AP->shells; i--; ) {
         s += TICS_ion_shell(T, AP++, diff_osc);
     }
     return s;
 }
 
-void sigmav_ion(int n, double *w, const char *target, const char *model)
+double TICS_CX(double T, const atomic_desc *D)
+{
+        static const double a = 7.042E-10, b = 0.414E-10; 
+        double sqrt_s = a;
+        const atomic_param *AP = D->AP;
+        
+        T /= AP->A;
+        if (T > 1.) {
+            sqrt_s -= b*log(T);
+        }
+        return sqrt_s*sqrt_s;
+}
+
+const keyval kv_TICS[] = {
+    "ion", TICS_ion,
+    "CX", TICS_CX
+};
+
+TICS_fun *get_TICS(const char *type)
+{
+    return select(LENGTH(kv_TICS), kv_TICS, type);  
+}
+
+
+/* public functions */
+atomic_desc get_atomic_desc(const char *target, const char *type, const char *model)
+{
+    atomic_desc D;
+    const atomic_param *AP = get_AP(target);
+    
+    D.AP = AP;
+    D.TICS = get_TICS(type);
+    D.diff_osc = get_diff_osc(model);
+    
+    if (strcmp(type,"ion")==0) {
+        D.mu_2q = 0.5*ME_Q;
+    } else {
+        D.mu_2q = 0.25*MP_Q*AP->A;
+    }
+    return D;
+}
+
+
+double sigmav(double w, const atomic_desc *D)
+{
+    double T = D->mu_2q*(w*w);
+    TICS_fun *TICS = D->TICS;
+    return w*TICS(T, D);
+}
+
+
+void sigmav_vec(int n, double *w, const atomic_desc *D)
 {
     int i, N;
-    double T;
-    const atomic_param *AP = get_AP(target);
-    diff_osc_fun *diff_osc = get_diff_osc(model);
+    double T, mu_2q = D->mu_2q;
+    TICS_fun *TICS = D->TICS;
     
-    for(i=0; i<n; i++) {
-        T = 0.5*MQ_E*(*w)*(*w);
-        *w++ *= TICS_ion(T, AP->shells, AP, diff_osc);
+    for(i=n; i--; ) {
+        T = mu_2q*(*w)*(*w);
+        *w++ *= TICS(T, D);
     }
 }
 
