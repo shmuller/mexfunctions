@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-const void *select(int n, const keyval *KV, const char *key)
+const void *kv_select(int n, const keyval *KV, const char *key)
 {
     int i;
     const keyval *kv;

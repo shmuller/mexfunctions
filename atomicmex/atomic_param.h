@@ -121,5 +121,5 @@ const keyval kv_AP[] = {
 
 const atomic_param* get_AP(const char *target)
 {
-    return select(LENGTH(kv_AP), kv_AP, target);
+    return kv_select(KV_LEN(kv_AP), kv_AP, target);
 }

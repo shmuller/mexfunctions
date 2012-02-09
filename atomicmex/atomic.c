@@ -45,7 +45,7 @@ const keyval kv_diff_osc[] = {
 
 diff_osc_fun *get_diff_osc(const char *model)
 {
-    return select(LENGTH(kv_diff_osc), kv_diff_osc, model);  
+    return kv_select(KV_LEN(kv_diff_osc), kv_diff_osc, model);  
 }
 
 
@@ -95,7 +95,7 @@ const keyval kv_TICS[] = {
 
 TICS_fun *get_TICS(const char *type)
 {
-    return select(LENGTH(kv_TICS), kv_TICS, type);  
+    return kv_select(KV_LEN(kv_TICS), kv_TICS, type);  
 }
 
 

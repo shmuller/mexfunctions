@@ -1,0 +1,9 @@
+#! python
+import distutils.sysconfig as sc
+CFLAGS = sc.get_config_var('CFLAGS')
+LDFLAGS = sc.get_config_var('LDFLAGS')
+
+# Initialize the environment
+env = Environment(CCFLAGS=CFLAGS, LINKFLAGS=LDFLAGS) 
+
+env.SharedLibrary(target = 'common', source = 'common.c')

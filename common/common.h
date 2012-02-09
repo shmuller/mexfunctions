@@ -1,7 +1,7 @@
 #ifndef __COMMON__
 #define __COMMON__
 
-#define LENGTH(x) (sizeof(x)/sizeof((x)[0]))
+#define KV_LEN(x) (sizeof(x)/sizeof((x)[0]))
 
 typedef double real;
 
@@ -12,6 +12,6 @@ typedef struct {
     const void *val;
 } keyval;
 
-const void *select(int n, const keyval *KV, const char *key);
+const void *kv_select(int n, const keyval *KV, const char *key);
 
 #endif /* __COMMON__ */
