@@ -42,7 +42,7 @@ extern func r8_erfcx; // exponentially scaled complementary error function
 extern func r8_gamma; // Gamma(X) for a real argument
 extern func r8_psi;   // Psi(X)
 
-static const keyval specfun[] = {
+static const keyval kv_specfun[] = {
     "besei0", besei0,
     "besei1", besei1,
     "besek0", besek0,

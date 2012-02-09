@@ -1,0 +1,11 @@
+#! python
+import distutils.sysconfig as sc
+CFLAGS = sc.get_config_var('CFLAGS')
+LDFLAGS = sc.get_config_var('LDFLAGS')
+
+F90FLAGS = CFLAGS + ' -fno-underscoring'
+
+# Initialize the environment
+env = Environment(F90FLAGS=F90FLAGS, LINKFLAGS=LDFLAGS) 
+
+env.SharedLibrary(target = 'specfun', source = 'specfun.f90')

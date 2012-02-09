@@ -33,7 +33,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     
     mxGetString(R[0],name,STRLEN);
     
-    fun = select(LENGTH(specfun), specfun, name);
+    fun = kv_select(KV_LEN(kv_specfun), kv_specfun, name);
     if (fun == NULL) {
         mexErrMsgTxt("specfunmex: Unknown function name");
     }
