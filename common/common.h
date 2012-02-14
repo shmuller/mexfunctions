@@ -1,11 +1,16 @@
-#ifndef __COMMON__
-#define __COMMON__
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #define KV_LEN(x) (sizeof(x)/sizeof((x)[0]))
 
-typedef double real;
+typedef double SM_REAL;
 
-typedef real (func)(real*);
+typedef SM_REAL (func)(SM_REAL*);
 
 typedef struct {
     const char *key;
@@ -14,4 +19,8 @@ typedef struct {
 
 const void *kv_select(int n, const keyval *KV, const char *key);
 
-#endif /* __COMMON__ */
+#ifdef __cplusplus
+}  /* end extern "C" */
+#endif
+
+#endif /* __COMMON_H__ */

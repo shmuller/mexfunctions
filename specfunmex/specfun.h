@@ -3,19 +3,10 @@
  * S. H. Muller, 2012/01/12
  */
 
-/*
-#ifndef __COMMON__
-#define __COMMON__
-typedef double real;
-
-typedef real (func)(real*);
-
-typedef struct {
-    char *name;
-    void *fun;
-} pair;
+#ifdef __cplusplus
+extern "C"
+{
 #endif
-*/
 
 #include "../common/common.h"
 
@@ -43,26 +34,32 @@ extern func r8_gamma; // Gamma(X) for a real argument
 extern func r8_psi;   // Psi(X)
 
 static const keyval kv_specfun[] = {
-    "besei0", besei0,
-    "besei1", besei1,
-    "besek0", besek0,
-    "besek1", besek1,
-    "besi0",  besi0,
-    "besi1",  besi1,
-    "besj0",  besj0,
-    "besj1",  besj1,
-    "besk0",  besk0,
-    "besk1",  besk1,
-    "besy0",  besy0,
-    "besy1",  besy1,
-    "daw",    daw,
-    "dlgama", dlgama,
-    "ei",     ei,
-    "eone",   eone,
-    "expei",  expei,
-    "erf",    r8_erf,
-    "erfc",   r8_erfc,
-    "erfcx",  r8_erfcx,
-    "gamma",  r8_gamma,
-    "psi",    r8_psi
+    "besei0", (const void*) besei0,
+    "besei1", (const void*) besei1,
+    "besek0", (const void*) besek0,
+    "besek1", (const void*) besek1,
+    "besi0",  (const void*) besi0,
+    "besi1",  (const void*) besi1,
+    "besj0",  (const void*) besj0,
+    "besj1",  (const void*) besj1,
+    "besk0",  (const void*) besk0,
+    "besk1",  (const void*) besk1,
+    "besy0",  (const void*) besy0,
+    "besy1",  (const void*) besy1,
+    "daw",    (const void*) daw,
+    "dlgama", (const void*) dlgama,
+    "ei",     (const void*) ei,
+    "eone",   (const void*) eone,
+    "expei",  (const void*) expei,
+    "erf",    (const void*) r8_erf,
+    "erfc",   (const void*) r8_erfc,
+    "erfcx",  (const void*) r8_erfcx,
+    "gamma",  (const void*) r8_gamma,
+    "psi",    (const void*) r8_psi
 };
+
+#ifdef __cplusplus
+}  /* end extern "C" */
+#endif
+
+
