@@ -23,7 +23,7 @@ DEFUN_DLD(specfunmex, args, nargout, "Special functions")
 
 	// trick octave to not make a copy
 	const NDArray X = args(1).array_value();
-	double *x = const_cast<double*>(X.data());
+	double *x = (double*) X.data();
 
 	func *fun = (func*) kv_select(KV_LEN(kv_specfun), kv_specfun, name);
 	if (fun == NULL) {
