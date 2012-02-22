@@ -221,6 +221,28 @@ wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
     return w_D;
 }
 
+void wrap_getArray(wrap_Array **l, wrap_Descrip *w_D, void *ptr) {
+    const wrap_dtype *w_dtype = w_D->w_dtype;
+    wrap_dims *w_d = &w_D->w_dims;
+    wrap_data *w_p = &w_D->w_p;
+    
+    if (w_dtype == NULL) {
+        *l = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
+    } else if (w_dtype == wrap_STRING) {
+        int numbytes = w_p->num*w_p->siz;
+        char *out = calloc(numbytes+1,sizeof(char));
+        memcpy(out,ptr,numbytes);
+        *l = mxCreateString(out);
+        free(out);
+    } else {        
+        *l = mxCreateNumericArray(w_d->ndims,w_d->dims,w_dtype->ID,w_dtype->Co);
+        w_p->r = mxGetData(*l);
+        w_p->i = mxGetImagData(*l);
+
+        mds2wrap_data(w_p, w_dtype, ptr);   
+    }
+    if (w_d->dims) free(w_d->dims);
+}
 
 void wrap_error(char *err) {
     mexErrMsgTxt(err);
@@ -288,8 +310,6 @@ void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
 }
 
 
-
-
 #include "tcp.c"
 
 int sm_mdsconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
@@ -340,8 +360,8 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     mdsDescrip D;
 	
     struct descrip exparg, *arg;
-    int i = 0, numbytes = 0, stat = 0;
-    void *mem = NULL, *out = NULL;
+    int i, numbytes, stat;
+    void *mem = NULL;
 
     wrap_Descrip w_D;
     char ndims;
@@ -358,25 +378,9 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
         
     w_D = mds2wrap_Descrip(arg);
-    const wrap_dtype *w_dtype = w_D.w_dtype;
-    wrap_dims *w_d = &w_D.w_dims;
-    wrap_data *w_p = &w_D.w_p;
     
-    if (w_dtype == NULL) {
-        L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
-    } else if (w_dtype == wrap_STRING) {
-        out = calloc(numbytes+1,sizeof(char));
-        memcpy(out,arg->ptr,numbytes);
-        L[0] = mxCreateString((char*)out);
-    } else {
-                  
-        L[0] = mxCreateNumericArray(w_d->ndims,w_d->dims,w_dtype->ID,w_dtype->Co);
-        w_p->r = mxGetData(L[0]);
-        w_p->i = mxGetImagData(L[0]);
-
-        mds2wrap_data(w_p, w_dtype, arg->ptr);   
-    }
-    if (w_d->dims) free(w_d->dims);
+    wrap_getArray(&L[0], &w_D, arg->ptr);
+    
     if (mem) free(mem);
     return(1);
 }
