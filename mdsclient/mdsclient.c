@@ -295,7 +295,7 @@ int sm_mdsclose(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 
 int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
-    mdsDescrip *D = malloc(sizeof(mdsDescrip));
+    mdsDescrip D;
 	
     struct descrip exparg, *arg;
     int i = 0, numbytes = 0, stat = 0;
@@ -308,10 +308,10 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 
     for(i=2; i<nR; i++) {
         w_D = wrap_getDescrip(R[i]);
-        getmdsDescrip(&w_D,D);
-        arg = MakeDescrip(&exparg,D->dtype,D->ndims,D->dims,D->ptr);
+        getmdsDescrip(&w_D,&D);
+        arg = MakeDescrip(&exparg,D.dtype,D.ndims,D.dims,D.ptr);
         stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-        if (D->dims) free(D->dims);
+        if (D.dims) free(D.dims);
     }
 	
     stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
@@ -326,7 +326,7 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
         L[0] = mxCreateString((char*)out);
     } else {
         stat = mds2mex_dims(arg,&ndims,&dimsL);
-        L[0] = mxCreateNumericArray(ndims,dimsL,ID,Co);
+        L[0] = mxCreateNumericArray(ndims,dimsL,w_dtype->ID,w_dtype->Co);
         w_D = wrap_getDescrip(L[0]);
         if (wrap_dtype_isreal(w_dtype)) {
             memcpy(w_D.pr,arg->ptr,numbytes);
@@ -335,7 +335,6 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
         }   
     }
     if (mem) free(mem);
-    free(D);
     return(1);
 }
 
