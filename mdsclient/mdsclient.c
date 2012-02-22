@@ -46,6 +46,7 @@ typedef mxArray wrap_Array;
 typedef mxClassID wrap_ClassID;
 typedef mxComplexity wrap_Complexity;
 
+/* data types */
 typedef struct {
     mxClassID ID;
     mxComplexity Co;
@@ -102,6 +103,7 @@ const wrap_dtype *wrap_getdtype(const wrap_Array *r) {
     return NULL;
 }
 
+/* data dimensions */
 typedef struct {
     char ndims;
     int  num;
@@ -121,19 +123,7 @@ void wrap_getdims(wrap_dims *w_d, const struct descrip *d) {
     }
 }
 
-int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
-{
-    int i;
-    *ndims = max(d->ndims,2);
-    *dims = malloc(*ndims*sizeof(mwSize));
-
-    for(i=0; i<d->ndims; i++) (*dims)[i] = d->dims[i];
-    for(; i<*ndims; i++) (*dims)[i] = 1;
-    return(1);
-}
-
-
-
+/* data descriptor */
 typedef struct {
     const wrap_dtype *w_dtype;
     wrap_dims w_dims;
@@ -152,7 +142,7 @@ wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
     w_d->dims  = (mwSize*) mxGetDimensions(r);
     
     w_D.siz = mxGetElementSize(r);
-    if (w_D.w_dtype->Co == mxCOMPLEX) w_D.siz *= 2;
+    if (!wrap_dtype_isreal(w_D.w_dtype)) w_D.siz *= 2;
     
     if (w_D.w_dtype != wrap_STRING) {
         w_D.pr = mxGetData(r);
@@ -163,65 +153,6 @@ wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
     }
     return w_D;
 }
-
-
-void wrap_error(char *err) {
-    mexErrMsgTxt(err);
-}
-
-
-/* completely wrapped code */
-
-const wrap_dtype *mds2wrap_dtype(const char *dtype) {
-    int i;
-    const dtype_item *t;
-    if (dtype==NULL) return NULL;
-    for(i=dtype_table_len,t=dtype_table; i--; t++) {
-        if (t->dtype==*dtype) return &t->w_dtype;
-    }
-    return NULL;
-}
-
-static const int item_dist = 
-    (void*) &dtype_table[0].dtype - (void*) &dtype_table[0].w_dtype;
-
-const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
-    return (void*) w_dtype + item_dist;   
-}
-
-/*
-const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
-    int i;
-    const dtype_item *t;
-    if (w_dtype==NULL) return NULL;
-    for(i=dtype_table_len,t=dtype_table; i--; t++) {
-        if (&t->w_dtype==w_dtype) return &t->dtype;
-    }
-    return NULL;
-}
-*/
-
-wrap_Descrip mds2wrap_Descrip(const struct descrip *d) {
-    int i;
-    wrap_Descrip w_D;
-    w_D.w_dtype = mds2wrap_dtype(&d->dtype);
-    wrap_getdims(&w_D.w_dims, d);
-    w_D.siz = ArgLen(d);
-    return w_D;
-}
-
-
-void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
-    wrap_Descrip w_D = wrap_getDescrip(r);
-    if (w_D.w_dtype == w_dtype) { 
-        return w_D.pr;
-	} else {
-        wrap_error("Wrong argument type");
-	}
-}
-
-
-
 
 
 void *mex2mds_cmplx(const wrap_Descrip *w_D) {
@@ -258,6 +189,51 @@ void mds2mex_cmplx(const wrap_Descrip *w_D, void *buf) {
         memcpy(pi,b+siz,siz);
     }
 }
+
+void wrap_error(char *err) {
+    mexErrMsgTxt(err);
+}
+
+
+/* completely wrapped code */
+
+const wrap_dtype *mds2wrap_dtype(const char *dtype) {
+    int i;
+    const dtype_item *t;
+    if (dtype==NULL) return NULL;
+    for(i=dtype_table_len,t=dtype_table; i--; t++) {
+        if (t->dtype==*dtype) return &t->w_dtype;
+    }
+    return NULL;
+}
+
+static const int item_dist = 
+    (void*) &dtype_table[0].dtype - (void*) &dtype_table[0].w_dtype;
+
+const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
+    return (void*) w_dtype + item_dist;   
+}
+
+
+wrap_Descrip mds2wrap_Descrip(const struct descrip *d) {
+    int i;
+    wrap_Descrip w_D;
+    w_D.w_dtype = mds2wrap_dtype(&d->dtype);
+    wrap_getdims(&w_D.w_dims, d);
+    w_D.siz = ArgLen(d);
+    return w_D;
+}
+
+
+void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
+    wrap_Descrip w_D = wrap_getDescrip(r);
+    if (w_D.w_dtype == w_dtype) { 
+        return w_D.pr;
+	} else {
+        wrap_error("Wrong argument type");
+	}
+}
+
 
 void getmdsDescrip(const wrap_Descrip *w_D, mdsDescrip *D) {
     int i;
@@ -345,8 +321,7 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 
     for(i=2; i<nR; i++) {
         w_D = wrap_getDescrip(R[i]);
-        getmdsDescrip(&w_D,&D);
-        
+        getmdsDescrip(&w_D,&D);        
         arg = MakeDescrip(&exparg,D.dtype,D.ndims,D.dims,D.ptr);
         stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
         if (D.dims) free(D.dims);
@@ -370,26 +345,9 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
         w_D.pr = mxGetData(L[0]);
         w_D.pi = mxGetImagData(L[0]);
 
-        wrap_Descrip w_D2 = wrap_getDescrip(L[0]);
-        
-        if (w_D2.w_dtype == w_D.w_dtype) mexPrintf("1\n");
-        if (w_D2.pr == w_D.pr) mexPrintf("2\n");
-        if (w_D2.pi == w_D.pi) mexPrintf("3\n");
-        if (w_D2.w_dims.ndims == w_D.w_dims.ndims) mexPrintf("4\n");
-        if (w_D2.w_dims.num == w_D.w_dims.num) mexPrintf("5\n");
-        if (w_D2.siz == w_D.siz) mexPrintf("6\n");
-        
-        for(i=0; i<w_D.w_dims.ndims; i++)
-            mexPrintf("%d,%d\n", w_D2.w_dims.dims[i], w_D.w_dims.dims[i]);
-        
-        mexPrintf("%d,%d\n", w_D2.siz, w_D.siz);
-        
-        
         if (wrap_dtype_isreal(w_dtype)) {
-            mexPrintf("Was here\n");
             memcpy(w_D.pr,arg->ptr,numbytes);
         } else {
-            mexPrintf("...or here\n");
             mds2mex_cmplx(&w_D,arg->ptr);
         }   
     }
