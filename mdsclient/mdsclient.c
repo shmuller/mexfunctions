@@ -35,10 +35,10 @@ typedef int mwSize;
 #endif
 
 typedef struct {
-	char dtype;
-	char ndims;
-	int length;
-	int *dims; 
+    char dtype;
+    char ndims;
+    int length;
+    int *dims; 
     void *ptr;
 } mdsDescrip;
 
@@ -53,6 +53,10 @@ typedef struct {
 
 int wrap_dtype_isequal(const wrap_dtype *a, const wrap_dtype *b) {
     return (a->ID == b->ID && a->Co == b->Co);
+}
+
+int wrap_dtype_isreal(const wrap_dtype *w_dtype) {
+    return (w_dtype->Co == mxREAL);
 }
 
 typedef struct {
@@ -102,8 +106,8 @@ typedef struct {
     const wrap_dtype *w_dtype;
     int     siz;
     char    ndims;
-	int     num;
-	mwSize *dims; 
+    int     num;
+    mwSize *dims; 
     void   *pr;
     void   *pi;
 } wrap_Descrip;
@@ -166,9 +170,9 @@ const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
 void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
     wrap_Descrip w_D = wrap_getDescrip(r);
     if (w_D.w_dtype == w_dtype) { 
-		return w_D.pr;
+            return w_D.pr;
 	} else {
-		wrap_error("Wrong argument type");
+            wrap_error("Wrong argument type");
 	}
 }
 
@@ -176,84 +180,78 @@ void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
 
 int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
 {
-	int i;
-	*ndims = max(d->ndims,2);
-	*dims = malloc(*ndims*sizeof(mwSize));
+    int i;
+    *ndims = max(d->ndims,2);
+    *dims = malloc(*ndims*sizeof(mwSize));
 
-	for(i=0; i<d->ndims; i++) (*dims)[i] = d->dims[i];
-	for(; i<*ndims; i++) (*dims)[i] = 1;
-	return(1);
+    for(i=0; i<d->ndims; i++) (*dims)[i] = d->dims[i];
+    for(; i<*ndims; i++) (*dims)[i] = 1;
+    return(1);
 }
 
 void *mex2mds_cmplx(const wrap_Descrip *w_D) {
-	size_t i,num,siz;
-	void *pr,*pi,*buf,*b;
+    size_t i,num,siz;
+    void *pr,*pi,*buf,*b;
     
     num = w_D->num;
     siz = w_D->siz;
     pr  = w_D->pr;
     pi  = w_D->pi;
     
-	buf = malloc(2*num*siz);
+    buf = malloc(2*num*siz);
 
-	for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
-		memcpy(b    ,pr,siz);
-		memcpy(b+siz,pi,siz);
-	}
-	return buf;
+    for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
+        memcpy(b    ,pr,siz);
+        memcpy(b+siz,pi,siz);
+    }
+    return buf;
 }
 
 void mds2mex_cmplx(const wrap_Descrip *w_D, void *buf) {
-	size_t i,num,siz;
-	void *pr,*pi,*b;
+    size_t i,num,siz;
+    void *pr,*pi,*b;
     
     num = w_D->num;
     siz = w_D->siz;
     pr  = w_D->pr;
     pi  = w_D->pi;
 
-	for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
-		memcpy(pr,b    ,siz);
-		memcpy(pi,b+siz,siz);
-	}
+    for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
+        memcpy(pr,b    ,siz);
+        memcpy(pi,b+siz,siz);
+    }
 }
 
 void getmdsDescrip(const wrap_Descrip *w_D, mdsDescrip *D) {
-	int i;
-	mwSize *dimsR = w_D->dims;
-	D->ndims = w_D->ndims;
+    int i;
+    mwSize *dimsR = w_D->dims;
+    D->ndims = w_D->ndims;
     
     const wrap_dtype *w_dtype = w_D->w_dtype;
-    D->dtype = *wrap2mds_dtype(w_dtype);
+    D->dtype = *wrap2mds_dtype(w_D->w_dtype);
     
-    wrap_ClassID ID = w_dtype->ID;
-    wrap_Complexity Co = w_dtype->Co;
-    
-	if (ID != mxCHAR_CLASS) {
-		/* remove singleton dimensions */
-		for(i=D->ndims-1; i>=0; i--) if (dimsR[i]==1) (D->ndims)--; else break;
+    if (w_D->w_dtype != wrap_STRING) {
+        /* remove singleton dimensions */
+        for(i=D->ndims-1; i>=0; i--) if (dimsR[i]==1) (D->ndims)--; else break;
 
-		D->dims = calloc(D->ndims,sizeof(int));
-		for(i=0; i<D->ndims; i++) (D->dims)[i]=dimsR[i];
+        D->dims = calloc(D->ndims,sizeof(int));
+        for(i=0; i<D->ndims; i++) (D->dims)[i]=dimsR[i];
 
-		if (Co==mxREAL) {
-			D->ptr = w_D->pr;
-		} else {
-			if (ID != mxDOUBLE_CLASS && ID != mxSINGLE_CLASS) {
-				wrap_error("Complex data must be single or double");
-			}
-			D->ptr = mex2mds_cmplx(w_D);
-		}
-	} else {
-		D->ndims = 0; D->dims = NULL;
-		D->ptr = w_D->pr;
-	}
+        if (wrap_dtype_isreal(w_D->w_dtype)) {
+            D->ptr = w_D->pr;
+        } else {
+            D->ptr = mex2mds_cmplx(w_D);
+        }
+    } else {
+        D->ndims = 0; D->dims = NULL;
+        D->ptr = w_D->pr;
+    }
 }
 
 #include "tcp.c"
 
 int sm_mdsconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	char *host = getarg(R[1],wrap_STRING);
+    char *host = getarg(R[1],wrap_STRING);
     int sock;
     
     switch (sock=tcpconnect(host)) {
@@ -264,111 +262,107 @@ int sm_mdsconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
         case -5: wrap_error("Could not authenticate user");
     }
     
-	L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
-	*((int*)mxGetData(L[0])) = sock;
-	return(1);
+    L[0] = mxCreateNumericMatrix(1,1,mxINT32_CLASS,mxREAL);
+    *((int*)mxGetData(L[0])) = sock;
+    return(1);
 }
 
 int sm_mdsdisconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	int sock = *((int*)getarg(R[1],wrap_INT32));
-	tcpdisconnect(sock);
-	return(1);
+    int sock = *((int*)getarg(R[1],wrap_INT32));
+    tcpdisconnect(sock);
+    return(1);
 }
 
 int sm_mdsopen(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
-	char *tree = getarg(R[2],wrap_STRING);
-	int shot = *((int*)getarg(R[3],wrap_INT32));
-	int stat = MdsOpen(sock,tree,shot);
-	if (!status_ok(stat)) {
-		wrap_error("Could not open tree");
-	}
-	return(1);
+    SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
+    char *tree = getarg(R[2],wrap_STRING);
+    int shot = *((int*)getarg(R[3],wrap_INT32));
+    int stat = MdsOpen(sock,tree,shot);
+    if (!status_ok(stat)) {
+        wrap_error("Could not open tree");
+    }
+    return(1);
 }
 
 int sm_mdsclose(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
-	int stat = MdsClose(sock);
-	if (!status_ok(stat)) {
-		wrap_error("Could not close tree");
-	}
-	return(1);
+    SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
+    int stat = MdsClose(sock);
+    if (!status_ok(stat)) {
+        wrap_error("Could not close tree");
+    }
+    return(1);
 }
 
 int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
-	mdsDescrip *D = malloc(sizeof(mdsDescrip));
+    SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
+    mdsDescrip *D = malloc(sizeof(mdsDescrip));
 	
-	struct descrip exparg, *arg;
-	int i = 0, numbytes = 0, stat = 0;
-	void *mem = 0, *out = 0;
+    struct descrip exparg, *arg;
+    int i = 0, numbytes = 0, stat = 0;
+    void *mem = 0, *out = 0;
 
     wrap_Descrip w_D;
-	char ndims;
-	int *dims;
-	mwSize *dimsL;
-	wrap_ClassID ID;
-	wrap_Complexity Co;
+    char ndims;
+    int *dims;
+    mwSize *dimsL;
 
-	for(i=2; i<nR; i++) {
+    for(i=2; i<nR; i++) {
         w_D = wrap_getDescrip(R[i]);
-		getmdsDescrip(&w_D,D);
-		arg = MakeDescrip(&exparg,D->dtype,D->ndims,D->dims,D->ptr);
-		stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-		if (D->dims) free(D->dims);
-	}
+        getmdsDescrip(&w_D,D);
+        arg = MakeDescrip(&exparg,D->dtype,D->ndims,D->dims,D->ptr);
+        stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+        if (D->dims) free(D->dims);
+    }
 	
-	stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
     
     const wrap_dtype *w_dtype = mds2wrap_dtype(&arg->dtype);
-    ID = w_dtype->ID;
-    Co = w_dtype->Co;
     
-	if (ID == mxUNKNOWN_CLASS) {
-		L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
-	} else if (ID == mxCHAR_CLASS) {
-		out = calloc(numbytes+1,sizeof(char));
-		memcpy(out,arg->ptr,numbytes);
-		L[0] = mxCreateString((char*)out);
-	} else {
-		stat = mds2mex_dims(arg,&ndims,&dimsL);
-		L[0] = mxCreateNumericArray(ndims,dimsL,ID,Co);
+    if (w_dtype == NULL) {
+        L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
+    } else if (w_dtype == wrap_STRING) {
+        out = calloc(numbytes+1,sizeof(char));
+        memcpy(out,arg->ptr,numbytes);
+        L[0] = mxCreateString((char*)out);
+    } else {
+        stat = mds2mex_dims(arg,&ndims,&dimsL);
+        L[0] = mxCreateNumericArray(ndims,dimsL,ID,Co);
         w_D = wrap_getDescrip(L[0]);
-		if (Co==mxREAL) {
-			memcpy(w_D.pr,arg->ptr,numbytes);
-		} else {
-			mds2mex_cmplx(&w_D,arg->ptr);
-		}   
-	}
-	if (mem) free(mem);
-	free(D);
-	return(1);
+        if (wrap_dtype_isreal(w_dtype)) {
+            memcpy(w_D.pr,arg->ptr,numbytes);
+        } else {
+            mds2mex_cmplx(&w_D,arg->ptr);
+        }   
+    }
+    if (mem) free(mem);
+    free(D);
+    return(1);
 }
 
 
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
-	char *cmd = getarg(R[0],wrap_STRING), errstr[256];
-	int stat;
+    char *cmd = getarg(R[0],wrap_STRING), errstr[256];
+    int stat;
 
-	if (strcmp(cmd,"mdsvalue")==0) {
-		stat = sm_mdsvalue(nL,L,nR,R);
-	} else if (strcmp(cmd,"mdsconnect")==0) {
-		stat = sm_mdsconnect(nL,L,nR,R);
-	} else if (strcmp(cmd,"mdsopen")==0) {
-		stat = sm_mdsopen(nL,L,nR,R);
-	} else if (strcmp(cmd,"mdsclose")==0) {
-		stat = sm_mdsclose(nL,L,nR,R);
-	} else if (strcmp(cmd,"mdsdisconnect")==0) {
-		stat = sm_mdsdisconnect(nL,L,nR,R);
-	} else {
-		wrap_error("Unknown command");
-	}
+    if (strcmp(cmd,"mdsvalue")==0) {
+        stat = sm_mdsvalue(nL,L,nR,R);
+    } else if (strcmp(cmd,"mdsconnect")==0) {
+        stat = sm_mdsconnect(nL,L,nR,R);
+    } else if (strcmp(cmd,"mdsopen")==0) {
+        stat = sm_mdsopen(nL,L,nR,R);
+    } else if (strcmp(cmd,"mdsclose")==0) {
+        stat = sm_mdsclose(nL,L,nR,R);
+    } else if (strcmp(cmd,"mdsdisconnect")==0) {
+        stat = sm_mdsdisconnect(nL,L,nR,R);
+    } else {
+        wrap_error("Unknown command");
+    }
 
-	if (stat < 0) {
-		sprintf(errstr,"Untrapped error occurred: %d",stat);
-		wrap_error(errstr);
-	}
+    if (stat < 0) {
+        sprintf(errstr,"Untrapped error occurred: %d",stat);
+        wrap_error(errstr);
+    }
 }
 
