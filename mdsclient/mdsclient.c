@@ -110,18 +110,30 @@ typedef struct {
     mwSize *dims;
 } wrap_dims;
 
-void wrap_getdims(wrap_dims *w_d, const struct descrip *d) {
+void mds2wrap_dims(wrap_dims *w_d, const struct descrip *d) {
     int i;
     w_d->ndims = max(d->ndims,2);
     w_d->dims = malloc(w_d->ndims*sizeof(mwSize));
     for(i=0,w_d->num=1; i<d->ndims; i++) {
-        w_d->dims[i] = d->dims[i];
-        w_d->num *= d->dims[i];
+        w_d->num *= w_d->dims[i] = d->dims[i];
     }
     for(; i<w_d->ndims; i++) {
         w_d->dims[i] = 1;
     }
 }
+
+void wrap2mds_dims(mdsDescrip *D, const wrap_dims *w_d) {
+    int i;
+    D->ndims = w_d->ndims;
+        
+    /* remove singleton dimensions */
+    for(i=D->ndims-1; i>=0; i--) if (w_d->dims[i]==1) D->ndims--; else break;
+
+    D->dims = calloc(D->ndims,sizeof(int));
+    for(i=0; i<D->ndims; i++) D->dims[i] = w_d->dims[i];
+}
+    
+        
 
 /* data descriptor */
 typedef struct {
@@ -190,6 +202,7 @@ void mds2mex_cmplx(const wrap_Descrip *w_D, void *buf) {
     }
 }
 
+
 void wrap_error(char *err) {
     mexErrMsgTxt(err);
 }
@@ -219,9 +232,28 @@ wrap_Descrip mds2wrap_Descrip(const struct descrip *d) {
     int i;
     wrap_Descrip w_D;
     w_D.w_dtype = mds2wrap_dtype(&d->dtype);
-    wrap_getdims(&w_D.w_dims, d);
+    mds2wrap_dims(&w_D.w_dims, d);
     w_D.siz = ArgLen(d);
     return w_D;
+}
+
+void wrap2mds_Descrip(mdsDescrip *D, const wrap_Descrip *w_D) {
+    int i;
+    const wrap_dtype *w_dtype = w_D->w_dtype;
+    D->dtype = *wrap2mds_dtype(w_D->w_dtype);
+    
+    if (w_D->w_dtype == wrap_STRING) {
+        D->ndims = 0; 
+        D->dims = NULL;
+    } else {
+        wrap2mds_dims(D, &w_D->w_dims);
+    }
+        
+    if (wrap_dtype_isreal(w_D->w_dtype)) {
+        D->ptr = w_D->pr;
+    } else {
+        D->ptr = mex2mds_cmplx(w_D);
+    }
 }
 
 
@@ -235,32 +267,7 @@ void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
 }
 
 
-void getmdsDescrip(const wrap_Descrip *w_D, mdsDescrip *D) {
-    int i;
-    const wrap_dims *w_d = &w_D->w_dims;
-    mwSize *dimsR = w_d->dims;
-    D->ndims = w_d->ndims;
-    
-    const wrap_dtype *w_dtype = w_D->w_dtype;
-    D->dtype = *wrap2mds_dtype(w_D->w_dtype);
-    
-    if (w_D->w_dtype != wrap_STRING) {
-        /* remove singleton dimensions */
-        for(i=D->ndims-1; i>=0; i--) if (dimsR[i]==1) (D->ndims)--; else break;
 
-        D->dims = calloc(D->ndims,sizeof(int));
-        for(i=0; i<D->ndims; i++) (D->dims)[i]=dimsR[i];
-
-        if (wrap_dtype_isreal(w_D->w_dtype)) {
-            D->ptr = w_D->pr;
-        } else {
-            D->ptr = mex2mds_cmplx(w_D);
-        }
-    } else {
-        D->ndims = 0; D->dims = NULL;
-        D->ptr = w_D->pr;
-    }
-}
 
 #include "tcp.c"
 
@@ -321,7 +328,7 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 
     for(i=2; i<nR; i++) {
         w_D = wrap_getDescrip(R[i]);
-        getmdsDescrip(&w_D,&D);        
+        wrap2mds_Descrip(&D,&w_D);        
         arg = MakeDescrip(&exparg,D.dtype,D.ndims,D.dims,D.ptr);
         stat = SendArg(sock, i-2, arg->dtype, nR-2, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
         if (D.dims) free(D.dims);
