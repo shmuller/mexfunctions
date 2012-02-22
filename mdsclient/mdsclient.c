@@ -174,7 +174,24 @@ void mds2mex_cmplx(const wrap_data *w_p, void *buf) {
     }
 }
 
-/* data descriptor */
+void *wrap2mds_data(const wrap_data *w_p, const wrap_dtype *w_dtype) {
+    if (wrap_dtype_isreal(w_dtype)) {
+        return w_p->r;
+    } else {
+        return mex2mds_cmplx(w_p);
+    }
+}
+
+void mds2wrap_data(wrap_data *w_p, const wrap_dtype *w_dtype, void *ptr) {
+    if (wrap_dtype_isreal(w_dtype)) {
+         memcpy(w_p->r, ptr, w_p->num*w_p->siz);
+     } else {
+         mds2mex_cmplx(w_p, ptr);
+     }
+}
+
+
+/* descriptors */
 typedef struct {
     const wrap_dtype *w_dtype;
     wrap_dims w_dims;
@@ -256,12 +273,8 @@ void wrap2mds_Descrip(mdsDescrip *D, const wrap_Descrip *w_D) {
     } else {
         wrap2mds_dims(D, &w_D->w_dims);
     }
-        
-    if (wrap_dtype_isreal(w_D->w_dtype)) {
-        D->ptr = w_D->w_p.r;
-    } else {
-        D->ptr = mex2mds_cmplx(&w_D->w_p);
-    }
+
+    D->ptr = wrap2mds_data(&w_D->w_p, w_D->w_dtype);
 }
 
 
@@ -345,8 +358,9 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
         
     w_D = mds2wrap_Descrip(arg);
-    wrap_dims *w_d = &w_D.w_dims;
     const wrap_dtype *w_dtype = w_D.w_dtype;
+    wrap_dims *w_d = &w_D.w_dims;
+    wrap_data *w_p = &w_D.w_p;
     
     if (w_dtype == NULL) {
         L[0] = mxCreateNumericArray(0,0,mxDOUBLE_CLASS,mxREAL);
@@ -357,14 +371,10 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     } else {
                   
         L[0] = mxCreateNumericArray(w_d->ndims,w_d->dims,w_dtype->ID,w_dtype->Co);
-        w_D.w_p.r = mxGetData(L[0]);
-        w_D.w_p.i = mxGetImagData(L[0]);
+        w_p->r = mxGetData(L[0]);
+        w_p->i = mxGetImagData(L[0]);
 
-        if (wrap_dtype_isreal(w_dtype)) {
-            memcpy(w_D.w_p.r,arg->ptr,numbytes);
-        } else {
-            mds2mex_cmplx(&w_D.w_p,arg->ptr);
-        }   
+        mds2wrap_data(w_p, w_dtype, arg->ptr);   
     }
     if (w_d->dims) free(w_d->dims);
     if (mem) free(mem);
