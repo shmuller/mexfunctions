@@ -106,7 +106,6 @@ const wrap_dtype *wrap_getdtype(const wrap_Array *r) {
 /* data dimensions */
 typedef struct {
     char ndims;
-    int  num;
     mwSize *dims;
 } wrap_dims;
 
@@ -114,8 +113,8 @@ void mds2wrap_dims(wrap_dims *w_d, const struct descrip *d) {
     int i;
     w_d->ndims = max(d->ndims,2);
     w_d->dims = malloc(w_d->ndims*sizeof(mwSize));
-    for(i=0,w_d->num=1; i<d->ndims; i++) {
-        w_d->num *= w_d->dims[i] = d->dims[i];
+    for(i=0; i<d->ndims; i++) {
+        w_d->dims[i] = d->dims[i];
     }
     for(; i<w_d->ndims; i++) {
         w_d->dims[i] = 1;
@@ -127,55 +126,29 @@ void wrap2mds_dims(mdsDescrip *D, const wrap_dims *w_d) {
     D->ndims = w_d->ndims;
         
     /* remove singleton dimensions */
-    for(i=D->ndims-1; i>=0; i--) if (w_d->dims[i]==1) D->ndims--; else break;
-
+    for(i=D->ndims-1; i>=0; i--) {
+        if (w_d->dims[i]==1) D->ndims--; else break;
+    }
     D->dims = calloc(D->ndims,sizeof(int));
     for(i=0; i<D->ndims; i++) D->dims[i] = w_d->dims[i];
 }
     
-        
-
-/* data descriptor */
+/* data pointers */
 typedef struct {
-    const wrap_dtype *w_dtype;
-    wrap_dims w_dims;
-    int  siz;
-    void *pr;
-    void *pi;
-} wrap_Descrip;
+    int num;
+    int siz;
+    void *r;
+    void *i;
+} wrap_data;
 
-wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
-    wrap_Descrip w_D;
-    w_D.w_dtype = wrap_getdtype(r);
-    
-    wrap_dims *w_d = &w_D.w_dims;
-    w_d->ndims = mxGetNumberOfDimensions(r);
-    w_d->num   = mxGetNumberOfElements(r);
-    w_d->dims  = (mwSize*) mxGetDimensions(r);
-    
-    w_D.siz = mxGetElementSize(r);
-    if (!wrap_dtype_isreal(w_D.w_dtype)) w_D.siz *= 2;
-    
-    if (w_D.w_dtype != wrap_STRING) {
-        w_D.pr = mxGetData(r);
-        w_D.pi = mxGetImagData(r);
-    } else {
-        w_D.pr = malloc((w_d->num+1)*sizeof(char));
-	    mxGetString(r, w_D.pr, w_d->num+1);
-    }
-    return w_D;
-}
-
-
-void *mex2mds_cmplx(const wrap_Descrip *w_D) {
+void *mex2mds_cmplx(const wrap_data *w_p) {
     size_t i,num,siz;
     void *pr,*pi,*buf,*b;
     
-    const wrap_dims *w_d = &w_D->w_dims;
-    num = w_d->num;
-    siz = w_D->siz/2;
-    pr  = w_D->pr;
-    pi  = w_D->pi;
+    num = w_p->num;
+    siz = w_p->siz/2;
+    pr  = w_p->r;
+    pi  = w_p->i;
     
     buf = malloc(2*num*siz);
 
@@ -186,20 +159,49 @@ void *mex2mds_cmplx(const wrap_Descrip *w_D) {
     return buf;
 }
 
-void mds2mex_cmplx(const wrap_Descrip *w_D, void *buf) {
+void mds2mex_cmplx(const wrap_data *w_p, void *buf) {
     size_t i,num,siz;
     void *pr,*pi,*b;
-    
-    const wrap_dims *w_d = &w_D->w_dims;
-    num = w_d->num;
-    siz = w_D->siz/2;
-    pr  = w_D->pr;
-    pi  = w_D->pi;
+   
+    num = w_p->num;
+    siz = w_p->siz/2;
+    pr  = w_p->r;
+    pi  = w_p->i;
 
     for(i=0,b=buf; i<num; i++,b+=2*siz,pr+=siz,pi+=siz) {
         memcpy(pr,b    ,siz);
         memcpy(pi,b+siz,siz);
     }
+}
+
+/* data descriptor */
+typedef struct {
+    const wrap_dtype *w_dtype;
+    wrap_dims w_dims;
+    wrap_data w_p;
+} wrap_Descrip;
+
+wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
+    wrap_Descrip w_D;
+    w_D.w_dtype = wrap_getdtype(r);
+    
+    wrap_dims *w_d = &w_D.w_dims;
+    w_d->ndims = mxGetNumberOfDimensions(r);
+    w_d->dims  = (mwSize*) mxGetDimensions(r);
+    
+    wrap_data *w_p = &w_D.w_p;
+    w_p->num = mxGetNumberOfElements(r);
+    w_p->siz = mxGetElementSize(r);
+    if (!wrap_dtype_isreal(w_D.w_dtype)) w_p->siz *= 2;
+    
+    if (w_D.w_dtype != wrap_STRING) {
+        w_p->r = mxGetData(r);
+        w_p->i = mxGetImagData(r);
+    } else {
+        w_p->r = malloc((w_p->num+1)*sizeof(char));
+	    mxGetString(r, w_p->r, w_p->num+1);
+    }
+    return w_D;
 }
 
 
@@ -232,14 +234,20 @@ wrap_Descrip mds2wrap_Descrip(const struct descrip *d) {
     int i;
     wrap_Descrip w_D;
     w_D.w_dtype = mds2wrap_dtype(&d->dtype);
-    mds2wrap_dims(&w_D.w_dims, d);
-    w_D.siz = ArgLen(d);
+    
+    wrap_dims *w_d = &w_D.w_dims;
+    mds2wrap_dims(w_d, d);
+    
+    wrap_data *w_p = &w_D.w_p;
+    for(i=0,w_p->num=1; i<w_d->ndims; i++) {
+        w_p->num *= w_d->dims[i];
+    }
+    w_p->siz = ArgLen(d);
     return w_D;
 }
 
 void wrap2mds_Descrip(mdsDescrip *D, const wrap_Descrip *w_D) {
     int i;
-    const wrap_dtype *w_dtype = w_D->w_dtype;
     D->dtype = *wrap2mds_dtype(w_D->w_dtype);
     
     if (w_D->w_dtype == wrap_STRING) {
@@ -250,9 +258,9 @@ void wrap2mds_Descrip(mdsDescrip *D, const wrap_Descrip *w_D) {
     }
         
     if (wrap_dtype_isreal(w_D->w_dtype)) {
-        D->ptr = w_D->pr;
+        D->ptr = w_D->w_p.r;
     } else {
-        D->ptr = mex2mds_cmplx(w_D);
+        D->ptr = mex2mds_cmplx(&w_D->w_p);
     }
 }
 
@@ -260,7 +268,7 @@ void wrap2mds_Descrip(mdsDescrip *D, const wrap_Descrip *w_D) {
 void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
     wrap_Descrip w_D = wrap_getDescrip(r);
     if (w_D.w_dtype == w_dtype) { 
-        return w_D.pr;
+        return w_D.w_p.r;
 	} else {
         wrap_error("Wrong argument type");
 	}
@@ -349,13 +357,13 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
     } else {
                   
         L[0] = mxCreateNumericArray(w_d->ndims,w_d->dims,w_dtype->ID,w_dtype->Co);
-        w_D.pr = mxGetData(L[0]);
-        w_D.pi = mxGetImagData(L[0]);
+        w_D.w_p.r = mxGetData(L[0]);
+        w_D.w_p.i = mxGetImagData(L[0]);
 
         if (wrap_dtype_isreal(w_dtype)) {
-            memcpy(w_D.pr,arg->ptr,numbytes);
+            memcpy(w_D.w_p.r,arg->ptr,numbytes);
         } else {
-            mds2mex_cmplx(&w_D,arg->ptr);
+            mds2mex_cmplx(&w_D.w_p,arg->ptr);
         }   
     }
     if (w_d->dims) free(w_d->dims);
