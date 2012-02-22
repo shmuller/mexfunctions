@@ -80,21 +80,32 @@ static const dtype_item dtype_table[] = {
 
 static const int dtype_table_len = LEN(dtype_table);
 
-wrap_dtype wrap_getdtype(const wrap_Array *r) {
+static const wrap_dtype 
+    *wrap_STRING = &dtype_table[0].w_dtype,
+    *wrap_INT32  = &dtype_table[6].w_dtype;
+
+
+const wrap_dtype *wrap_getdtype(const wrap_Array *r) {
     wrap_dtype w_dtype; 
     w_dtype.ID = mxGetClassID(r);
     w_dtype.Co = mxIsComplex(r) ? mxCOMPLEX : mxREAL;
-    return w_dtype;
+    
+    int i;
+    const dtype_item *t;
+    for(i=dtype_table_len,t=dtype_table; i--; t++) {
+        if (wrap_dtype_isequal(&t->w_dtype,&w_dtype)) return &t->w_dtype;
+    }
+    return NULL;
 }
 
 typedef struct {
-    wrap_dtype w_dtype;
-    int siz;
-    char ndims;
-	int num;
+    const wrap_dtype *w_dtype;
+    int     siz;
+    char    ndims;
+	int     num;
 	mwSize *dims; 
-    void *pr;
-    void *pi;
+    void   *pr;
+    void   *pi;
 } wrap_Descrip;
 
 wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
@@ -105,7 +116,7 @@ wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
     w_D.num     = mxGetNumberOfElements(r);
     w_D.dims    = (mwSize*) mxGetDimensions(r);
     
-    if (w_D.w_dtype.ID != mxCHAR_CLASS) {
+    if (w_D.w_dtype != wrap_STRING) {
         w_D.pr = mxGetData(r);
         w_D.pi = mxGetImagData(r);
     } else {
@@ -118,18 +129,6 @@ wrap_Descrip wrap_getDescrip(const wrap_Array *r) {
 
 void wrap_error(char *err) {
     mexErrMsgTxt(err);
-}
-
-int wrap_getNumberOfElements(const wrap_Array *r) {
-    return mxGetNumberOfElements(r);
-}
-
-int wrap_getElementSize(const wrap_Array *r) {
-    return mxGetElementSize(r);
-}
-
-int wrap_getNumberOfDimensions(const wrap_Array *r) {
-    return mxGetNumberOfDimensions(r);
 }
 
 
@@ -145,33 +144,34 @@ const wrap_dtype *mds2wrap_dtype(const char *dtype) {
     return NULL;
 }
 
+static const int item_dist = 
+    (void*) &dtype_table[0].dtype - (void*) &dtype_table[0].w_dtype;
+
+const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
+    return (void*) w_dtype + item_dist;   
+}
+
+/*
 const char *wrap2mds_dtype(const wrap_dtype *w_dtype) {
     int i;
     const dtype_item *t;
     if (w_dtype==NULL) return NULL;
     for(i=dtype_table_len,t=dtype_table; i--; t++) {
-        if (wrap_dtype_isequal(&t->w_dtype,w_dtype)) return &t->dtype;
+        if (&t->w_dtype==w_dtype) return &t->dtype;
     }
     return NULL;
 }
+*/
 
-
-
-void *getnumarg(const wrap_Array *r, wrap_ClassID id) {
-	if (wrap_getdtype(r).ID == id) { 
-		return mxGetData(r);
+void *getarg(const wrap_Array *r, const wrap_dtype *w_dtype) {
+    wrap_Descrip w_D = wrap_getDescrip(r);
+    if (w_D.w_dtype == w_dtype) { 
+		return w_D.pr;
 	} else {
 		wrap_error("Wrong argument type");
 	}
 }
 
-void *getstringarg(const wrap_Array *r) {
-	short len = wrap_getNumberOfElements(r);
-	void *str = malloc((len+1)*sizeof(char));
-
-	mxGetString(r,str,len+1);
-	return str;
-}
 
 
 int mds2mex_dims(struct descrip *d, char *ndims, mwSize **dims)
@@ -223,11 +223,11 @@ void getmdsDescrip(const wrap_Descrip *w_D, mdsDescrip *D) {
 	mwSize *dimsR = w_D->dims;
 	D->ndims = w_D->ndims;
     
-    wrap_dtype w_dtype = w_D->w_dtype;
-    D->dtype = *wrap2mds_dtype(&w_dtype);
+    const wrap_dtype *w_dtype = w_D->w_dtype;
+    D->dtype = *wrap2mds_dtype(w_dtype);
     
-    wrap_ClassID ID = w_dtype.ID;
-    wrap_Complexity Co = w_dtype.Co;
+    wrap_ClassID ID = w_dtype->ID;
+    wrap_Complexity Co = w_dtype->Co;
     
 	if (ID != mxCHAR_CLASS) {
 		/* remove singleton dimensions */
@@ -253,7 +253,7 @@ void getmdsDescrip(const wrap_Descrip *w_D, mdsDescrip *D) {
 #include "tcp.c"
 
 int sm_mdsconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	char *host = getstringarg(R[1]);
+	char *host = getarg(R[1],wrap_STRING);
     int sock;
     
     switch (sock=tcpconnect(host)) {
@@ -270,15 +270,15 @@ int sm_mdsconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 }
 
 int sm_mdsdisconnect(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	int sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	int sock = *((int*)getarg(R[1],wrap_INT32));
 	tcpdisconnect(sock);
 	return(1);
 }
 
 int sm_mdsopen(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
-	char *tree = getstringarg(R[2]);
-	int shot = *((int*)getnumarg(R[3],mxINT32_CLASS));
+	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
+	char *tree = getarg(R[2],wrap_STRING);
+	int shot = *((int*)getarg(R[3],wrap_INT32));
 	int stat = MdsOpen(sock,tree,shot);
 	if (!status_ok(stat)) {
 		wrap_error("Could not open tree");
@@ -287,7 +287,7 @@ int sm_mdsopen(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 }
 
 int sm_mdsclose(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
 	int stat = MdsClose(sock);
 	if (!status_ok(stat)) {
 		wrap_error("Could not close tree");
@@ -296,7 +296,7 @@ int sm_mdsclose(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 }
 
 int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
-	SOCKET sock = *((int*)getnumarg(R[1],mxINT32_CLASS));
+	SOCKET sock = *((int*)getarg(R[1],wrap_INT32));
 	mdsDescrip *D = malloc(sizeof(mdsDescrip));
 	
 	struct descrip exparg, *arg;
@@ -349,7 +349,7 @@ int sm_mdsvalue(int nL, wrap_Array *L[], int nR, const wrap_Array *R[]) {
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
-	char *cmd = getstringarg(R[0]), errstr[256];
+	char *cmd = getarg(R[0],wrap_STRING), errstr[256];
 	int stat;
 
 	if (strcmp(cmd,"mdsvalue")==0) {
