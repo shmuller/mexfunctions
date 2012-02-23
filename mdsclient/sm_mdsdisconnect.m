@@ -1,11 +1,11 @@
 function sm_mdsdisconnect(varargin)
 %sm_mdsdisconnect([sock])
-%   Wrapper for mdsclient library
+%   Wrapper for mdsclientmex file
 %
 %   S. H. Muller, 2008/02/07
 
 sock = getsock(varargin);
 
-mdsclient('mdsdisconnect',sock);
+mdsclientmex('mdsdisconnect',sock);
 
 remsock(sock);

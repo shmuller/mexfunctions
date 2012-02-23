@@ -4,4 +4,4 @@ function out = MdsValue(varargin)
 %
 %   S. H. Muller, 2008/02/07
 
-out = mdsclient('mdsvalue',varargin{:});
+out = mdsclientmex('mdsvalue',varargin{:});

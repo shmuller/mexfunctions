@@ -4,13 +4,13 @@ function MdsClose(sock)
 %
 %   S. H. Muller, 2008/02/07
 
-expt = mdsclient('mdsvalue',sock,'$expt');
+expt = mdsclientmex('mdsvalue',sock,'$expt');
 errstr = '%TREE-W-TreeNOT_OPEN, Tree not currently open';
 
 if ~strcmp(expt,errstr)
-    mdsclient('mdsclose',sock);
+    mdsclientmex('mdsclose',sock);
 end
 
 if isunix
-    mdsclient('mdsdisconnect',sock);
+    mdsclientmex('mdsdisconnect',sock);
 end

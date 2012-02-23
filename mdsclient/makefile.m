@@ -23,4 +23,4 @@ switch computer
         lib = {'/usr/local/mdsplus/lib/libMdsIpShr.a'};
 end
 
-mex('-v','mdsclient.c',def{:},opt{:},inc{:},lib{:});
+mex('-v','mdsclientmex.c',def{:},opt{:},inc{:},lib{:});

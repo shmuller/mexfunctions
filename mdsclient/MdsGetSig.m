@@ -10,18 +10,18 @@ end
 
 switch mode
     case 'full'
-        x = mdsclient('mdsvalue',sock,node);
+        x = mdsclientmex('mdsvalue',sock,node);
         
     case 'raw'
         expr = ['raw_of(',node,')'];
-        x = mdsclient('mdsvalue',sock,expr);
+        x = mdsclientmex('mdsvalue',sock,expr);
         
     case 'netw'
         expr = ['getsigcal(',node,')'];
-        f = mdsclient('mdsvalue',sock,expr);
+        f = mdsclientmex('mdsvalue',sock,expr);
 
         expr = ['raw_of(',node,')'];
-        x = mdsclient('mdsvalue',sock,expr);
+        x = mdsclientmex('mdsvalue',sock,expr);
 
         x = f(1)*cast(x,class(f))+f(2);
 end

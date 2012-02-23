@@ -4,11 +4,11 @@ function sock = MdsOpen(serv,tree,shot)
 %
 %   S. H. Muller, 2008/02/07
 
-sock = mdsclient('mdsconnect',serv);
+sock = mdsclientmex('mdsconnect',serv);
 
 switch nargin
     case 2
-        mdsclient('mdsopen',sock,tree,int32(0));
+        mdsclientmex('mdsopen',sock,tree,int32(0));
     case 3
-        mdsclient('mdsopen',sock,tree,int32(shot));
+        mdsclientmex('mdsopen',sock,tree,int32(shot));
 end

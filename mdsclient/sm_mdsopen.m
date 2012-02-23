@@ -1,6 +1,6 @@
 function out = sm_mdsopen(varargin)
 %out = sm_mdsopen(sock,tree,shot)
-%   Wrapper for mdsclient mex file
+%   Wrapper for mdsclientmex file
 %
 %   S. H. Muller, 2008/02/07
 
