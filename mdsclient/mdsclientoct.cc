@@ -170,19 +170,8 @@ void mds2oct(octave_value &out, const Descrip *D)
 
 DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
 {
-    int i;
+    int i, sock;
     octave_value_list retval;
-
-    char host[] = "localhost:8001";
-    int sock;
-
-    if ((sock=sm_mdsconnect(host)) < 0) {
-        ERROR("Could not connect.");
-    }
-
-    printf("sock = %d\n", sock);
-
-    //sm_mdsopen(sock, "rcp", 132777);
 
     Descrip l, *R;    
     int nR = args.length();
@@ -193,20 +182,36 @@ DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
         oct2mds(&R[i], args(i));
     }
 
-    void *mem;
-    sm_mdsvalue(sock, &l, nR, R, &mem);
+    char *cmd = (char*) R[0].ptr;
 
-    mds2oct(retval(0), &l);
+    if (strcmp(cmd,"mdsconnect")==0) 
+    {
+        char *host = (char*) R[1].ptr;
+        if ((sock=sm_mdsconnect(host)) < 0) {
+            ERROR("Could not connect.");
+	}
+	dim_vector dv(1);
+	int32NDArray t(dv,sock);
+	retval(0) = t;
+    } 
+    else if (strcmp(cmd,"mdsvalue")==0)
+    {
+        void *mem;
+	sock = *((int*)R[1].ptr);
+        sm_mdsvalue(sock, &l, nR-2, R+2, &mem);
 
-    if (mem) free(mem);
+        mds2oct(retval(0), &l);
+        if (mem) free(mem);
+    }
+    else if (strcmp(cmd,"mdsdisconnect")==0)
+    {
+        sock = *((int*)R[1].ptr);
+        sm_mdsdisconnect(sock);
+    }
  
     for(i=0; i<nR; i++) free(R[i].dims);
     free(R);
-
-    //sm_mdsclose(sock);
-
-    sm_mdsdisconnect(sock);
-
+    
     return retval;
 }
 
