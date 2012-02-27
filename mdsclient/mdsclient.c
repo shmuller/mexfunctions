@@ -47,16 +47,28 @@ const w_dtype_t *get_w_dtype(char dtype)
 }
 
 
-Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num, int siz, void *ptr)
+Descrip *mkDescrip_dims(Descrip *l, char ndims, int *dims, int num, int siz)
 {
     int i;
-    l->w_dtype = w_dtype;
     l->ndims = ndims;
     l->dims = (ndims==0) ? NULL : malloc(ndims*sizeof(int));
     for(i=0; i<ndims; i++) l->dims[i] = dims[i];
     l->num = num;
     l->siz = siz;
+    return l;
+}
+
+Descrip *mkDescrip_data(Descrip *l, w_dtype_t w_dtype, void *ptr)
+{
+    l->w_dtype = w_dtype;
     l->ptr = ptr;
+    return l;
+}
+
+Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num, int siz, void *ptr)
+{
+    mkDescrip_dims(l, ndims, dims, num, siz);
+    mkDescrip_data(l, w_dtype, ptr);
     return l;
 }
 
