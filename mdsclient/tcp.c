@@ -9,6 +9,11 @@
 
 #include <ipdesc.h>
 
+#ifndef status_ok
+#define status_ok(status) (((status) & 1) == 1)
+#endif
+
+
 int tcpopen(char *host, char *port) {   
     int sock;
     int one = 1;
