@@ -71,11 +71,13 @@ void oct2mds_dims(Descrip *D, const octave_value &in)
     int i, num, siz;
     int ndims = in.ndims();
     dim_vector dv = in.dims();
+
+    // remove singleton dimensions
     for(i=ndims-1; i>=0; i--) if (dv(i)==1) ndims--; else break;
 
-    int *dims = (int*) malloc(ndims*sizeof(int));
+    int *dims = (ndims==0) ? NULL : (int*) malloc(ndims*sizeof(int));
     for(i=0,num=1; i<ndims; i++) num *= dims[i] = dv(i);
-    siz = in.byte_size()/num;
+    siz = (num==0) ? 0 : in.byte_size()/num;
 
     mkDescrip_dims(D, ndims, dims, num, siz);
 }
@@ -109,7 +111,7 @@ void mds2oct(octave_value &out, const Descrip *D)
     for(i=0; i<D->ndims; i++) dv(i) = D->dims[i];
     for(; i<ndims; i++) dv(i) = 1;
 
-    if (D->w_dtype == w_dtype_CSTRING) dv(1) = D->siz;
+    if (D->w_dtype == w_dtype_CSTRING) dv(1) = D->num;
 
     switch (D->w_dtype) {
         case w_dtype_CSTRING:        out = charNDArray(dv);         break;
