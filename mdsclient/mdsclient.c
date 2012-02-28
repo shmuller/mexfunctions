@@ -1,10 +1,16 @@
 #include <stdlib.h>
+#include <string.h>
 
-#include "tcp.c"
+#include "tcp.h"
 
 #include "mdsclient.h"
 
 #include <ipdesc.h>
+
+#ifndef status_ok
+#define status_ok(status) (((status) & 1) == 1)
+#endif
+
 
 typedef struct {
     w_dtype_t w_dtype;
@@ -73,17 +79,6 @@ Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num
 }
 
 
-int sm_mdsconnect(char *host) 
-{
-    return tcpconnect(host);
-}
-
-int sm_mdsdisconnect(int sock) 
-{
-    tcpdisconnect(sock);
-    return 1;
-}
-
 int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem) 
 {
     struct descrip exparg, *arg;
@@ -109,15 +104,52 @@ int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem)
     return 1;
 }
 
-int sm_mdsopen(int sock, char *tree, int shot) 
-{
-    return MdsOpen(sock,tree,shot);
+
+int tcpauth(int sock, char *user_p)
+{  
+    struct descrip exparg, *arg;
+    int numbytes = 0, stat = 0;
+    void *mem = NULL;
+	
+    arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
+    stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
+    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+    if (!status_ok(stat)) {
+        tcpclose(sock);
+        return -5;
+    }
+    return 1;
 }
 
-int sm_mdsclose(int sock) 
+
+int sm_mdsconnect(char *host) 
 {
-    return MdsClose(sock);
+    char *port;
+    int sock, err;
+    int STRLEN = 4096;
+    char user[STRLEN];
+    char *user_p = tcpuser(user,STRLEN);
+  
+    if ((port=strchr(host,':')) == NULL) {
+        port = strdup("8000");
+    } else {
+        *port++ = 0;
+    }
+
+    if ((sock=tcpopen(host,port)) < 0) {
+        return sock;		
+    }
+    if ((err=tcpauth(sock,user_p)) < 0) {
+        return err;
+    }
+    return sock;
+
 }
 
+int sm_mdsdisconnect(int sock) 
+{
+    tcpclose(sock);
+    return 1;
+}
 
 

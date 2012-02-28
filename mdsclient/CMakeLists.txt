@@ -11,7 +11,7 @@ find_package(mdsplus REQUIRED)
 
 include_directories(${mdsplus_INCLUDE_DIRS})
 
-add_library(mdsclient SHARED mdsclient.c)
+add_library(mdsclient SHARED mdsclient.c tcp.c)
 target_link_libraries(mdsclient ${mdsplus_LIBRARIES})
 
 add_executable(mdsclient_test mdsclient_test.c)

@@ -9,10 +9,11 @@
 int Startup() {return 0;}
 int Cleanup() {return 0;}
 
-char *getUserName(char *user, int len)
+char *tcpuser(char *user, int len)
 {
     struct passwd pwd, *pwd_p;
     
     return getpwuid_r(geteuid(), &pwd, user, len, &pwd_p) ?
         "Linux User" : pwd_p->pw_name;
 }
+

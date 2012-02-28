@@ -34,13 +34,10 @@ Descrip *mkDescrip_dims(Descrip *l, char ndims, int *dims, int num, int siz);
 Descrip *mkDescrip_data(Descrip *l, w_dtype_t w_dtype, void *ptr);
 Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num, int siz, void *ptr);
 
-int sm_mdsconnect(char *host);
-int sm_mdsdisconnect(int sock);
-
 int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem);
 
-int sm_mdsopen(int sock, char *tree, int shot);
-int sm_mdsclose(int sock);
+int sm_mdsconnect(char *host);
+int sm_mdsdisconnect(int sock);
 
 #ifdef __cplusplus
 }

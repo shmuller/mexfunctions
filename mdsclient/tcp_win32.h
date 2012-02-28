@@ -11,8 +11,9 @@ int Cleanup()
     return WSACleanup();
 }
 
-char *getUserName(char *user, int len)
+char *tcpuser(char *user, int len)
 {
     DWORD bsize = len;
-	return GetUserName(user,&bsize) ? user : "Windows User";
+    return GetUserName(user,&bsize) ? user : "Windows User";
 }
+
