@@ -36,20 +36,20 @@ static const dtype_item dtype_table[] = {
 static int dtype_table_len = sizeof(dtype_table)/sizeof(dtype_table[0]);
 
 
-const char *get_dtype(w_dtype_t w_dtype)
+char get_dtype(w_dtype_t w_dtype)
 {
     int i;
     for(i=0; i<dtype_table_len; i++)
-        if (dtype_table[i].w_dtype == w_dtype) return &dtype_table[i].dtype;
-    return NULL;
+        if (dtype_table[i].w_dtype == w_dtype) return dtype_table[i].dtype;
+    return 0;
 }
 
-const w_dtype_t *get_w_dtype(char dtype)
+w_dtype_t get_w_dtype(char dtype)
 {
     int i;
     for(i=0; i<dtype_table_len; i++)
-        if (dtype_table[i].dtype == dtype) return &dtype_table[i].w_dtype;
-    return NULL;
+        if (dtype_table[i].dtype == dtype) return dtype_table[i].w_dtype;
+    return w_dtype_UNKNOWN;
 }
 
 
@@ -82,13 +82,13 @@ Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num
 int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem) 
 {
     struct descrip exparg, *arg;
-    const char *dtype;
-    const w_dtype_t *w_dtype;
+    char dtype;
+    w_dtype_t w_dtype;
     int i, numbytes, num, siz, stat;
 
     for(i=0; i<nr; i++,r++) {
-	dtype = get_dtype(r->w_dtype);
-	arg = MakeDescrip(&exparg, *dtype, r->ndims, r->dims, r->ptr);
+        dtype = get_dtype(r->w_dtype);
+        arg = MakeDescrip(&exparg, dtype, r->ndims, r->dims, r->ptr);
         stat = SendArg(sock, i, arg->dtype, nr, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
     }
 
@@ -99,7 +99,7 @@ int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem)
     siz = ArgLen(arg);
     num = numbytes/siz;
 
-    mkDescrip(l, *w_dtype, arg->ndims, arg->dims, num, siz, arg->ptr);
+    mkDescrip(l, w_dtype, arg->ndims, arg->dims, num, siz, arg->ptr);
 
     return 1;
 }

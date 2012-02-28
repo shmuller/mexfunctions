@@ -71,7 +71,7 @@ void oct2mds_dims(Descrip *D, const octave_value &in)
     int i, num, siz;
     int ndims = in.ndims();
     dim_vector dv = in.dims();
-    //for(i=ndims-1; i>=0; i--) if (dv(i)==1) ndims--; else break;
+    for(i=ndims-1; i>=0; i--) if (dv(i)==1) ndims--; else break;
 
     int *dims = (int*) malloc(ndims*sizeof(int));
     for(i=0,num=1; i<ndims; i++) num *= dims[i] = dv(i);
@@ -97,6 +97,10 @@ void oct2mds(Descrip *D, const octave_value &in)
 
 void mds2oct(octave_value &out, const Descrip *D)
 {
+    if (D->w_dtype == w_dtype_UNKNOWN) {
+        out = NDArray();
+	return;
+    }
     int i, numbytes = D->num*D->siz;
     int ndims = (D->ndims > 2) ? D->ndims : 2;
 
@@ -105,74 +109,24 @@ void mds2oct(octave_value &out, const Descrip *D)
     for(i=0; i<D->ndims; i++) dv(i) = D->dims[i];
     for(; i<ndims; i++) dv(i) = 1;
 
+    if (D->w_dtype == w_dtype_CSTRING) dv(1) = D->siz;
+
     switch (D->w_dtype) {
-       case w_dtype_CSTRING: {
-           dv(1) = D->siz;
-           charNDArray t(dv);
-	   memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_UCHAR: {
-           uint8NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_CHAR: {
-           int8NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_USHORT: {
-           uint16NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_SHORT: {
-           int16NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_ULONG: {
-           uint32NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_LONG: {
-           int32NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_ULONGLONG: {
-           uint64NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_LONGLONG: {
-           int64NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_FLOAT: {
-           FloatNDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_COMPLEX: {
-           FloatComplexNDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_DOUBLE: {
-           NDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
-       case w_dtype_COMPLEX_DOUBLE: {
-           ComplexNDArray t(dv);
-           memcpy((void*)t.data(), D->ptr, numbytes);
-           out = t; break;
-       }
+        case w_dtype_CSTRING:        out = charNDArray(dv);         break;
+        case w_dtype_UCHAR:          out = uint8NDArray(dv);        break;
+        case w_dtype_CHAR:           out = int8NDArray(dv);         break;
+        case w_dtype_USHORT:         out = uint16NDArray(dv);       break;
+        case w_dtype_SHORT:          out = int16NDArray(dv);        break;
+        case w_dtype_ULONG:          out = uint32NDArray(dv);       break;
+        case w_dtype_LONG:           out = int32NDArray(dv);        break;
+        case w_dtype_ULONGLONG:      out = uint64NDArray(dv);       break;
+        case w_dtype_LONGLONG:       out = int64NDArray(dv);        break;
+        case w_dtype_FLOAT:          out = FloatNDArray(dv);        break;
+        case w_dtype_COMPLEX:        out = FloatComplexNDArray(dv); break;
+        case w_dtype_DOUBLE:         out = NDArray(dv);             break;
+        case w_dtype_COMPLEX_DOUBLE: out = ComplexNDArray(dv);      break;
     }
+    memcpy(octGetData(out), D->ptr, numbytes);
 }
 
 

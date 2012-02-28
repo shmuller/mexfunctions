@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 typedef enum {
+    w_dtype_UNKNOWN=-1,
     w_dtype_CSTRING,
     w_dtype_UCHAR,
     w_dtype_CHAR,

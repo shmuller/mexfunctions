@@ -13,7 +13,7 @@ int sm_error(const char *errstr)
 
 int main()
 {
-    char host[] = "localhost:8001";
+    char host[] = "localhost:8020";
     //char host[] = "mdsplus.aug.ipp.mpg.de:8000";
     int sock;
 
@@ -26,7 +26,7 @@ int main()
 
     //sm_mdsopen(sock, "rcp", 132777);
 
-    char cmd[] = "$";
+    char cmd[] = "[]";
 
     Descrip l, *R; 
 	    
@@ -34,15 +34,15 @@ int main()
 
     mkDescrip(&R[0], w_dtype_CSTRING, 0, NULL, 0, sizeof(char), cmd);
 
-    int one = 1;
-    double x = 1.;
-    mkDescrip(&R[1], w_dtype_DOUBLE, 1, &one, 1, sizeof(double), &x);
+    //int one = 1;
+    //double x = 1.;
+    //mkDescrip(&R[1], w_dtype_DOUBLE, 1, &one, 1, sizeof(double), &x);
 
 
     void *mem;
-    sm_mdsvalue(sock, &l, 2, R, &mem);
+    sm_mdsvalue(sock, &l, 1, R, &mem);
 
-    printf("out = %f\n", *(double*)l.ptr);
+    //printf("out = %d\n", *(int*)l.ptr);
 
     if (mem) free(mem);
     free(R);
