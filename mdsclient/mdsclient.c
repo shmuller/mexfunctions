@@ -128,8 +128,14 @@ int sm_mdsconnect(char *host)
     int sock, err;
     int STRLEN = 4096;
     char user[STRLEN];
-    char *user_p = tcpuser(user,STRLEN);
-  
+    char *user_p = host;
+
+    if ((host=strchr(user_p,'@')) == NULL) {
+        host = user_p;
+        user_p = tcpuser(user,STRLEN);
+    } else {
+        *host++ = 0;
+    }
     if ((port=strchr(host,':')) == NULL) {
         port = strdup("8000");
     } else {

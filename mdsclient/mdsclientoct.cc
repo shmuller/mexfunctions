@@ -9,6 +9,28 @@
 
 #define ERROR(x) error(x); return octave_value_list()
 
+
+void *octGetData(const octave_value &in)
+{
+    if (in.is_complex_type() && !in.is_scalar_type()) {
+        // handle complex data types separately, but only if not scalar!
+        if (in.is_double_type()) {
+            const ComplexNDArray t = in.complex_array_value();
+            return (void*) t.data();
+	} else if (in.is_single_type()) {
+            const FloatComplexNDArray t = in.float_complex_array_value();
+            return (void*) t.data();
+        } else {
+            error("Data type not implemented.");
+            return NULL;
+	}
+    } else {
+        // handle bulk of data types with mex_get_data()
+        return in.mex_get_data();
+    }
+}
+
+
 void oct2mds_dtype(Descrip *D, const octave_value &in)
 {
     if (in.is_string()) {
@@ -63,26 +85,12 @@ void oct2mds(Descrip *D, const octave_value &in)
     oct2mds_dims(D, in);
     oct2mds_dtype(D, in);
 
-    if (in.is_string()) 
-    {
+    D->ptr = octGetData(in);
+
+    if (in.is_string()) {
         void *ptr = calloc(D->num+1,sizeof(char));
-        memcpy(ptr,in.mex_get_data(),D->num);
+        memcpy(ptr,D->ptr,D->num);
 	mkDescrip(D, D->w_dtype, 0, NULL, 0, D->siz, ptr);
-    } 
-    else if (in.is_real_type() || in.is_scalar_type()) 
-    {
-        // real or scalar complex
-        D->ptr = in.mex_get_data();
-    } 
-    else if (in.is_double_type()) 
-    {
-        const ComplexNDArray t = in.complex_array_value();
-        D->ptr = (void*)t.data();
-    } 
-    else if (in.is_single_type()) 
-    {
-        const FloatComplexNDArray t = in.float_complex_array_value();
-        D->ptr = (void*)t.data();
     }
 }
 
@@ -99,7 +107,7 @@ void mds2oct(octave_value &out, const Descrip *D)
 
     switch (D->w_dtype) {
        case w_dtype_CSTRING: {
-           dv(1) = D->num;
+           dv(1) = D->siz;
            charNDArray t(dv);
 	   memcpy((void*)t.data(), D->ptr, numbytes);
            out = t; break;
@@ -187,9 +195,13 @@ DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
     if (strcmp(cmd,"mdsconnect")==0) 
     {
         char *host = (char*) R[1].ptr;
-        if ((sock=sm_mdsconnect(host)) < 0) {
-            ERROR("Could not connect.");
-	}
+        switch (sock=sm_mdsconnect(host)) {
+            case -1:
+            case -2:
+            case -3:
+            case -4: ERROR("Could not connect to server");
+            case -5: ERROR("Could not authenticate user");
+        }
 	dim_vector dv(1);
 	int32NDArray t(dv,sock);
 	retval(0) = t;
