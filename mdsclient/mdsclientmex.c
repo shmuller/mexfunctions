@@ -102,17 +102,14 @@ void mex2mds(Descrip *D, const mxArray *in)
 {
     mex2mds_dims(D, in);
     mex2mds_dtype(D, in);
-
-    if (!mxIsComplex(in)) {
+        
+    if (mxIsChar(in)) {
+        D->ptr = mxArrayToString(in);
+        mkDescrip_dims(D, 0, NULL, 0, D->siz);
+    } else if (!mxIsComplex(in)) {
         D->ptr = mxGetData(in);
     } else {
         mex2mds_cmplx(&D->ptr, mxGetData(in), mxGetImagData(in), D->num, D->siz);
-    }
-        
-    if (mxIsChar(in)) {
-        void *ptr = calloc(D->num+1,sizeof(char));
-        memcpy(ptr,D->ptr,D->num);
-        mkDescrip(D, D->w_dtype, 0, NULL, 0, D->siz, ptr);
     }
 }
 
@@ -120,7 +117,13 @@ void mex2mds(Descrip *D, const mxArray *in)
 void mds2mex(mxArray **out, const Descrip *D)
 {
     if (D->w_dtype == w_dtype_UNKNOWN) {
-        out = mxCreateNumericMatrix(0,0,mxDOUBLE_CLASS,mxREAL);
+        *out = mxCreateNumericMatrix(0,0,mxDOUBLE_CLASS,mxREAL);
+        return;
+    } else if (D->w_dtype == w_dtype_CSTRING) {
+        void *ptr = calloc(D->num+1,sizeof(char));
+        memcpy(ptr, D->ptr, D->num*sizeof(char));
+        *out = mxCreateString(ptr);
+        free(ptr);
         return;
     }
     int i, numbytes = D->num*D->siz;

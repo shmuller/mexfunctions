@@ -97,7 +97,7 @@ int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem)
     
     w_dtype = get_w_dtype(arg->dtype);
     siz = (w_dtype==w_dtype_CSTRING) ? sizeof(char) : ArgLen(arg);
-    num = numbytes/siz;
+    num = (siz==0) ? 0 : numbytes/siz;
 
     mkDescrip(l, w_dtype, arg->ndims, arg->dims, num, siz, arg->ptr);
 
