@@ -177,7 +177,7 @@ DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
         sm_mdsdisconnect(sock);
     }
  
-    for(i=0; i<nR; i++) free(R[i].dims);
+    for(i=0; i<nR; i++) if (R[i].dims) free(R[i].dims);
     free(R);
     
     return retval;
