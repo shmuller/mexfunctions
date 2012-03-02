@@ -14,11 +14,16 @@ include_directories(${mdsplus_INCLUDE_DIRS})
 add_library(mdsclient SHARED mdsclient.c tcp.c)
 target_link_libraries(mdsclient ${mdsplus_LIBRARIES})
 
+add_library(mdsclient_static STATIC mdsclient.c tcp.c)
+set_target_properties(mdsclient_static PROPERTIES OUTPUT_NAME mdsclient)
+target_link_libraries(mdsclient_static ${mdsplus_LIBRARIES})
+
 add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)
 
-install(TARGETS mdsclient_test mdsclient 
+install(TARGETS mdsclient_test mdsclient mdsclient_static 
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
 )
+

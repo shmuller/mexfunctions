@@ -7,7 +7,7 @@ env = Environment(CPPFLAGS='-I/usr/local/mdsplus/include')
 #		LIBS='MdsIpShr', LIBPATH='/usr/local/mdsplus/lib')
 
 libs_static = [File('/usr/local/mdsplus/lib/libMdsIpShr.a'), File('/usr/local/mdsplus/lib/libMdsIpUtil.a')]
-mdsclient = env.SharedLibrary(target='mdsclient', source='mdsclient.c', LIBS=libs_static)
+mdsclient = env.SharedLibrary(target='mdsclient', source=['mdsclient.c','tcp.c'], LIBS=libs_static)
 
 
 env.Program(target='mdsclient_test', source='mdsclient_test.c', LIBS=mdsclient)
