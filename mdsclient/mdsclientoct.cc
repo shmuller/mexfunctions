@@ -92,7 +92,7 @@ void oct2mds(Descrip *D, const octave_value &in)
     if (in.is_string()) {
         void *ptr = calloc(D->num+1,sizeof(char));
         memcpy(ptr,D->ptr,D->num);
-	mkDescrip(D, D->w_dtype, 0, NULL, 0, D->siz, ptr);
+        mkDescrip(D, D->w_dtype, 0, NULL, 0, D->siz, ptr);
     }
 }
 
@@ -165,7 +165,7 @@ DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
     else if (strcmp(cmd,"mdsvalue")==0)
     {
         void *mem;
-	sock = *((int*)R[1].ptr);
+        sock = *((int*)R[1].ptr);
         sm_mdsvalue(sock, &l, nR-2, R+2, &mem);
 
         mds2oct(retval(0), &l);

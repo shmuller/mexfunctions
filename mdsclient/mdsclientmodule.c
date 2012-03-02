@@ -11,6 +11,27 @@
 
 #define ERROR(x) fprintf(stderr,"%s\n",x); return NULL
 
+void mds2py_type(w_dtype_t w_dtype, int *typenum)
+{
+    switch (w_dtype)
+    {
+        case w_dtype_CSTRING         :  *typenum = NPY_STRING;  break;
+        case w_dtype_UCHAR           :  *typenum = NPY_UINT8;   break;
+        case w_dtype_CHAR            :  *typenum = NPY_INT8;    break;
+        case w_dtype_USHORT          :  *typenum = NPY_UINT16;  break;
+        case w_dtype_SHORT           :  *typenum = NPY_INT16;   break;
+        case w_dtype_ULONG           :  *typenum = NPY_UINT32;  break;
+        case w_dtype_LONG            :  *typenum = NPY_INT32;   break;
+        case w_dtype_ULONGLONG       :  *typenum = NPY_UINT64;  break;
+        case w_dtype_LONGLONG        :  *typenum = NPY_INT64;   break;
+        case w_dtype_FLOAT           :  *typenum = NPY_FLOAT;   break;
+        case w_dtype_DOUBLE          :  *typenum = NPY_DOUBLE;  break;
+        case w_dtype_COMPLEX         :  *typenum = NPY_CFLOAT;  break;
+        case w_dtype_COMPLEX_DOUBLE  :  *typenum = NPY_CDOUBLE; break;
+        default                      :  *typenum = NPY_NOTYPE;  break;
+    }
+}
+
 
 /*
 void *octGetData(const octave_value &in)
@@ -190,6 +211,26 @@ DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
 */
 
 
+void mds2py(PyObject **out, const Descrip *D)
+{
+    int i, tmp, typenum;
+    mds2py_type(D->w_dtype, &typenum);
+
+    npy_int *dims = (D->ndims==0) ? NULL : malloc(D->ndims*sizeof(npy_int));
+    for(i=0; i<D->ndims; i++) dims[i] = D->dims[D->ndims-1-i];
+
+    if (D->w_dtype == w_dtype_UNKNOWN) {
+        *out = Py_BuildValue("");
+    } else if (D->w_dtype == w_dtype_CSTRING) {
+        *out = Py_BuildValue("s#", D->ptr, D->num);
+    } else {
+        *out = PyArray_FromDims(D->ndims, dims, typenum);
+        memcpy(PyArray_DATA(*out), D->ptr, D->num*D->siz);
+    }
+    free(dims);
+}
+
+
 static PyObject* mdsconnect(PyObject *self, PyObject *args)
 {
     int sock;
@@ -233,13 +274,11 @@ static PyObject* mdsvalue(PyObject *self, PyObject *args)
     void *mem;
     sm_mdsvalue(sock, &l, 1, &R, &mem);
 
-    printf("%d\n", l.ndims);
-    printf("%d\n", l.dims[0]);
-    
-    PyObject *L = PyArray_FromDims(l.ndims, l.dims, PyArray_INT32);
-    memcpy(PyArray_DATA(L), l.ptr, l.num*l.siz);
+    PyObject *retval;
+    mds2py(&retval, &l);
+    if (mem) free(mem);
 
-    return L;
+    return retval;
 }
 
 
