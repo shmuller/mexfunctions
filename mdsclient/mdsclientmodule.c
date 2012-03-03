@@ -4,12 +4,11 @@
 #include <string.h>
 
 #include <Python.h>
-#include <numpy/noprefix.h>
-//#include <numpy/arrayobject.h>
+#include <numpy/arrayobject.h>
 
 #include "mdsclient.h"
 
-#define ERROR(x) fprintf(stderr,"%s\n",x); return NULL
+#define ERROR(t,m) PyErr_SetString(t,m); return NULL
 
 void mds2py_type(w_dtype_t w_dtype, int *typenum)
 {
@@ -32,183 +31,56 @@ void mds2py_type(w_dtype_t w_dtype, int *typenum)
     }
 }
 
-
-/*
-void *octGetData(const octave_value &in)
+void py2mds_type(int typenum, w_dtype_t* w_dtype)
 {
-    if (in.is_complex_type() && !in.is_scalar_type()) {
-        // handle complex data types separately, but only if not scalar!
-        if (in.is_double_type()) {
-            const ComplexNDArray t = in.complex_array_value();
-            return (void*) t.data();
-	} else if (in.is_single_type()) {
-            const FloatComplexNDArray t = in.float_complex_array_value();
-            return (void*) t.data();
-        } else {
-            error("Data type not implemented.");
-            return NULL;
-	}
-    } else {
-        // handle bulk of data types with mex_get_data()
-        return in.mex_get_data();
+    switch (typenum)
+    {
+        case NPY_STRING   :  *w_dtype = w_dtype_CSTRING;        break;
+        case NPY_UINT8    :  *w_dtype = w_dtype_UCHAR;          break;
+        case NPY_INT8     :  *w_dtype = w_dtype_CHAR;           break;
+        case NPY_UINT16   :  *w_dtype = w_dtype_USHORT;         break;
+        case NPY_INT16    :  *w_dtype = w_dtype_SHORT;          break;
+        case NPY_UINT32   :  *w_dtype = w_dtype_ULONG;          break;
+        case NPY_INT32    :  *w_dtype = w_dtype_LONG;           break;
+        case NPY_UINT64   :  *w_dtype = w_dtype_ULONGLONG;      break;
+        case NPY_INT64    :  *w_dtype = w_dtype_LONGLONG;       break;
+        case NPY_FLOAT    :  *w_dtype = w_dtype_FLOAT;          break;
+        case NPY_DOUBLE   :  *w_dtype = w_dtype_DOUBLE;         break;
+        case NPY_CFLOAT   :  *w_dtype = w_dtype_COMPLEX;        break;
+        case NPY_CDOUBLE  :  *w_dtype = w_dtype_COMPLEX_DOUBLE; break;
+        default           :  *w_dtype = w_dtype_UNKNOWN;        break;
     }
 }
 
-
-void oct2mds_dtype(Descrip *D, const octave_value &in)
-{
-    if (in.is_string()) {
-        D->w_dtype = w_dtype_CSTRING;
-    } else if (in.is_real_type()) {
-        if (in.is_double_type()) {
-            D->w_dtype = w_dtype_DOUBLE;
-        } else if (in.is_single_type()) {
-            D->w_dtype = w_dtype_FLOAT;
-        } else if (in.is_uint8_type()) {
-            D->w_dtype = w_dtype_UCHAR;
-        } else if (in.is_int8_type()) {
-            D->w_dtype = w_dtype_CHAR;
-        } else if (in.is_uint16_type()) {
-            D->w_dtype = w_dtype_USHORT;
-        } else if (in.is_int16_type()) {
-            D->w_dtype = w_dtype_SHORT;
-        } else if (in.is_uint32_type()) {
-            D->w_dtype = w_dtype_ULONG;
-        } else if (in.is_int32_type()) {
-            D->w_dtype = w_dtype_LONG;
-        } else if (in.is_uint64_type()) {
-            D->w_dtype = w_dtype_ULONGLONG;
-        } else if (in.is_int64_type()) {
-            D->w_dtype = w_dtype_LONGLONG;
-        }
-    } else if (in.is_double_type()) {
-        D->w_dtype = w_dtype_COMPLEX_DOUBLE;
-    } else if (in.is_single_type()) {
-        D->w_dtype = w_dtype_COMPLEX;
-    } else {
-        error("Unknown data type.");
-    }
-}
-
-void oct2mds_dims(Descrip *D, const octave_value &in)
+void py2mds_dims(Descrip *D, const PyObject *in)
 {
     int i, num, siz;
-    int ndims = in.ndims();
-    dim_vector dv = in.dims();
-
-    // remove singleton dimensions
-    for(i=ndims-1; i>=0; i--) if (dv(i)==1) ndims--; else break;
-
+    int ndims = PyArray_NDIM(in);
+    npy_intp *dv = PyArray_DIMS(in);
+    
     int *dims = (ndims==0) ? NULL : (int*) malloc(ndims*sizeof(int));
-    for(i=0,num=1; i<ndims; i++) num *= dims[i] = dv(i);
-    siz = (num==0) ? 0 : in.byte_size()/num;
+    for(i=0,num=1; i<ndims; i++) num *= dims[i] = dv[ndims-1-i];
+    siz = (num==0) ? 0 : PyArray_ITEMSIZE(in);
 
     mkDescrip_dims(D, ndims, dims, num, siz);
 }
 
-void oct2mds(Descrip *D, const octave_value &in)
+void py2mds(Descrip *D, const PyObject *in)
 {
-    oct2mds_dims(D, in);
-    oct2mds_dtype(D, in);
-
-    D->ptr = octGetData(in);
-
-    if (in.is_string()) {
-        void *ptr = calloc(D->num+1,sizeof(char));
-        memcpy(ptr,D->ptr,D->num);
-	mkDescrip(D, D->w_dtype, 0, NULL, 0, D->siz, ptr);
+    if (PyString_Check(in)) {
+        D->siz = PyString_Size(in);
+        D->ptr = PyString_AsString(in);
+        mkDescrip(D, w_dtype_CSTRING, 0, NULL, 0, D->siz, D->ptr);
+        return;
     }
+
+    PyObject *arr = PyArray_FromAny(in, NULL, 0, 0, 0, NULL);
+    int typenum = PyArray_TYPE(arr);
+    py2mds_type(typenum, &D->w_dtype);
+    py2mds_dims(D, arr);
+
+    D->ptr = PyArray_DATA(arr);
 }
-
-
-void mds2oct(octave_value &out, const Descrip *D)
-{
-    if (D->w_dtype == w_dtype_UNKNOWN) {
-        out = NDArray();
-	return;
-    }
-    int i, numbytes = D->num*D->siz;
-    int ndims = (D->ndims > 2) ? D->ndims : 2;
-
-    dim_vector dv;
-    dv.resize(ndims);
-    for(i=0; i<D->ndims; i++) dv(i) = D->dims[i];
-    for(; i<ndims; i++) dv(i) = 1;
-
-    if (D->w_dtype == w_dtype_CSTRING) dv(1) = D->num;
-
-    switch (D->w_dtype) {
-        case w_dtype_CSTRING:        out = charNDArray(dv);         break;
-        case w_dtype_UCHAR:          out = uint8NDArray(dv);        break;
-        case w_dtype_CHAR:           out = int8NDArray(dv);         break;
-        case w_dtype_USHORT:         out = uint16NDArray(dv);       break;
-        case w_dtype_SHORT:          out = int16NDArray(dv);        break;
-        case w_dtype_ULONG:          out = uint32NDArray(dv);       break;
-        case w_dtype_LONG:           out = int32NDArray(dv);        break;
-        case w_dtype_ULONGLONG:      out = uint64NDArray(dv);       break;
-        case w_dtype_LONGLONG:       out = int64NDArray(dv);        break;
-        case w_dtype_FLOAT:          out = FloatNDArray(dv);        break;
-        case w_dtype_COMPLEX:        out = FloatComplexNDArray(dv); break;
-        case w_dtype_DOUBLE:         out = NDArray(dv);             break;
-        case w_dtype_COMPLEX_DOUBLE: out = ComplexNDArray(dv);      break;
-    }
-    memcpy(octGetData(out), D->ptr, numbytes);
-}
-
-
-
-DEFUN_DLD(mdsclientmex, args, nargout, "MDSplus client")
-{
-    int i, sock;
-    octave_value_list retval;
-
-    Descrip l, *R;    
-    int nR = args.length();
-
-    R = (Descrip*) malloc(nR*sizeof(Descrip));
-    
-    for(i=0; i<nR; i++) {
-        oct2mds(&R[i], args(i));
-    }
-
-    char *cmd = (char*) R[0].ptr;
-
-    if (strcmp(cmd,"mdsconnect")==0) 
-    {
-        char *host = (char*) R[1].ptr;
-        switch (sock=sm_mdsconnect(host)) {
-            case -1:
-            case -2:
-            case -3:
-            case -4: ERROR("Could not connect to server");
-            case -5: ERROR("Could not authenticate user");
-        }
-	dim_vector dv(1);
-	int32NDArray t(dv,sock);
-	retval(0) = t;
-    } 
-    else if (strcmp(cmd,"mdsvalue")==0)
-    {
-        void *mem;
-        sock = *((int*)R[1].ptr);
-        sm_mdsvalue(sock, &l, nR-2, R+2, &mem);
-
-        mds2oct(retval(0), &l);
-        if (mem) free(mem);
-    }
-    else if (strcmp(cmd,"mdsdisconnect")==0)
-    {
-        sock = *((int*)R[1].ptr);
-        sm_mdsdisconnect(sock);
-    }
- 
-    for(i=0; i<nR; i++) if (R[i].dims) free(R[i].dims);
-    free(R);
-    
-    return retval;
-}
-
-*/
 
 
 void mds2py(PyObject **out, const Descrip *D)
@@ -227,7 +99,7 @@ void mds2py(PyObject **out, const Descrip *D)
         *out = PyArray_FromDims(D->ndims, dims, typenum);
         memcpy(PyArray_DATA(*out), D->ptr, D->num*D->siz);
     }
-    free(dims);
+    if (dims) free(dims);
 }
 
 
@@ -235,61 +107,82 @@ static PyObject* mdsconnect(PyObject *self, PyObject *args)
 {
     int sock;
     char *host=NULL;
-    if (!PyArg_ParseTuple(args, "z", &host)) {
-        return NULL;
+    if (!PyArg_ParseTuple(args, "s", &host)) {
+        ERROR(PyExc_TypeError, "Host string expected. E.g.: 'localhost:8000'");
     }
     switch (sock=sm_mdsconnect(host)) {
         case -1:
         case -2:
         case -3:
-        case -4: ERROR("Could not connect to server");
-        case -5: ERROR("Could not authenticate user");
+        case -4: ERROR(PyExc_Exception, "Could not connect to server");
+        case -5: ERROR(PyExc_Exception, "Could not authenticate user");
     }
     return Py_BuildValue("i", sock);
-
-    Py_RETURN_NONE;
 }
 
 static PyObject* mdsdisconnect(PyObject *self, PyObject *args)
 {
     int sock;
     if (!PyArg_ParseTuple(args, "i", &sock)) {
-        return NULL;
+        ERROR(PyExc_TypeError, "Socket argument expected.");
     }
     sm_mdsdisconnect(sock);
     Py_RETURN_NONE;
 }
 
-
 static PyObject* mdsvalue(PyObject *self, PyObject *args)
 {
-    int sock;
-    char *cmd=NULL;
-    if (!PyArg_ParseTuple(args, "iz", &sock, &cmd)) {
-        return NULL;
+    int i, sock;
+    Descrip l, *R;
+    int nR = PyTuple_Size(args);
+    
+    R = (Descrip*) malloc(nR*sizeof(Descrip));
+    
+    for(i=0; i<nR; i++) {
+        py2mds(&R[i], PyTuple_GetItem(args,i));
     }
-    Descrip l, R;
-    mkDescrip(&R, w_dtype_CSTRING, 0, NULL, 0, strlen(cmd), cmd);
 
     void *mem;
-    sm_mdsvalue(sock, &l, 1, &R, &mem);
+    sock = *((int*)R[0].ptr);
+    sm_mdsvalue(sock, &l, nR-1, R+1, &mem);
 
     PyObject *retval;
     mds2py(&retval, &l);
     if (mem) free(mem);
 
-    return retval;
+    for(i=0; i<nR; i++) if (R[i].dims) free(R[i].dims);
+    free(R);
+
+    return retval;    
 }
 
 
+static PyObject* insert_arg(PyObject *args, int idx, PyObject *arg)
+{
+    int i, len=PyTuple_GET_SIZE(args);
+    PyObject *new_args = PyTuple_New(len+1);
+    for(i=0; i<idx; i++) {
+        PyTuple_SET_ITEM(new_args, i, PyTuple_GET_ITEM(args,i));
+    }
+    PyTuple_SET_ITEM(new_args, idx, arg);
+    for(; i<len; i++) {
+        PyTuple_SET_ITEM(new_args, i+1, PyTuple_GET_ITEM(args,i));
+    }
+    return new_args;
+}
+
 static PyObject* mdsopen(PyObject *self, PyObject *args)
 {
-    Py_RETURN_NONE;
+    PyObject *arg = PyString_FromString("TreeOpen($,$)");
+    PyObject *new_args = insert_arg(args, 1, arg);
+    return mdsvalue(self, new_args);
 }
 
 static PyObject* mdsclose(PyObject *self, PyObject *args)
 {
-    Py_RETURN_NONE;
+    PyObject *arg = PyString_FromString("TreeClose()");
+    PyObject *new_args = insert_arg(args, 1, arg);
+    return mdsvalue(self, new_args);
 }
 
 

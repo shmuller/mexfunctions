@@ -1,10 +1,10 @@
 import mdsclient
 
-sock = mdsclient.mdsconnect('localhost:8010')
+sock = mdsclient.mdsconnect('localhost:8020')
 print sock
 
 
-res = mdsclient.mdsvalue(sock,'[[1,2,3],[4,5,6]]')
+res = mdsclient.mdsvalue(sock,"[[1,2,3],[4,5,6]]")
 print res
 
 res = mdsclient.mdsvalue(sock,'[1D0,2D0,3D0]')
