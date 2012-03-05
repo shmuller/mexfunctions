@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
  
 module1 = Extension('triblock', 
-        sources = ['triblockmodule.c'], 
+        sources = ['triblockmodule.c', '_triblock.c'],
         libraries = ['lapack'])
  
 setup(name = 'triblock',
