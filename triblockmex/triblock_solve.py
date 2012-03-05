@@ -17,66 +17,67 @@ def solve(L,D,U,b,is_half=0):
     J, N, M = D.shape
 
     IPIV = np.zeros(M,dtype='i')
+    
+    if not is_half:
+        D = np.concatenate((D,b[:,None,:]),axis=1).copy()
+        U = np.concatenate((U,np.zeros((J,1,M))),axis=1).copy()
 
-    D = np.concatenate((D,b[:,None,:]),axis=1).copy()
-    U = np.concatenate((U,np.zeros((J,1,M))),axis=1).copy()
+        for j in range(J-1):
+            U[j+1,-1] = D[j,-1]
+            triblock.step(D[j],U[j+1],IPIV,L[j],D[j+1])
 
-    for j in range(J-1):
-        U[j+1,-1] = D[j,-1]
-        triblock.triblock(D[j],U[j+1],IPIV,L[j],D[j+1])
+        b[J-1] = np.linalg.solve(D[J-1,:N].T,D[J-1,-1])
+        for j in range(J-2,-1,-1):
+            b[j] = U[j+1,-1] - np.dot(U[j+1,:N].T,b[j+1])
 
-    b[J-1] = np.linalg.solve(D[J-1,:N].T,D[J-1,-1])
-    for j in range(J-2,-1,-1):
-        b[j] = U[j+1,-1] - np.dot(U[j+1,:N].T,b[j+1])
+    else:
+        D = D.swapaxes(1,2).copy()
+        L = L.swapaxes(1,2)[:,M/2:].copy()
 
+        for j in range(J-1):
+            triblock.step(D[j],U[j+1],IPIV,L[j],D[j+1],1)
 
-    """
-    for j in range(J-1):
-        triblock.triblock(D[j],U[j+1],IPIV,L[j],D[j+1],1)
-
-    b[J-1] = np.linalg.solve(D[J-1].T,b[J-1])
-    for j in range(J-2,-1,-1):
-        b[j] = -np.dot(U[j+1].T,b[j+1])
-    """
+        b[J-1] = np.linalg.solve(D[J-1],b[J-1])
+        for j in range(J-2,-1,-1):
+            b[j] = -np.dot(U[j+1].T,b[j+1])
 
     return b
 
-"""
-if ~is_half
-    b = reshape(b,[M,1,J]);
-    D = [D,b];
-    U = [U,zeros(M,1,J)];
 
-    for j = 1:J-1
-        U(:,N+1,j+1) = D(:,N+1,j);
-        triblockmex(D(:,1:N,j),U(:,:,j+1),IPIV,L(:,:,j),D(:,:,j+1));
-        %U(:,:,j+1) = D(:,1:N,j)\U(:,:,j+1);
-        %D(:,1:N,j) = NaN;
-        %D(:,:,j+1) = D(:,:,j+1) - L(:,:,j)*U(:,:,j+1);
-    end
+if __name__ == "__main__":
+    n, m = 2, 3
 
-    b = reshape(b,[M,J]);
-    b(:,J) = D(:,1:N,J)\D(:,N+1,J);
-    for j = J-1:-1:1
-        b(:,j) = U(:,N+1,j+1)-U(:,1:N,j+1)*b(:,j+1);
-    end
+    D = np.random.rand(m,n,n)*5
+    U = np.random.rand(m,n,n)*2
+    L = np.random.rand(m,n,n)*3
+    #U = np.zeros((m,n,n))
+    #L = np.zeros((m,n,n))
+    b = np.arange(1.,n*m+1.).reshape(m,n)
 
-else
-    D = permute(D,[2,1,3]);
-    L = permute(L,[2,1,3]);
-    L = L(:,M/2+1:M,:);
+    U[:,:,n/2:] = 0.
+    L[:,:,:n/2] = 0.
+    b[:m-1,:] = 0.
 
-    for j = 1:J-1
-        triblockmex(D(:,:,j),U(:,:,j+1),IPIV,L(:,:,j),D(:,:,j+1),is_half);
-    end
+    A = np.zeros((n*m,n*m))
 
-    b(:,J) = D(:,:,J).'\b(:,J);
-    for j = J-1:-1:1
-        b(:,j) = -U(:,:,j+1)*b(:,j+1);
-    end
+    j = np.arange(n,dtype='i')
+    for i in range(m):
+        A[np.ix_(i*n+j,i*n+j)] = D[i]
 
+    for i in range(1,m):
+        A[np.ix_(i*n+j,(i-1)*n+j)] = U[i]
 
-end
+    for i in range(m-1):
+        A[np.ix_(i*n+j,(i+1)*n+j)] = L[i]
 
-"""
+    x = np.linalg.solve(A.T,b.ravel())
+
+    x2 = solve(L,D,U,b.copy())
+
+    x3 = solve(L,D,U,b.copy(),1)
+
+    xx = np.c_[x,x2.ravel(),x3.ravel()]
+
+    print xx
+
 

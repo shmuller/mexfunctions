@@ -11,7 +11,7 @@
 
 #include "_triblock.h"
 
-static PyObject *triblock(PyObject *self, PyObject *args)
+static PyObject *step(PyObject *self, PyObject *args)
 {
     int is_half = 0;
     PyObject *a[5];
@@ -36,7 +36,7 @@ static PyObject *triblock(PyObject *self, PyObject *args)
 
 
 static PyMethodDef methods[] = {
-    {"triblock", triblock, METH_VARARGS, "Tri-block-diagonal solve step"},
+    {"step", step, METH_VARARGS, "Tri-block-diagonal solve step"},
     {NULL, NULL, 0, NULL}
 };
  
