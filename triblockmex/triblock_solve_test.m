@@ -6,8 +6,6 @@ U = rand(n,n,m)*2;
 L = rand(n,n,m)*3;
 b = reshape(1:n*m,n,m);
 
-x = triblock_solve(L,D,U,b);
-
 % use standard solver
 A = zeros(n*m,n*m);
 
@@ -24,6 +22,10 @@ for i = 1:m-1
 end
 
 x2 = A\b(:);
+
+% use mex solver
+x = triblock_solve(L,D,U,b);
+
 
 [x(:),x2(:)]
 

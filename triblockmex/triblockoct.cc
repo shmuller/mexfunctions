@@ -30,34 +30,46 @@ DEFUN_DLD(triblockmex, args, nargout, "Tri-block-diagonal solve step")
 {
 	octave_value retval;
 
-	const NDArray AA = args(0).array_value();
-	const NDArray BB = args(1).array_value();
-	const int32NDArray IP = args(2).int32_array_value();
-	const NDArray CC = args(3).array_value();
-	const NDArray DD = args(4).array_value();
+	const NDArray arr_D1 = args(0).array_value();
+	const NDArray arr_U2 = args(1).array_value();
+	const int32NDArray arr_IPIV = args(2).int32_array_value();
+	const NDArray arr_L1 = args(3).array_value();
+	const NDArray arr_D2 = args(4).array_value();
 
-	double *A = (double*) AA.data();
-	double *B = (double*) BB.data();
-	int *IPIV = (int*) IP.data();
-	double *C = (double*) CC.data();
-	double *D = (double*) DD.data();
+	double *D1 = (double*) arr_D1.data();
+	double *U2 = (double*) arr_U2.data();
+	int *IPIV  = (int*) arr_IPIV.data();
+	double *L1 = (double*) arr_L1.data();
+	double *D2 = (double*) arr_D2.data();
 
-	const dim_vector dv = BB.dims();
+    int is_half = (args.length() > 5);
+
+	const dim_vector dv = arr_U2.dims();
 	int N = dv(0), NRHS = dv(1);
-
-	int LDA = N, LDB = N, INFO = 0, N2 = N/2, NN2 = N*N2;
+    
+	int INFO = 0;
 	char TRANSN = 'N', TRANST = 'T';
 	double ALPHA = -1.0, BETA = 1.0;
 
-	dgetrf(&N, &N, A, &LDA, IPIV, &INFO);
+	dgetrf(&N, &N, D1, &N, IPIV, &INFO);
 	
-	if (INFO == 0) {
- 		dgetrs(&TRANST, &N, &NRHS, A, &LDA, IPIV, B, &LDB, &INFO);
- 	}
+    if (!is_half) 
+    {
+        // U2 = D1\U2 
+        // D2 = D2 - L1*U2
+        dgetrs(&TRANSN, &N, &NRHS, D1, &N, IPIV, U2, &N, &INFO);
         
- 	D += NN2;
- 	dgemm(&TRANST, &TRANSN, &N, &N2, &N, &ALPHA, B, &N, C, &N, &BETA, D, &N);
-	
+        dgemm(&TRANSN, &TRANSN, &N, &NRHS, &N, &ALPHA, L1, &N, U2, &N, &BETA, D2, &N);
+    } 
+    else 
+    {
+        dgetrs(&TRANST, &N, &NRHS, D1, &N, IPIV, U2, &N, &INFO);
+        
+        int N2 = N/2, NN2 = N*N2;
+ 	    D2 += NN2;
+ 	    dgemm(&TRANST, &TRANSN, &N, &N2, &N, &ALPHA, U2, &N, L1, &N, &BETA, D2, &N);
+    }
+
 	return retval;
 }
 
