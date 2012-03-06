@@ -1,6 +1,12 @@
 /* Mdsplus client wrapper for Matlab. Compile with:
  *
- * mex mdsclientmex.c -lmdsclient
+ * mex mdsclientmex.c -lmdsclient COPTIMFLAGS=-O3 LDOPTIMFLAGS=-O3
+ * 
+ * For standalone mex file, replace -lmdsclient with:
+ *
+ * /usr/local/lib/libmdsclient.a 
+ * /usr/local/mdsplus/lib/libMdsIpShr.a 
+ * /usr/local/mdsplus/lib/libMdsIpUtil.a
  *
  * S. H. Muller, 2012/03/06
  */
