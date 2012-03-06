@@ -16,6 +16,7 @@ target_link_libraries(mdsclient ${mdsplus_LIBRARIES})
 
 add_library(mdsclient_static STATIC mdsclient.c tcp.c)
 set_target_properties(mdsclient_static PROPERTIES OUTPUT_NAME mdsclient)
+set_target_properties(mdsclient_static PROPERTIES COMPILE_FLAGS -fPIC)
 target_link_libraries(mdsclient_static ${mdsplus_LIBRARIES})
 
 add_executable(mdsclient_test mdsclient_test.c)
