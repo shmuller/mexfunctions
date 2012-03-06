@@ -11,6 +11,8 @@
 
 import numpy as np
 import triblock
+import h5py
+import os
 
 def solve_full(L,D,U,b):
     """Solve full block-tridiagonal system."""
@@ -56,12 +58,12 @@ def solve(L,D,U,b,is_half=0):
         return solve_half(L,D,U,b)
 
 
-def solve_otf(L,D,U,b):
-    J, M = b.shape
-    IPIV = np.zeros(M,'i')
-
+def solve_otf_diagonalize(h,fmt,L,D,U,siz):
+    J, M = siz    
     D1 = D[0].T.copy()
     U = U.copy()
+
+    IPIV = np.zeros(M,'i')
 
     for j in range(J-1):
         U2 = U[j+1]
@@ -69,10 +71,32 @@ def solve_otf(L,D,U,b):
         D2 = D[j+1].T.copy()
         triblock.step(D1,U2,IPIV,L1,D2,1)
         D1 = D2
+        h[fmt(j)] = U2
+    
+    h[fmt(J-1)] = D1
 
+
+def solve_otf_backsubst(h,fmt,b,siz):
+    J, M = siz
+    D1 = h[fmt(J-1)][:]
     b[J-1] = np.linalg.solve(D1,b[J-1])
     for j in range(J-2,-1,-1):
-        b[j] = -np.dot(U[j+1].T,b[j+1])
+        U2 = h[fmt(j)][:]
+        b[j] = -np.dot(U2.T,b[j+1])
+    return b
+
+
+def solve_otf(L,D,U,b):
+    fmt = lambda j: "%03d" % j
+    siz = b.shape
+
+    h = h5py.File("tmp.h5","w")
+    solve_otf_diagonalize(h,fmt,L,D,U,siz)
+    h.close()
+
+    h = h5py.File("tmp.h5","r")        
+    b = solve_otf_backsubst(h,fmt,b,siz)
+    h.close()
     return b
 
 
