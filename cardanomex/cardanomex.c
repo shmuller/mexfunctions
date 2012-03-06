@@ -12,7 +12,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "math.h"
 
 #define SQRT3 1.73205080756887729

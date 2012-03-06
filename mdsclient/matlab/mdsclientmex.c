@@ -1,3 +1,10 @@
+/* Mdsplus client wrapper for Matlab. Compile with:
+ *
+ * mex mdsclientmex.c -lmdsclient
+ *
+ * S. H. Muller, 2012/03/06
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -5,7 +12,7 @@
 
 #include "mex.h"
 
-#include "mdsclient.h"
+#include "../mdsclient.h"
 
 #define ERROR(x) mexErrMsgTxt(x)
 

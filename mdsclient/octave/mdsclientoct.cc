@@ -1,3 +1,10 @@
+/* Mdsplus client wrapper for Octave. Compile with:
+ *
+ * mkoctfile mdsclientoct.cc -lmdsclient
+ *
+ * S. H. Muller, 2012/03/06
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -5,7 +12,7 @@
 
 #include <octave/oct.h>
 
-#include "mdsclient.h"
+#include "../mdsclient.h"
 
 #define ERROR(x) error(x); return octave_value_list()
 

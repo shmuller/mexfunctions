@@ -1,3 +1,10 @@
+/* Mdsplus client wrapper for Python. Compile with:
+ * 
+ * python setup.py install
+ *
+ * S. H. Muller, 2012/03/06
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -6,7 +13,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-#include "mdsclient.h"
+#include "../mdsclient.h"
 
 #define ERROR(t,m) PyErr_SetString(t,m); return NULL
 
