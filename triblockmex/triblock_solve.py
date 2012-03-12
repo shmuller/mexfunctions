@@ -41,7 +41,7 @@ class block_generator:
         M = D.shape[2]
         self.D = D.swapaxes(1,2).copy()
         self.L = L.swapaxes(1,2)[:,M/2:].copy()
-        self.U = U.copy()
+        self.U = U.swapaxes(1,2).copy()
 
     def getL(self,j):
         return self.L[j]
@@ -73,7 +73,7 @@ def backsubst(S,b,siz):
     b[J-1] = np.linalg.solve(D1,b[J-1])
     for j in range(J-2,-1,-1):
         U2 = S.load(j)
-        b[j] = -np.dot(U2.T,b[j+1])
+        b[j] = -np.dot(U2,b[j+1])
     return b
 
 
@@ -116,14 +116,14 @@ def solve_half(L,D,U,b):
 
     D = D.swapaxes(1,2).copy()
     L = L.swapaxes(1,2)[:,M/2:].copy()
-    U = U.copy()
+    U = U.swapaxes(1,2).copy()
 
     for j in range(J-1):
         triblock.step(D[j],U[j+1],IPIV,L[j],D[j+1],1)
 
     b[J-1] = np.linalg.solve(D[J-1],b[J-1])
     for j in range(J-2,-1,-1):
-        b[j] = -np.dot(U[j+1].T,b[j+1])
+        b[j] = -np.dot(U[j+1],b[j+1])
     return b
 
 
