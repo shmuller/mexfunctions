@@ -15,16 +15,23 @@ import h5py
 
 class save_restore:
     """Save and restore blocks."""
-    def __init__(self, fname="tmp.h5", fmt="%03d"):
+    def __init__(self, fname="tmp.h5", fmt="%03d", **kwargs):
         self.fname = fname
         self.fmt = fmt
+
+        def donothing(j): pass
+        self.print_save = kwargs.pop("print_save", donothing)
+        self.print_load = kwargs.pop("print_load", donothing)
+
     def open(self, mode="w"):
         self.h = h5py.File(self.fname, mode)
     def close(self):
         self.h.close()
     def save(self, j, x):
+        self.print_save(j)
         self.h[self.fmt % j] = x
     def load(self, j):
+        self.print_load(j)
         return self.h[self.fmt % j][:]
 
 
@@ -73,13 +80,13 @@ def backsubst(S,b,siz):
 def solve_otf(S,G,b):
     siz = b.shape
 
-    S.open("w")
-    diagonalize(S,G,siz)
-    S.close()
+    try:
+        S.open("w")
+        diagonalize(S,G,siz)
+        b = backsubst(S,b,siz)
+    finally:
+        S.close()
 
-    S.open("r")
-    b = backsubst(S,b,siz)
-    S.close()
     return b
 
 

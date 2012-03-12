@@ -1,7 +1,7 @@
 /* triblockmex(A,B,IPIV,C,D)
  * Tri-block-diagnonal solve step. Compile with:
  *
- * mkoctfile triblockoct.cc -llapack
+ * mkoctfile triblockoct.cc _triblock.c -llapack
  *
  * ln -s triblockoct.oct triblockmex.oct
  *
