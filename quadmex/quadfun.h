@@ -9,12 +9,12 @@ extern "C"
 #include "../common/common.h"
 
 typedef struct {
-    real *x;
+    SM_REAL *x;
     int N;
     int o;
 } link;
 
-void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, real *y);
+void quadfun(func *fun, link *LI, int nI, int Np, int Ns, int N, SM_REAL *y);
 
 #ifdef __cplusplus
 }

@@ -10,7 +10,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "math.h"
 #include "string.h"
 
@@ -83,7 +82,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
     mxGetString(R[2],name,STRLEN);
 
-    func *fun = select(LENGTH(functions), functions, name);
+    func *fun = kv_select(KV_LEN(functions), functions, name);
     if (fun == NULL) {
         mexErrMsgTxt("quadfunmex: Unknown function name");
     }

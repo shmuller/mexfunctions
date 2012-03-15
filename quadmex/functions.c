@@ -13,9 +13,9 @@
 #define SQRT2PI  2.50662827463100050241576528481105
 #define ISQRT2PI 0.39894228040143267793994605993438
 
-real dim1(real *par)
+SM_REAL dim1(SM_REAL *par)
 {
-    real x=par[0], a=par[1], r, ra;
+    SM_REAL x=par[0], a=par[1], r, ra;
     
     if (x != 0.) {
         r=1./x-1; ra=r-a;
@@ -25,9 +25,9 @@ real dim1(real *par)
     }
 }
 
-real dim2(real *par)
+SM_REAL dim2(SM_REAL *par)
 {
-    real x=par[0], a=par[1], r, ra, ar;
+    SM_REAL x=par[0], a=par[1], r, ra, ar;
     
     if (x != 0.) {
         r=1./x-1; ra=r-a; ar=a*r;
@@ -40,21 +40,21 @@ real dim2(real *par)
 
 
 /* private functions */
-real _I_a_eq_1(real r, real z0)
+SM_REAL _I_a_eq_1(SM_REAL r, SM_REAL z0)
 {
-    real rz=r-z0, zr=2.*z0*r, sinhcs=(zr==0) ? 1. : (1-exp(-zr))/zr;
+    SM_REAL rz=r-z0, zr=2.*z0*r, sinhcs=(zr==0) ? 1. : (1-exp(-zr))/zr;
     return SQRT2_PI*r*r*exp(-0.5*rz*rz)*sinhcs;
 }
 
-real _L_a_gt_1(real r, real z0, real b)
+SM_REAL _L_a_gt_1(SM_REAL r, SM_REAL z0, SM_REAL b)
 {
-    real rz=r-z0, x=ISQRT2*(z0/b+r*b);
+    SM_REAL rz=r-z0, x=ISQRT2*(z0/b+r*b);
     return exp(-0.5*rz*rz)*daw(&x);
 }
 
-real _L_a_lt_1(real r, real z0, real b)
+SM_REAL _L_a_lt_1(SM_REAL r, SM_REAL z0, SM_REAL b)
 {
-    real rz=r+z0, z0_b=z0/b, x=ISQRT2*(z0_b+r*b);
+    SM_REAL rz=r+z0, z0_b=z0/b, x=ISQRT2*(z0_b+r*b);
     
     if (x < 0.) {
         return exp(-0.5*(1-b*b)*(r*r-z0_b*z0_b))*r8_erfc(&x);
@@ -63,37 +63,37 @@ real _L_a_lt_1(real r, real z0, real b)
     }
 }
 
-real _I_a_gt_1(real r, real z0, real a2)
+SM_REAL _I_a_gt_1(SM_REAL r, SM_REAL z0, SM_REAL a2)
 {
-    real b=sqrt(a2-1);
+    SM_REAL b=sqrt(a2-1);
     return ISQRTPI*(a2/b)*r*(_L_a_gt_1(r,z0,b) - _L_a_gt_1(-r,z0,b));
 }
 
-real _I_a_lt_1(real r, real z0, real a2)
+SM_REAL _I_a_lt_1(SM_REAL r, SM_REAL z0, SM_REAL a2)
 {
-    real b=sqrt(1-a2);
+    SM_REAL b=sqrt(1-a2);
     return 0.5*(a2/b)*r*(_L_a_lt_1(-r,z0,b) - _L_a_lt_1(r,z0,b));
 }
 
-real _cos_th_int(real c, void *data)
+SM_REAL _cos_th_int(SM_REAL c, void *data)
 {
-    real *par = data;
-    real r=par[0], ar=par[1], z0=par[2], aR0=par[3];
-    real s=sqrt(1-c*c), aR=s*ar, daR=aR-aR0, dz=c*r-z0, x=aR0*aR;
+    SM_REAL *par = data;
+    SM_REAL r=par[0], ar=par[1], z0=par[2], aR0=par[3];
+    SM_REAL s=sqrt(1-c*c), aR=s*ar, daR=aR-aR0, dz=c*r-z0, x=aR0*aR;
     
     return exp(-0.5*(daR*daR+dz*dz))*besei0(&x);
 }
 
 
 /* public functions */
-real angle_int_iso(real *par)
+SM_REAL angle_int_iso(SM_REAL *par)
 {
     return _I_a_eq_1(par[0], par[1]);
 }
 
-real angle_int_Z(real *par)
+SM_REAL angle_int_Z(SM_REAL *par)
 {
-    real r=par[0], a=par[1], z0=fabs(par[2]), a2=a*a;
+    SM_REAL r=par[0], a=par[1], z0=fabs(par[2]), a2=a*a;
 
     if (a2 == 1.) {
         return _I_a_eq_1(r,z0);
@@ -104,15 +104,15 @@ real angle_int_Z(real *par)
     }
 }
 
-real angle_int_RZ(real *par)
+SM_REAL angle_int_RZ(SM_REAL *par)
 {
-    real r=par[0], a=par[1], z0=par[2], R0=par[3], ar=a*r, aR0=a*R0;
-    real par2[] = {r,ar,z0,aR0};
+    SM_REAL r=par[0], a=par[1], z0=par[2], R0=par[3], ar=a*r, aR0=a*R0;
+    SM_REAL par2[] = {r,ar,z0,aR0};
     
     return ISQRT2PI*ar*ar*gauss_legendre(32, _cos_th_int, par2, -1., 1.);
 }
 
-real angle_int(real *par)
+SM_REAL angle_int(SM_REAL *par)
 {
     if (par[1] == 1.) {
         return _I_a_eq_1(par[0], hypot(par[2],par[3]));
@@ -125,11 +125,11 @@ real angle_int(real *par)
 
 
 /* tests */
-real Maxw(real *par)
+SM_REAL Maxw(SM_REAL *par)
 {
-    real x=par[0], y=par[1], z=par[2];
-    real a=par[3], b=par[4], c=par[5], v=par[6];
-    real r2=x*x+y*y+z*z, f, M;
+    SM_REAL x=par[0], y=par[1], z=par[2];
+    SM_REAL a=par[3], b=par[4], c=par[5], v=par[6];
+    SM_REAL r2=x*x+y*y+z*z, f, M;
     
     x -= a; y -= b; z -= c;
     
@@ -139,27 +139,27 @@ real Maxw(real *par)
     return sqrt(r2)*M;
 }
 
-real Maxw_r(real *par)
+SM_REAL Maxw_r(SM_REAL *par)
 {
-    real r=par[0];
-    real a=par[1], b=par[2], c=par[3], v=par[4];
-    real R0=hypot(a,b), z0=c;
+    SM_REAL r=par[0];
+    SM_REAL a=par[1], b=par[2], c=par[3], v=par[4];
+    SM_REAL R0=hypot(a,b), z0=c;
     
-    real par2[] = {r/v, 1., z0/v, R0/v};
+    SM_REAL par2[] = {r/v, 1., z0/v, R0/v};
     
     return r*angle_int(par2)/v;
 }
 
 
-real dblMaxw(real *par)
+SM_REAL dblMaxw(SM_REAL *par)
 {
-    real x=par[ 0], y=par[ 1], z=par[ 2];
-    real a=par[ 3], b=par[ 4], c=par[ 5], v=par[ 6];
+    SM_REAL x=par[ 0], y=par[ 1], z=par[ 2];
+    SM_REAL a=par[ 3], b=par[ 4], c=par[ 5], v=par[ 6];
    
-    real X=par[ 7], Y=par[ 8], Z=par[ 9];
-    real A=par[10], B=par[11], C=par[12], V=par[13];
+    SM_REAL X=par[ 7], Y=par[ 8], Z=par[ 9];
+    SM_REAL A=par[10], B=par[11], C=par[12], V=par[13];
     
-    real dx, dy, dz, vrel, f, M;
+    SM_REAL dx, dy, dz, vrel, f, M;
     
     dx = x-X; dy = y-Y; dz = z-Z;
     vrel = sqrt(dx*dx+dy*dy+dz*dz);

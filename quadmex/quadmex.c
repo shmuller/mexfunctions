@@ -9,7 +9,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 #include "math.h"
 #include "string.h"
 
@@ -82,7 +81,7 @@ mxArray *gauss_legendre_matlab(int nI, const int *d, const int *n, int nR, mxArr
     if ((mem=malloc(Lmn*D*sizeof(double)))==NULL) {
         free(L);
         free(ND);
-        mxErrMsgTxt("Out of memory");
+        mexErrMsgTxt("Out of memory");
     }
     
     // generate tensor product arguments
