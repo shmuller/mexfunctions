@@ -67,12 +67,16 @@ def diagonalize(S,G,siz):
     S.save(J-1,D1)
 
 
-def backsubst(S,b,siz):
+def backsubst(S,b,siz,U2=None):
     J, M = siz
-    D1 = S.load(J-1)
-    b[J-1] = np.linalg.solve(D1,b[J-1])
+    if U2 is None:
+        U2 = S.load(J-1)
+    else:
+        U2[:] = S.load(J-1)
+
+    b[J-1] = np.linalg.solve(U2,b[J-1])
     for j in range(J-2,-1,-1):
-        U2 = S.load(j)
+        U2[:] = S.load(j)
         b[j] = -np.dot(U2,b[j+1])
     return b
 
@@ -83,7 +87,7 @@ def solve_otf(S,G,b):
     try:
         S.open("w")
         diagonalize(S,G,siz)
-        b = backsubst(S,b,siz)
+        b = backsubst(S,b,siz,G.getU(0))
     finally:
         S.close()
 
