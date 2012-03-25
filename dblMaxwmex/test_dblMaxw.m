@@ -1,7 +1,10 @@
 v0 = [0.1,0.2,0.3];
-u0 = [0,0,0];
+u0 = [0.2,0.4,0.8];
 vt = 0.5;
-ut = 1;
+ut = 2;
+
+v0(1:2) = 0;
+u0(1:2) = 0;
 
 L = [-5,5];
 
@@ -22,3 +25,15 @@ wt = hypot(vt,ut);
 I2_ = quadfunmex(int32(1),int32(256),'Maxw_r',[0,10],w0(1),w0(2),w0(3),wt)
 
 I2__ = dblMaxwmex(vt,v0,ut,u0,int32([3,3]))
+
+
+v3 = linspace(-5,5,1000);
+tic
+I3 = dblMaxwmex(vt,v0,ut,u0,int32([2,3]),v3);
+toc
+
+fun = @(x) dblMaxwmex(vt,v0,ut,u0,int32([2,3]),x);
+
+tic
+nrm = quadmex(int32(1),int32(256),fun,[-5,5])
+toc

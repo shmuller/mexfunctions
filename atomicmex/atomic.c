@@ -16,6 +16,8 @@ function AP = atomic_params(target)
 
 */
 
+#include <math.h>
+
 #include "../common/common.h"
 #include "atomic.h"
 #include "atomic_param.h"
