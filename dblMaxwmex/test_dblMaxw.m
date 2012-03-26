@@ -3,8 +3,8 @@ u0 = [0.2,0.4,0.8];
 vt = 0.5;
 ut = 2;
 
-v0(1:2) = 0;
-u0(1:2) = 0;
+%v0(1:2) = 0;
+%u0(1:2) = 0;
 
 L = [-5,5];
 
@@ -24,16 +24,59 @@ w0 = u0-v0;
 wt = hypot(vt,ut);
 I2_ = quadfunmex(int32(1),int32(256),'Maxw_r',[0,10],w0(1),w0(2),w0(3),wt)
 
-I2__ = dblMaxwmex(vt,v0,ut,u0,int32([3,3]))
-
+I2__ = dblMaxwmex('vrel',vt,v0,ut,u0,int32([3,3]))
 
 v3 = linspace(-5,5,1000);
+
 tic
-I3 = dblMaxwmex(vt,v0,ut,u0,int32([2,3]),v3);
+I3 = dblMaxwmex('ion',vt,v0,ut,u0,int32([2,3]),v3);
 toc
 
-fun = @(x) dblMaxwmex(vt,v0,ut,u0,int32([2,3]),x);
+fun = @(x) dblMaxwmex('one',vt,v0,ut,u0,int32([2,3]),x);
 
 tic
 nrm = quadmex(int32(1),int32(256),fun,[-5,5])
 toc
+
+
+
+qe = 1.60217646e-19;
+kB = 1.38065030e-23;
+mp = 1.67262158e-27;
+me = 9.10938188e-31;
+
+Te = 1500;
+ve = sqrt(qe/me*Te);
+
+mi = 2*mp;
+Ti = 1500;
+vi = sqrt(qe/mi*Ti);
+
+mn = 2*mp;
+Tn = 50;
+vn = sqrt(qe/mn*Tn);
+
+
+v1 = linspace(-5*vi,5*vi,100);
+v2 = linspace(-5*vi,5*vi,50);
+
+z = [0,0,0];
+
+tic
+I12_ion = dblMaxwmex('ion',vn,z,ve,z,int32([1,3]),v1,v2);
+toc
+
+figure;
+surf(1e-3*v2,1e-3*v1,1e14*I12_ion)
+
+tic
+I12_CX = dblMaxwmex('CX',vn,z,vi,z,int32([1,3]),v1,v2);
+toc
+
+figure;
+surf(1e-3*v2,1e-3*v1,1e14*I12_CX)
+
+
+
+
+

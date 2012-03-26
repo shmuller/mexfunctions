@@ -12,6 +12,7 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/dblMaxwmex.c 
         ${CMAKE_CURRENT_SOURCE_DIR}/../quadmex/gauss_legendre.c
         -lspecfun -latomic -lcommon
+    DEPENDS dblMaxwmex.c angle_int.c
     COMMENT "Building Octave extension")
 
 add_custom_target(dblMaxwmex ALL
