@@ -13,6 +13,41 @@
 #define SQRT2PI  2.50662827463100050241576528481105
 #define ISQRT2PI 0.39894228040143267793994605993438
 
+/**********************************************************/
+SM_REAL angle_int1(SM_REAL R, SM_REAL R0)
+{
+    SM_REAL Rm=R-R0, Rp=R+R0;
+    return ISQRT2PI*(exp(-0.5*Rm*Rm)+exp(-0.5*Rp*Rp));
+}
+
+/* R, R0, Rt */
+SM_REAL AngleInt1(SM_REAL *par)
+{
+    SM_REAL R=par[0], R0=par[1], Rt=par[2];
+    SM_REAL f=1./Rt;
+
+    return f*angle_int1(f*R,f*R0);
+}
+
+
+/**********************************************************/
+SM_REAL angle_int2(SM_REAL R, SM_REAL R0)
+{
+    SM_REAL dR=R-R0, x=R*R0;
+    return R*exp(-0.5*dR*dR)*besei0(&x);
+}
+
+/* R, R0, Rt */
+SM_REAL AngleInt2(SM_REAL *par)
+{
+    SM_REAL R=par[0], R0=par[1], Rt=par[2];
+    SM_REAL f=1./Rt;
+
+    return f*angle_int2(f*R,f*R0);
+}
+
+
+/**********************************************************/
 
 /* private functions */
 SM_REAL _I_a_eq_1(SM_REAL r, SM_REAL z0)
@@ -88,7 +123,7 @@ SM_REAL angle_int_RZ(SM_REAL *par)
 }
 
 /* r, alpha, z0, R0 */
-SM_REAL angle_int(SM_REAL *par)
+SM_REAL angle_int3(SM_REAL *par)
 {
     if (par[1] == 1.) {
         return _I_a_eq_1(par[0], hypot(par[2],par[3]));
@@ -100,13 +135,13 @@ SM_REAL angle_int(SM_REAL *par)
 }
 
 /* r, R0, Rt, z0, zt */
-SM_REAL AngleInt(SM_REAL *par)
+SM_REAL AngleInt3(SM_REAL *par)
 {
     SM_REAL r=par[0], R0=par[1], Rt=par[2], z0=par[3], zt=par[4];
     SM_REAL f=1./zt;
     SM_REAL par2[] = {f*r,zt/Rt,f*z0,f*R0};
 
-    return f*angle_int(par2);
+    return f*angle_int3(par2);
 }
 
 
@@ -128,7 +163,7 @@ SM_REAL _L_zt_ne_1(SM_REAL r, SM_REAL z0, SM_REAL izt, SM_REAL b)
     }
 }
 
-SM_REAL angle_int_Z2(SM_REAL *par)
+SM_REAL angle_int_Z_(SM_REAL *par)
 {
     SM_REAL r=par[0], izt=par[1], z0=fabs(par[2]), b;
 
@@ -141,7 +176,7 @@ SM_REAL angle_int_Z2(SM_REAL *par)
 }
 
 
-SM_REAL _cos_th_int2(SM_REAL c, void *data)
+SM_REAL _cos_th_int_(SM_REAL c, void *data)
 {
     SM_REAL *par = data;
     SM_REAL r=par[0], izt=par[1], z0=par[2], R0=par[3];
@@ -150,34 +185,33 @@ SM_REAL _cos_th_int2(SM_REAL c, void *data)
     return exp(-0.5*(dR*dR+dz*dz))*besei0(&x);
 }
 
-SM_REAL angle_int_RZ2(SM_REAL *par)
+SM_REAL angle_int_RZ_(SM_REAL *par)
 {
     SM_REAL r=par[0], izt=par[1];
-    return ISQRT2PI*r*r*izt*gauss_legendre(32, _cos_th_int2, par, -1., 1.);
+    return ISQRT2PI*r*r*izt*gauss_legendre(32, _cos_th_int_, par, -1., 1.);
 }
 
 
 /* r, izt, z0, R0 */
-SM_REAL angle_int2(SM_REAL *par)
+SM_REAL angle_int3_(SM_REAL *par)
 {
     if (par[1] == 1.) {
         return _I_a_eq_1(par[0], hypot(par[2],par[3]));
     } else if (par[3] == 0.) {
-        return angle_int_Z2(par);
+        return angle_int_Z_(par);
     } else {
-        return angle_int_RZ2(par);
+        return angle_int_RZ_(par);
     }
 }
 
 /* r, R0, Rt, z0, zt */
-SM_REAL AngleInt2(SM_REAL *par)
+SM_REAL AngleInt3_(SM_REAL *par)
 {
     SM_REAL r=par[0], R0=par[1], Rt=par[2], z0=par[3], zt=par[4];
     SM_REAL f=1./Rt;
     SM_REAL par2[] = {f*r,1./(f*zt),f*z0,f*R0};
 
-    return f*angle_int2(par2);
+    return f*angle_int3_(par2);
 }
-
 
 

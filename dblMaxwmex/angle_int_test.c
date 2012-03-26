@@ -35,7 +35,7 @@ int main()
         {0., 0., 1. , 1., 0.5}
     };
 
-    func *fun[] = {AngleInt, AngleInt2};
+    func *fun[] = {AngleInt1, AngleInt2, AngleInt3, AngleInt3_};
 
     int Ni = KV_LEN(par), Nj = KV_LEN(fun);
 

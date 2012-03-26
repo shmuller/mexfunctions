@@ -77,7 +77,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     double w0[] = {u0[0]-v0[0], u0[1]-v0[1], u0[2]-v0[2]};
     double data_angle[5], *y;
     
-    intgrd_data ID = {0., 1., NULL, NULL, AngleInt2, data_angle};
+    intgrd_data ID = {0., 1., NULL, NULL, AngleInt3_, data_angle};
 
     atomic_desc D;
 
@@ -151,8 +151,10 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
                     *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
                 }
             }
-
         }
+
+    } else if (IJ[1] == 2 && IJ[0] == 2) {
+        
     }
     
 }
