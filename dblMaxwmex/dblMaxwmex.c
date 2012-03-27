@@ -51,18 +51,14 @@ SM_REAL intgrd(SM_REAL x, void *data)
 }
 
 
-typedef struct {
-    SM_REAL val;
-    unsigned idx;
-} PAIR;
-
-
-int compare(const void *A, const void *B)
+int compare_r(SM_REAL *DATA, const unsigned *A, const unsigned *B)
 {
-    SM_REAL a = ((PAIR*)A)->val;
-    SM_REAL b = ((PAIR*)B)->val;
-    return (a > b) - (a < b);
+    SM_REAL a = DATA[*A];
+    SM_REAL b = DATA[*B];
+
+    return (a < b) ? -1 : (a > b);
 }
+
 
 #define R0 data_angle[1]
 #define Rt data_angle[2]
@@ -204,8 +200,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
         L[0] = mxCreateNumericArray(4,dims,mxDOUBLE_CLASS,mxREAL);
         y = mxGetData(L[0]);
 
-        PAIR *pair = malloc(N*sizeof(PAIR));
-        PAIR *p = pair;
+        unsigned *seq = malloc(N*sizeof(unsigned));
+        unsigned *s = seq;
+
         unsigned idx = 0;
 
         ID.f_angle = AngleInt1;
@@ -219,32 +216,36 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
                 for(j=0; j<N2; j++) {
                     for(i=0; i<N1; i++) {
                         w1 = u1[j]-v1[i];
-                        ID.x0 = hypot(w1,w2);
-
-                        p->val = ID.x0;
-                        p->idx = idx++;
-                        p++;
-                        
-                        //*y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                        *y++ = hypot(w1,w2);
+                        *s++ = idx++;
                     }
                 }
             }
         }
 
-        qsort(pair,N,sizeof(PAIR),compare);
+        y = mxGetData(L[0]);
 
-        idx = 0;
-        double val;
-        for(i=0,p=pair,ID.x0=-1.; i<N; i++,p++) {
-            if (ID.x0 != p->val) {
-                ID.x0 = p->val;
+        /*
+        for(i=0; i<N; i++) {
+            ID.x0 = *y;
+            *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+        }
+        */
+
+        double val, *ys;
+
+        qsort_r(seq,N,sizeof(unsigned),y,compare_r);
+
+        for(i=N,s=seq,ID.x0=-1.; i--; ) {
+            ys = y + *s++;
+            if (ID.x0 != *ys) {
+                ID.x0 = *ys;
                 val = gauss_legendre(Nr, intgrd, &ID, 0., rM);
-                idx++;
             }
-            y[p->idx] = val;
+            *ys = val;
         }
 
-        printf("idx = %lu\n", idx);
+        free(seq);
     }
     
 }
