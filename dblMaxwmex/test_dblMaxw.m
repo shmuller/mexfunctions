@@ -63,20 +63,47 @@ v2 = linspace(-5*vi,5*vi,50);
 z = [0,0,0];
 
 tic
-I12_ion = dblMaxwmex('ion',vn,z,ve,z,int32([1,3]),v1,v2);
+I13_ion = dblMaxwmex('ion',vn,z,ve,z,int32([1,3]),v1,v2);
 toc
 
 figure;
-surf(1e-3*v2,1e-3*v1,1e14*I12_ion)
+surf(1e-3*v2,1e-3*v1,1e14*I13_ion)
 
 tic
-I12_CX = dblMaxwmex('CX',vn,z,vi,z,int32([1,3]),v1,v2);
+I13_CX = dblMaxwmex('CX',vn,z,vi,z,int32([1,3]),v1,v2);
 toc
 
 figure;
-surf(1e-3*v2,1e-3*v1,1e14*I12_CX)
+surf(1e-3*v2,1e-3*v1,1e14*I13_CX)
 
 
+v3 = linspace(-5*vi,5*vi,100);
+u3 = linspace(-5*vi,5*vi,50);
 
+tic
+I22_ion = dblMaxwmex('ion',vn,z,ve,z,int32([2,2]),v3,u3);
+toc
+
+figure;
+surf(1e-3*u3,1e-3*v3,I22_ion);
+
+tic
+I22_CX = dblMaxwmex('CX',vn,z,vi,z,int32([2,2]),v3,u3);
+toc
+
+figure;
+surf(1e-3*u3,1e-3*v3,I22_CX);
+
+v1 = linspace(-5*vi,5*vi,100);
+u1 = linspace(-5*vi,5*vi,100);
+v2 = linspace(-5*vi,5*vi,50);
+u2 = linspace(-5*vi,5*vi,50);
+
+%v2 = 0;
+%u2 = 0;
+
+tic
+I = dblMaxwmex('CX',vn,z,vi,z,int32([1,1]),v1,u1,v2,u2);
+toc
 
 

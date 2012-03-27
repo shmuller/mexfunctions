@@ -1,6 +1,8 @@
 #include "mex.h"
-#include "math.h"
-#include "string.h"
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "../common/common.h"
 #include "../atomicmex/atomic.h"
@@ -8,7 +10,6 @@
 #include "../quadmex/gauss_legendre.h"
 
 #include "angle_int.c"
-
 
 #define STRLEN 1024
 
@@ -49,6 +50,20 @@ SM_REAL intgrd(SM_REAL x, void *data)
     return ID->f_r(r,ID->data_r)*ID->f_angle(ID->data_angle);
 }
 
+
+typedef struct {
+    SM_REAL val;
+    unsigned idx;
+} PAIR;
+
+
+int compare(const void *A, const void *B)
+{
+    SM_REAL a = ((PAIR*)A)->val;
+    SM_REAL b = ((PAIR*)B)->val;
+    return (a > b) - (a < b);
+}
+
 #define R0 data_angle[1]
 #define Rt data_angle[2]
 #define z0 data_angle[3]
@@ -58,7 +73,7 @@ SM_REAL intgrd(SM_REAL x, void *data)
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
-    int i, j;
+    int i, j, k, l;
 
     char f_r[STRLEN];
     mxGetString(*R++,f_r,STRLEN);
@@ -154,7 +169,82 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
         }
 
     } else if (IJ[1] == 2 && IJ[0] == 2) {
-        
+        double *v3 = mxGetData(R[0]);
+        double *u3 = mxGetData(R[1]);
+        int N1 = mxGetNumberOfElements(R[0]);
+        int N2 = mxGetNumberOfElements(R[1]);
+
+        mwSize dims[] = {N1,N2};
+        L[0] = mxCreateNumericArray(2,dims,mxDOUBLE_CLASS,mxREAL);
+        y = mxGetData(L[0]);
+
+        ID.f_angle = AngleInt2;
+        R0 = hypot(w0[0],w0[1]);
+        Rt = wt;
+
+        for(j=0; j<N2; j++) {
+            for(i=0; i<N1; i++) {
+                ID.x0 = u3[j]-v3[i];
+                *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+            }
+        }
+
+    } else if (IJ[1] == 1 && IJ[0] == 1) {
+        double *v1 = mxGetData(R[0]);
+        double *u1 = mxGetData(R[1]);
+        double *v2 = mxGetData(R[2]);
+        double *u2 = mxGetData(R[3]);
+        int N1 = mxGetNumberOfElements(R[0]);
+        int N2 = mxGetNumberOfElements(R[1]);
+        int N3 = mxGetNumberOfElements(R[2]);
+        int N4 = mxGetNumberOfElements(R[3]);
+        int N = N1*N2*N3*N4;
+
+        mwSize dims[] = {N1,N2,N3,N4};
+        L[0] = mxCreateNumericArray(4,dims,mxDOUBLE_CLASS,mxREAL);
+        y = mxGetData(L[0]);
+
+        PAIR *pair = malloc(N*sizeof(PAIR));
+        PAIR *p = pair;
+        unsigned idx = 0;
+
+        ID.f_angle = AngleInt1;
+        R0 = w0[2];
+        Rt = wt;
+
+        double w1,w2;
+        for(l=0; l<N4; l++) {
+            for(k=0; k<N3; k++) {
+                w2 = u2[l]-v2[k];
+                for(j=0; j<N2; j++) {
+                    for(i=0; i<N1; i++) {
+                        w1 = u1[j]-v1[i];
+                        ID.x0 = hypot(w1,w2);
+
+                        p->val = ID.x0;
+                        p->idx = idx++;
+                        p++;
+                        
+                        //*y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                    }
+                }
+            }
+        }
+
+        qsort(pair,N,sizeof(PAIR),compare);
+
+        idx = 0;
+        double val;
+        for(i=0,p=pair,ID.x0=-1.; i<N; i++,p++) {
+            if (ID.x0 != p->val) {
+                ID.x0 = p->val;
+                val = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                idx++;
+            }
+            y[p->idx] = val;
+        }
+
+        printf("idx = %lu\n", idx);
     }
     
 }
