@@ -94,16 +94,31 @@ toc
 figure;
 surf(1e-3*u3,1e-3*v3,I22_CX);
 
-v1 = linspace(-5*vi,5*vi,100);
-u1 = linspace(-5*vi,5*vi,100);
-v2 = linspace(-5*vi,5*vi,50);
-u2 = linspace(-5*vi,5*vi,50);
+N1 = 100;
+N2 = 50;
+
+v1 = linspace(-5*vi,5*vi,N1).';
+v2 = linspace(-5*vi,5*vi,N2).';
+u1 = linspace(-5*vi,5*vi,N1).';
+u2 = linspace(-5*vi,5*vi,N2).';
 
 %v2 = 0;
 %u2 = 0;
 
 tic
-I = dblMaxwmex('CX',vn,z,vi,z,int32([1,1]),v1,u1,v2,u2);
+I = dblMaxwmex('vrel',vn,z,vi,z,int32([1,1]),v1,v2,u1,u2);
 toc
+
+dv1 = diff(v1)/2; dv1 = [0;dv1] + [dv1;0];
+dv2 = diff(v2)/2; dv2 = [0;dv2] + [dv2;0];
+du1 = diff(u1)/2; du1 = [0;du1] + [du1;0];
+du2 = diff(u2)/2; du2 = [0;du2] + [du2;0];
+
+I = squeeze(sum(repmat(dv1,[1,N2,N1,N2]).*I,1));
+I = squeeze(sum(repmat(dv2,[1,N1,N2]).*I,1));
+I = sum(repmat(du1,[1,N2]).*I,1);
+I = sum(du2.*I(:))
+
+I_ana = 4/sqrt(2*pi)*hypot(vn,vi)
 
 

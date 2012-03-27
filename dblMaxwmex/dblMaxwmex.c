@@ -187,8 +187,8 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 
     } else if (IJ[1] == 1 && IJ[0] == 1) {
         double *v1 = mxGetData(R[0]);
-        double *u1 = mxGetData(R[1]);
-        double *v2 = mxGetData(R[2]);
+        double *v2 = mxGetData(R[1]);
+        double *u1 = mxGetData(R[2]);
         double *u2 = mxGetData(R[3]);
         int N1 = mxGetNumberOfElements(R[0]);
         int N2 = mxGetNumberOfElements(R[1]);
@@ -209,17 +209,10 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
         R0 = w0[2];
         Rt = wt;
 
-        double w1,w2;
-        for(l=0; l<N4; l++) {
-            for(k=0; k<N3; k++) {
-                w2 = u2[l]-v2[k];
-                for(j=0; j<N2; j++) {
-                    for(i=0; i<N1; i++) {
-                        w1 = u1[j]-v1[i];
-                        *y++ = hypot(w1,w2);
-                        *s++ = idx++;
-                    }
-                }
+        for(l=0; l<N4; l++) for(k=0; k<N3; k++) {
+            for(j=0; j<N2; j++) for(i=0; i<N1; i++) {
+                *y++ = hypot(u1[k]-v1[i],u2[l]-v2[j]);
+                *s++ = idx++;
             }
         }
 
@@ -232,10 +225,9 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
         }
         */
 
-        double val, *ys;
-
         qsort_r(seq,N,sizeof(unsigned),y,compare_r);
 
+        double val, *ys;
         for(i=N,s=seq,ID.x0=-1.; i--; ) {
             ys = y + *s++;
             if (ID.x0 != *ys) {
@@ -243,6 +235,21 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
                 val = gauss_legendre(Nr, intgrd, &ID, 0., rM);
             }
             *ys = val;
+        }
+
+        double fM1,fM2,fM3,fM4;
+        for(l=0; l<N4; l++) {
+            fM4 = fM(u2[l]-u0[1],*ut);
+            for(k=0; k<N3; k++) {
+                fM3 = fM4*fM(u1[k]-u0[0],*ut);
+                for(j=0; j<N2; j++) {
+                    fM2 = fM3*fM(v2[j]-v0[1],*vt);
+                    for(i=0; i<N1; i++) {
+                        fM1 = fM2*fM(v1[i]-v0[0],*vt);
+                        *y++ *= fM1;
+                    }
+                }
+            }
         }
 
         free(seq);
