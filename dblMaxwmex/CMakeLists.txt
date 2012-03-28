@@ -18,3 +18,5 @@ install(TARGETS dblMaxw angle_int_test
 	ARCHIVE DESTINATION lib
 )
 
+install(FILES dblMaxw.h angle_int.h DESTINATION include)
+
