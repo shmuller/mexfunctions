@@ -1,6 +1,7 @@
 #include "math.h"
 
-#include "../common/common.h"
+#include "angle_int.h"
+
 #include "../specfunmex/specfun.h"
 
 #include "../quadmex/gauss_legendre.h"

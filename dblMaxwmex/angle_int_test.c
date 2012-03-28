@@ -4,7 +4,7 @@
 
 #include "../common/common.h"
 
-#include "angle_int.c"
+#include "angle_int.h"
 
 typedef struct {
     func *fun;
