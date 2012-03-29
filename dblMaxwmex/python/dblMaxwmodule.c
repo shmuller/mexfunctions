@@ -1,9 +1,9 @@
-/* triblock(A,B,IPIV,C,D)
- * Tri-block-diagnonal solve step. Compile with:
+/* dblMaxw.integrate("f_r",vt,v0,ut,u0,IJ,(VU))
+ * Double-Maxwellian integrals. Compile with:
  *
  * python setup.py install
  *
- * S. H. Muller, 2012/03/04
+ * S. H. Muller, 2012/03/29
  */
 
 #include <Python.h>
@@ -13,27 +13,50 @@
 
 static PyObject *integrate(PyObject *self, PyObject *args)
 {
-    /*
-    int is_half = 0;
-    PyObject *a[5];
-    if (!PyArg_ParseTuple(args, "OOOOO|i", a, a+1, a+2, a+3, a+4, &is_half)) {
-        PyErr_SetString(PyExc_TypeError, "D1, U2, IPIV, L1, D2 expected");
+    int i;
+    char *f_r;
+    double vt, ut;
+    PyObject *a[3], *VU_args=NULL, *VU_arg, *L;
+    if (!PyArg_ParseTuple(args, "zdOdOO|O", &f_r, &vt, a, &ut, a+1, a+2, &VU_args)) {
+        PyErr_SetString(PyExc_TypeError, "f_r, vt, v0, ut, u0, IJ, (VU) expected");
         return NULL;
     }
 
-	double *D1 = PyArray_DATA(a[0]);
-	double *U2 = PyArray_DATA(a[1]);
-	int *IPIV  = PyArray_DATA(a[2]);
-	double *L1 = PyArray_DATA(a[3]);
-	double *D2 = PyArray_DATA(a[4]);
+    double *v0 = PyArray_DATA(a[0]);
+    double *u0 = PyArray_DATA(a[1]);
+    int *IJ    = PyArray_DATA(a[2]);
+    
+    int mV = 3-IJ[0], mU = 3-IJ[1], m = mV+mU;
 
-	int N = PyArray_DIM(a[1],1), NRHS = PyArray_DIM(a[1],0);
-    int INFO;
+    if (((VU_args) ? PyTuple_Size(VU_args) : 0) != m) {
+        PyErr_SetString(PyExc_TypeError, "Incorrect size for tuple VU");
+        return NULL;
+    }
+    
+    double **VU = (m==0) ? NULL : malloc(m*(sizeof(double*)+sizeof(int)+sizeof(npy_int)));
+    double **V = VU, **U=VU+mV;
+    int *DI = VU+m;
+    npy_int *dims = DI+m;
 
-    _triblock(D1, U2, IPIV, L1, D2, is_half, N, NRHS, &INFO);
+    for(i=0; i<m; i++) {
+        VU_arg = PyTuple_GetItem(VU_args,i);
+        VU[i] = PyArray_DATA(VU_arg);
+        dims[m-1-i] = DI[i] = PyArray_SIZE(VU_arg);
+    }
+    
+    if (m == 0) {
+        npy_int ones[] = {1};
+        L = PyArray_FromDims(1, ones, NPY_DOUBLE);
+    } else {
+        L = PyArray_FromDims(m, dims, NPY_DOUBLE);
+    }
+    double *Y = PyArray_DATA(L);
+    
+    dblMaxw(f_r, &vt, v0, &ut, u0, IJ, DI, V, U, Y);
 
-    */
-    Py_RETURN_NONE;
+    if (VU) free(VU);
+
+    return L;
 }
 
 
@@ -46,5 +69,6 @@ PyMODINIT_FUNC
 initdblMaxw(void)
 {
     Py_InitModule("dblMaxw", methods);
+    import_array();
 }
 
