@@ -11,13 +11,24 @@
 
 #include "dblMaxw.h"
 
+int dims_ok(PyObject *in, int m, npy_int *dims)
+{
+    int i;
+    if (PyArray_NDIM(in) != m) return 0;
+
+    npy_intp *dv = PyArray_DIMS(in);
+    for(i=0; i<m; i++) if (dv[i] != dims[i]) return 0;
+    return 1;
+}
+
 static PyObject *integrate(PyObject *self, PyObject *args)
 {
     int i;
     char *f_r, *nrm;
     double vt, ut;
-    PyObject *a[3], *VU_args=NULL, *VU_arg, *L;
-    if (!PyArg_ParseTuple(args, "zdOdOOz|O", &f_r, &vt, a, &ut, a+1, a+2, &nrm, &VU_args)) {
+    PyObject *a[3], *VU_args=NULL, *VU_arg, *L=NULL;
+    if (!PyArg_ParseTuple(args, "zdOdOOz|OO", 
+            &f_r, &vt, a, &ut, a+1, a+2, &nrm, &VU_args, &L)) {
         PyErr_SetString(PyExc_TypeError, "f_r, vt, v0, ut, u0, IJ, nrm, (VU) expected");
         return NULL;
     }
@@ -44,18 +55,23 @@ static PyObject *integrate(PyObject *self, PyObject *args)
         dims[m-1-i] = DI[i] = PyArray_SIZE(VU_arg);
     }
     
-    if (m == 0) {
-        npy_int ones[] = {1};
-        L = PyArray_FromDims(1, ones, NPY_DOUBLE);
-    } else {
-        L = PyArray_FromDims(m, dims, NPY_DOUBLE);
+    if (L == NULL) {
+        if (m == 0) {
+            npy_int ones[] = {1};
+            L = PyArray_FromDims(1, ones, NPY_DOUBLE);
+        } else {
+            L = PyArray_FromDims(m, dims, NPY_DOUBLE);
+        }
+    } else if (!dims_ok(L, m, dims)) {
+        PyErr_SetString(PyExc_TypeError, "Incorrect size of L");
+        if (VU) free(VU);
+        return NULL;
     }
     double *Y = PyArray_DATA(L);
     
     dblMaxw(f_r, &vt, v0, &ut, u0, IJ, nrm, DI, V, U, Y);
 
     if (VU) free(VU);
-
     return L;
 }
 

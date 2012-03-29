@@ -45,7 +45,9 @@ u2 = np.linspace(-5*vi,5*vi,N4)
 z = np.zeros(3);
 IJ = np.array([1,1],'i')
 
-I = dblMaxw.integrate("vrel",vn,z,vi,z,IJ,"MM",(v1,v2,u1,u2))
+L = np.empty((N4,N3,N2,N1),'d')
+
+I = dblMaxw.integrate("vrel",vn,z,vi,z,IJ,"MM",(v1,v2,u1,u2),L)
 
 
 dv1 = np.diff(v1)/2.; dv1 = np.r_[0.,dv1] + np.r_[dv1,0.]
