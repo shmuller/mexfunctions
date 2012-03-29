@@ -36,8 +36,9 @@ SM_REAL vrel(SM_REAL r, void *data)
     return r;
 }
 
-SM_REAL fM(SM_REAL x, SM_REAL xt)
+SM_REAL fM(SM_REAL x, void *data)
 {
+    SM_REAL xt = *(SM_REAL*)data;
     x /= xt;
     return exp(-0.5*x*x)/(SQRT2PI*xt);
 }
@@ -61,6 +62,33 @@ int compare_r(SM_REAL *DATA, const unsigned *A, const unsigned *B)
 }
 
 
+typedef struct {
+    int N;
+    SM_REAL *x;
+    SM_REAL x0;
+    func_r *fun;
+    void *data;
+} FM_PAR;
+
+SM_REAL *normalize(SM_REAL *y, SM_REAL f, FM_PAR *P, int d)
+{
+    int i;
+    SM_REAL fi;
+    if (d > 1) {
+        for(i=0; i<P->N; i++) {
+            fi = f*P->fun(P->x[i]-P->x0,P->data);
+            y = normalize(y, fi, P+1, d-1);
+        }
+    } else {
+        for(i=0; i<P->N; i++) {
+            fi = f*P->fun(P->x[i]-P->x0,P->data);
+            *y++ *= fi;
+        }
+    }
+    return y;
+}
+
+
 #define R0 data_angle[1]
 #define Rt data_angle[2]
 #define z0 data_angle[3]
@@ -69,7 +97,7 @@ int compare_r(SM_REAL *DATA, const unsigned *A, const unsigned *B)
 #define Nr 32
 
 void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
-    int *IJ, int *DI, double **V, double **U, double *Y)
+    int *IJ, char *nrm, int *DI, double **V, double **U, double *Y)
 {
     int i, j, k, l;
 
@@ -102,6 +130,11 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
         ID.f_r = one;
     }
 
+    func_r *fV = (nrm[0]=='M') ? fM : one;
+    func_r *fU = (nrm[1]=='M') ? fM : one;
+    void *dataV = vt;
+    void *dataU = ut;
+    
     if (IJ[1] == 3) {
         if (IJ[0] == 3) {
             R0 = 0.;
@@ -123,9 +156,14 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
                 *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
             }
 
+            FM_PAR P[] = {{N,v3,v0[2],fV,dataV}};
+            normalize(Y,1.,P,1);
+
+            /*
             for(i=0,y=Y; i<N; i++) {
                 *y++ *= fM(v3[i]-v0[2],*vt);
             }
+            */
 
         } else if (IJ[0] == 1) {
             double *v1 = V[0], *v2 = V[1];
@@ -144,6 +182,13 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
                 }
             }
 
+            FM_PAR P[] = {
+                {DI[1],v2,v0[1],fV,dataV},
+                {DI[0],v1,v0[0],fV,dataV}
+            };
+            normalize(Y,1.,P,2);
+            
+            /*
             for(j=0,y=Y; j<DI[1]; j++) {
                 fM2 = fM(v2[j]-v0[1],*vt);
                 for(i=0; i<DI[0]; i++) {
@@ -151,6 +196,7 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
                     *y++ *= fM1;
                 }
             }
+            */
 
         }
 
@@ -167,6 +213,13 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
             *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
         }
 
+        FM_PAR P[] = {
+            {DI[1],u3,u0[2],fU,dataU},
+            {DI[0],v3,v0[2],fV,dataV}
+        };
+        normalize(Y,1.,P,2);
+
+        /*
         for(j=0,y=Y; j<DI[1]; j++) {
             fM2 = fM(u3[j]-u0[2],*ut);
             for(i=0; i<DI[0]; i++) {
@@ -174,6 +227,7 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
                 *y++ *= fM1;
             }
         }
+        */
 
     } else if (IJ[1] == 1 && IJ[0] == 1) {
         double *v1 = V[0], *v2 = V[1], *u1 = U[0], *u2 = U[1];
@@ -211,6 +265,15 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
             *ys = val;
         }
 
+        FM_PAR P[] = {
+            {DI[3],u2,u0[1],fU,dataU},
+            {DI[2],u1,u0[0],fU,dataU},
+            {DI[1],v2,v0[1],fV,dataV},
+            {DI[0],v1,v0[0],fV,dataV}
+        };
+        normalize(Y,1.,P,4);
+
+        /*
         for(l=0,y=Y; l<DI[3]; l++) {
             fM4 = fM(u2[l]-u0[1],*ut);
             for(k=0; k<DI[2]; k++) {
@@ -224,6 +287,7 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
                 }
             }
         }
+        */
 
         free(seq);
     }

@@ -14,11 +14,11 @@
 static PyObject *integrate(PyObject *self, PyObject *args)
 {
     int i;
-    char *f_r;
+    char *f_r, *nrm;
     double vt, ut;
     PyObject *a[3], *VU_args=NULL, *VU_arg, *L;
-    if (!PyArg_ParseTuple(args, "zdOdOO|O", &f_r, &vt, a, &ut, a+1, a+2, &VU_args)) {
-        PyErr_SetString(PyExc_TypeError, "f_r, vt, v0, ut, u0, IJ, (VU) expected");
+    if (!PyArg_ParseTuple(args, "zdOdOOz|O", &f_r, &vt, a, &ut, a+1, a+2, &nrm, &VU_args)) {
+        PyErr_SetString(PyExc_TypeError, "f_r, vt, v0, ut, u0, IJ, nrm, (VU) expected");
         return NULL;
     }
 
@@ -52,7 +52,7 @@ static PyObject *integrate(PyObject *self, PyObject *args)
     }
     double *Y = PyArray_DATA(L);
     
-    dblMaxw(f_r, &vt, v0, &ut, u0, IJ, DI, V, U, Y);
+    dblMaxw(f_r, &vt, v0, &ut, u0, IJ, nrm, DI, V, U, Y);
 
     if (VU) free(VU);
 
