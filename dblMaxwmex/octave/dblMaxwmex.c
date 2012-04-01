@@ -10,6 +10,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     char f_r[STRLEN], nrm[STRLEN];
     mxGetString(*R++,f_r,STRLEN);
 
+    double *r0 = mxGetData(*R++);
     double *vt = mxGetData(*R++);
     double *v0 = mxGetData(*R++);
     double *ut = mxGetData(*R++);
@@ -36,7 +37,7 @@ void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
     }
     double *Y = mxGetData(L[0]);
 
-    dblMaxw(f_r, vt, v0, ut, u0, IJ, nrm, DI, V, U, Y);
+    dblMaxw(f_r, r0, vt, v0, ut, u0, IJ, nrm, DI, V, U, Y);
 
     if (VU) free(VU);
 }

@@ -21,22 +21,35 @@ int dims_ok(PyObject *in, int m, npy_int *dims)
     return 1;
 }
 
+int size_ok(PyObject *in, int m, npy_int *dims)
+{
+    int i, N=1;
+    for(i=0; i<m; i++) N *= dims[i];
+    
+    return PyArray_SIZE(in) == N;
+}
+
+
 static PyObject *integrate(PyObject *self, PyObject *args)
 {
     int i;
     char *f_r, *nrm;
-    double vt, ut;
-    PyObject *a[3], *VU_args=NULL, *VU_arg, *L=NULL;
-    if (!PyArg_ParseTuple(args, "zdOdOOz|OO", 
-            &f_r, &vt, a, &ut, a+1, a+2, &nrm, &VU_args, &L)) {
-        PyErr_SetString(PyExc_TypeError, "f_r, vt, v0, ut, u0, IJ, nrm, (VU) expected");
+    double vt, ut, r0;
+    PyObject *a[2], *fM_args=NULL, *VU_args=NULL, *VU_arg, *out=NULL;
+    if (!PyArg_ParseTuple(args, "zdOOz|OO", 
+            &f_r, &r0, &fM_args, a, &nrm, &VU_args, &out)) {
+        PyErr_SetString(PyExc_TypeError, "f_r, r0, (fM), IJ, nrm, [(VU), out] expected");
         return NULL;
     }
+    int *IJ = PyArray_DATA(a[0]);
 
+    if (!PyArg_ParseTuple(fM_args, "dOdO", &vt, a, &ut, a+1)) {
+        PyErr_SetString(PyExc_TypeError, "fM = (vt, v0, ut, u0) expected");
+        return NULL;
+    }
     double *v0 = PyArray_DATA(a[0]);
     double *u0 = PyArray_DATA(a[1]);
-    int *IJ    = PyArray_DATA(a[2]);
-    
+        
     int mV = 3-IJ[0], mU = 3-IJ[1], m = mV+mU;
 
     if (((VU_args) ? PyTuple_Size(VU_args) : 0) != m) {
@@ -55,24 +68,26 @@ static PyObject *integrate(PyObject *self, PyObject *args)
         dims[m-1-i] = DI[i] = PyArray_SIZE(VU_arg);
     }
     
-    if (L == NULL) {
+    if (out == NULL) {
         if (m == 0) {
             npy_int ones[] = {1};
-            L = PyArray_FromDims(1, ones, NPY_DOUBLE);
+            out = PyArray_FromDims(1, ones, NPY_DOUBLE);
         } else {
-            L = PyArray_FromDims(m, dims, NPY_DOUBLE);
+            out = PyArray_FromDims(m, dims, NPY_DOUBLE);
         }
-    } else if (!dims_ok(L, m, dims)) {
-        PyErr_SetString(PyExc_TypeError, "Incorrect size of L");
+    } else if (!size_ok(out, m, dims)) {
+        PyErr_SetString(PyExc_TypeError, "Incorrect size of output array");
         if (VU) free(VU);
         return NULL;
+    } else {
+        Py_INCREF(out);
     }
-    double *Y = PyArray_DATA(L);
+    double *Y = PyArray_DATA(out);
     
-    dblMaxw(f_r, &vt, v0, &ut, u0, IJ, nrm, DI, V, U, Y);
+    dblMaxw(f_r, &r0, &vt, v0, &ut, u0, IJ, nrm, DI, V, U, Y);
 
     if (VU) free(VU);
-    return L;
+    return out;
 }
 
 

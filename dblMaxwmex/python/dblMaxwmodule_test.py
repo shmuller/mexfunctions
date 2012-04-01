@@ -11,7 +11,7 @@ IJ = np.array([3,3],'i')
 
 VU = ()
 
-res = dblMaxw.integrate("vrel",vt,v0,ut,u0,IJ,"MM",VU)
+res = dblMaxw.integrate("vrel",1.,(vt,v0,ut,u0),IJ,"MM",VU)
 
 print "%.16e" % res
 
@@ -45,9 +45,9 @@ u2 = np.linspace(-5*vi,5*vi,N4)
 z = np.zeros(3);
 IJ = np.array([1,1],'i')
 
-L = np.empty((N4,N3,N2,N1),'d')
+out = np.empty((N4,N3,N2,N1),'d')
 
-I = dblMaxw.integrate("vrel",vn,z,vi,z,IJ,"MM",(v1,v2,u1,u2),L)
+I = dblMaxw.integrate("vrel",1.,(vn,z,vi,z),IJ,"MM",(v1,v2,u1,u2),out)
 
 
 dv1 = np.diff(v1)/2.; dv1 = np.r_[0.,dv1] + np.r_[dv1,0.]

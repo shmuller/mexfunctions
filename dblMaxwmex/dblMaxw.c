@@ -96,7 +96,7 @@ SM_REAL *normalize(SM_REAL *y, SM_REAL f, FM_PAR *P, int d)
 
 #define Nr 32
 
-void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
+void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *u0,
     int *IJ, char *nrm, int *DI, double **V, double **U, double *Y)
 {
     int i, j, k, l;
@@ -109,7 +109,7 @@ void dblMaxw(char *f_r, double *vt, double *v0, double *ut, double *u0,
     double w0[] = {u0[0]-v0[0], u0[1]-v0[1], u0[2]-v0[2]};
 
     double data_angle[5];
-    intgrd_data ID = {0., 1., NULL, NULL, AngleInt3_, data_angle};
+    intgrd_data ID = {0., *r0, NULL, NULL, AngleInt3_, data_angle};
 
     int m = 6-IJ[0]-IJ[1], N=1;
     for(i=0; i<m; i++) N *= DI[i];
