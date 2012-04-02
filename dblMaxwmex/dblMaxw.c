@@ -96,6 +96,11 @@ SM_REAL *normalize(SM_REAL *y, SM_REAL f, FM_PAR *P, int d)
 
 #define Nr 32
 
+void get_limits(double *a, double *b, double rc, double rM) {
+    *a = (rc < rM) ? 0. : rc-rM;
+    *b = rc+rM;
+}
+
 void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *u0,
     int *IJ, char *nrm, int *DI, double **V, double **U, double *Y)
 {
@@ -104,7 +109,7 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
     double *y;
 
     double wt = hypot(*vt,*ut);
-    double rM = 10.*wt;
+    double rM = 10.*wt, a, b;
 
     double w0[] = {u0[0]-v0[0], u0[1]-v0[1], u0[2]-v0[2]};
 
@@ -141,10 +146,11 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
             Rt = wt;
             z0 = sqrt(w0[0]*w0[0]+w0[1]*w0[1]+w0[2]*w0[2]);
             zt = wt;
-                
-            *Y = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+            
+            get_limits(&a, &b, z0, rM);
+            *Y = gauss_legendre(Nr, intgrd, &ID, a, b);
         
-        } else if (IJ[0] == 2) {   
+        } else if (IJ[0] == 2) {
             double *v3 = V[0];
 
             R0 = hypot(w0[0],w0[1]);
@@ -153,7 +159,8 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
 
             for(i=0,y=Y; i<N; i++) {
                 z0 = u0[2]-v3[i];
-                *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                get_limits(&a, &b, hypot(R0,z0), rM);
+                *y++ = gauss_legendre(Nr, intgrd, &ID, a, b);
             }
 
             FM_PAR P[] = {{N,v3,v0[2],fV,dataV}};
@@ -178,7 +185,8 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
                 for(i=0; i<DI[0]; i++) {
                     dx = u0[0]-v1[i];
                     R0 = hypot(dx,dy);
-                    *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                    get_limits(&a, &b, hypot(R0,z0), rM);
+                    *y++ = gauss_legendre(Nr, intgrd, &ID, a, b);
                 }
             }
 
@@ -208,9 +216,11 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
         R0 = hypot(w0[0],w0[1]);
         Rt = wt;
 
+        get_limits(&a, &b, R0, rM);
+
         for(j=0,y=Y; j<DI[1]; j++) for(i=0; i<DI[0]; i++) {
             ID.x0 = u3[j]-v3[i];
-            *y++ = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+            *y++ = gauss_legendre(Nr, intgrd, &ID, a, b);
         }
 
         FM_PAR P[] = {
@@ -240,6 +250,8 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
         R0 = w0[2];
         Rt = wt;
 
+        get_limits(&a, &b, R0, rM);
+
         for(l=0,y=Y,s=seq,idx=0; l<DI[3]; l++) for(k=0; k<DI[2]; k++) {
             for(j=0; j<DI[1]; j++) for(i=0; i<DI[0]; i++) {
                 *y++ = hypot(u1[k]-v1[i],u2[l]-v2[j]);
@@ -260,7 +272,7 @@ void dblMaxw(char *f_r, double *r0, double *vt, double *v0, double *ut, double *
             ys = Y + *s++;
             if (ID.x0 != *ys) {
                 ID.x0 = *ys;
-                val = gauss_legendre(Nr, intgrd, &ID, 0., rM);
+                val = gauss_legendre(Nr, intgrd, &ID, a, b);
             }
             *ys = val;
         }

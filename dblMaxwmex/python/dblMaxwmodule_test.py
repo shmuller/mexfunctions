@@ -43,6 +43,14 @@ u1 = np.linspace(-5*vi,5*vi,N3)
 u2 = np.linspace(-5*vi,5*vi,N4)
 
 z = np.zeros(3);
+
+out = np.empty((N2,N1),'d')
+
+IJ = np.array([1,3],'i')
+
+nu = dblMaxw.integrate("ion",1.,(vn,z,vi,z),IJ,"OM",(v1,v2),out)
+
+
 IJ = np.array([1,1],'i')
 
 out = np.empty((N4,N3,N2,N1),'d')
