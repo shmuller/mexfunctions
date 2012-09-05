@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.0)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
 
@@ -21,6 +21,10 @@ target_link_libraries(mdsclient_static ${mdsplus_LIBRARIES})
 
 add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)
+
+add_subdirectory(octave)
+
+set(CMAKE_BUILD_TYPE Release)
 
 install(TARGETS mdsclient_test mdsclient mdsclient_static 
 	RUNTIME DESTINATION bin

@@ -11,7 +11,6 @@
 
 
 #include <mex.h>
-#include <matrix.h>
 
 #include <float.h>
 

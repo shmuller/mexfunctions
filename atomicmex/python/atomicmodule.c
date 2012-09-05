@@ -1,7 +1,7 @@
 #include <Python.h>
 #include "numpy/noprefix.h"
 
-#include "atomic.h"
+#include "../atomic.h"
 
 static PyObject* atomic(PyObject *self, PyObject *args)
 {

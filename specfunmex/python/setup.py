@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
  
 module1 = Extension('specfun', 
         sources = ['specfunmodule.c'], 
-        libraries = ['common', 'specfun'])
+        libraries = ['specfun', 'common'])
  
 setup (name = 'specfun',
         version = '0.0',

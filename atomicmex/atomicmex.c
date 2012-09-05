@@ -9,7 +9,6 @@
  */
 
 #include "mex.h"
-#include "matrix.h"
 
 #include "atomic.h"
 

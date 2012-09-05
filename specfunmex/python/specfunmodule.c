@@ -1,8 +1,7 @@
 #include <Python.h>
-#include "numpy/noprefix.h"
+#include "numpy/arrayobject.h"
 
-#include "../common/common.h"
-#include "specfun.h"
+#include "../specfun.h"
 
 static PyObject* specfun(PyObject *self, PyObject *args)
 {

@@ -192,13 +192,18 @@ static PyObject* mdsclose(PyObject *self, PyObject *args)
     return mdsvalue(self, new_args);
 }
 
+#define USAGE_MDSCONNECT    "sock = mdsclient.mdsconnect('hostname:port')"
+#define USAGE_MDSDISCONNECT "mdsclient.mdsdisconnect(sock)"
+#define USAGE_MDSVALUE      "x = mdsclient.mdsvalue(sock,'mdsexpr',arg1,arg2,...)"
+#define USAGE_MDSOPEN       "mdsclient.mdsopen(sock,'tree',shot)"
+#define USAGE_MDSCLOSE      "mdsclient.mdsclose(sock)"
 
 static PyMethodDef methods[] = {
-    {"mdsconnect", mdsconnect, METH_VARARGS, "Connect to mdsplus server"},
-    {"mdsdisconnect", mdsdisconnect, METH_VARARGS, "Disconnect from mdsplus server"},
-    {"mdsvalue", mdsvalue, METH_VARARGS, "Evaluate mdsplus expression"},
-    {"mdsopen", mdsopen, METH_VARARGS, "Open mdsplus tree"},
-    {"mdsclose", mdsclose, METH_VARARGS, "Close mdsplus tree"},
+    {"mdsconnect", mdsconnect, METH_VARARGS, USAGE_MDSCONNECT},
+    {"mdsdisconnect", mdsdisconnect, METH_VARARGS, USAGE_MDSDISCONNECT},
+    {"mdsvalue", mdsvalue, METH_VARARGS, USAGE_MDSVALUE},
+    {"mdsopen", mdsopen, METH_VARARGS, USAGE_MDSOPEN},
+    {"mdsclose", mdsclose, METH_VARARGS, USAGE_MDSCLOSE},
     {NULL, NULL, 0, NULL}
 };
  
