@@ -1,11 +1,10 @@
 #include <Python.h>
-#include "numpy/noprefix.h"
+#include <numpy/arrayobject.h>
 
 #include "../atomic.h"
 
 static PyObject* atomic(PyObject *self, PyObject *args)
 {
-	int i;
 	PyObject *pyx;
 	char *target=NULL, *type=NULL, *model=NULL;
 	

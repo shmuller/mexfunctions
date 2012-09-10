@@ -1,6 +1,6 @@
 import mdsclient
 
-sock = mdsclient.mdsconnect('localhost:8020')
+sock = mdsclient.mdsconnect('localhost:8001')
 print sock
 
 
