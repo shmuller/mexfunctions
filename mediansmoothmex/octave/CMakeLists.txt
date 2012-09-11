@@ -4,7 +4,8 @@ add_custom_command(
     OUTPUT mediansmoothmex.mex
     COMMAND mkoctfile --mex 
         ${CMAKE_CURRENT_SOURCE_DIR}/mediansmoothmex.c
-    DEPENDS mediansmoothmex.c ../mediansmooth.c
+        -I${mediansmooth_SOURCE_DIR} -L${mediansmooth_BINARY_DIR} -lmediansmooth
+    DEPENDS mediansmoothmex.c mediansmooth
     COMMENT "Building Octave extension")
 
 add_custom_target(mediansmoothmex ALL
