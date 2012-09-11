@@ -23,6 +23,7 @@ add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)
 
 add_subdirectory(octave)
+add_subdirectory(python)
 
 set(CMAKE_BUILD_TYPE Release)
 

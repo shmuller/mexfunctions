@@ -10,9 +10,7 @@
 
 #include <octave/oct.h>
 
-#include "../common/common.h"
-#include "specfun.h"
-
+#include "../specfun.h"
 
 DEFUN_DLD(specfunmex, args, nargout, "Special functions")
 {

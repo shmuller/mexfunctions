@@ -11,7 +11,8 @@ add_library(specfun_static STATIC specfun.f90)
 set_target_properties(specfun_static PROPERTIES OUTPUT_NAME specfun)
 set_target_properties(specfun_static PROPERTIES COMPILE_FLAGS "-fPIC -fno-underscoring")
 
-set(CMAKE_BUILD_TYPE Release)
+add_subdirectory(octave)
+add_subdirectory(python)
 
 install(TARGETS specfun specfun_static
     RUNTIME DESTINATION bin

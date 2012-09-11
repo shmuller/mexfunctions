@@ -4,7 +4,7 @@ project(mediansmooth)
 
 add_library(mediansmooth SHARED mediansmooth.c)
 
-#add_subdirectory(octave)
+add_subdirectory(octave)
 
 set(CMAKE_BUILD_TYPE Release)
 

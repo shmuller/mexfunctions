@@ -9,8 +9,7 @@ add_executable(angle_int_test angle_int_test.c)
 target_link_libraries(angle_int_test dblMaxw)
 
 add_subdirectory(octave)
-
-set(CMAKE_BUILD_TYPE Release)
+add_subdirectory(python)
 
 install(TARGETS dblMaxw angle_int_test
     RUNTIME DESTINATION bin

@@ -1,0 +1,13 @@
+#undef TYPE
+#undef TYPE_MIN
+#undef TYPE_MAX
+#undef elem_type
+#undef elem_ptr
+#undef print
+#undef compar
+#undef median_init
+#undef find_spot
+#undef median_add
+#undef median_remove
+#undef median_replace
+#undef median_filt

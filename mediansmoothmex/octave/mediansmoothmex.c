@@ -28,7 +28,9 @@
 #define median_replace median_replace_double
 #define median_filt median_filt_double
 
-#include "mediansmooth.c"
+#include "../mediansmooth.c"
+
+#include "../undef.h"
 
 #define TYPE float
 #define TYPE_MIN (-FLT_MAX)
@@ -44,7 +46,7 @@
 #define median_replace median_replace_float
 #define median_filt median_filt_float
 
-#include "mediansmooth.c"
+#include "../mediansmooth.c"
 
 void mexFunction(int nL, mxArray *L[], int nR, const mxArray *R[])
 {
