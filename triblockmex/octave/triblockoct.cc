@@ -10,7 +10,7 @@
 
 #include <octave/oct.h>
 
-#include "_triblock.h"
+#include "../_triblock.h"
 
 DEFUN_DLD(triblockmex, args, nargout, "Tri-block-diagonal solve step")
 {
