@@ -64,58 +64,61 @@ void print_queues_median(pqueue_t *L, pqueue_t *R, void *med) {
 }
 
 
-static int balance = 0;
-static node_t *median = NULL;
+typedef struct {
+    int balance;
+    node_t *median;
+} status;
 
-void insert(pqueue_t *dest, pqueue_t *src, node_t *n) {
-    int cmp = src->cmppri(n->pri, median->pri);
+
+void insert(pqueue_t *dest, pqueue_t *src, node_t *n, void *med_pri) {
+    int cmp = src->cmppri(n->pri, med_pri);
     node_t *o = (cmp) ? pqueue_replace_head_wrap(src, n) : n;
     pqueue_insert_wrap(dest, o);
 }
 
-void *add(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri) {
+void *add(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
     n->pri = new_pri;
-    
-    if (!median)
-        median = n;
 
-    switch (balance) {
+    if (!stat->median)
+        stat->median = n;
+
+    switch (stat->balance) {
         case 0:
-            if (R->cmppri(n->pri, median->pri)) {
+            if (R->cmppri(n->pri, stat->median->pri)) {
                 pqueue_insert_wrap(R, n);
-                balance = +1;
-                median = pqueue_peek(R);
+                stat->balance = +1;
+                stat->median = pqueue_peek(R);
             } else {
                 pqueue_insert_wrap(L, n);
-                balance = -1;
-                median = pqueue_peek(L);
+                stat->balance = -1;
+                stat->median = pqueue_peek(L);
             }
             break;
         case +1:
-            insert(L, R, n);
-            balance = 0;
-            median = pqueue_peek(L);
+            insert(L, R, n, stat->median->pri);
+            stat->balance = 0;
+            stat->median = pqueue_peek(L);
             break;
         case -1:
-            insert(R, L, n);
-            balance = 0;
-            median = pqueue_peek(L);
+            insert(R, L, n, stat->median->pri);
+            stat->balance = 0;
+            stat->median = pqueue_peek(L);
             break;
     }
-    return median->pri;
+    return stat->median->pri;
 }
 
-void *del(pqueue_t *L, pqueue_t *R, node_t *n) {
-    switch (balance) {
+void *del(pqueue_t *L, pqueue_t *R, node_t *n, status *stat) {
+    switch (stat->balance) {
         case 0:
             if (n->q == L) {
                 pqueue_remove(L, n);
-                balance = +1;
-                median = pqueue_peek(R);
+                stat->balance = +1;
+                stat->median = pqueue_peek(R);
             } else {
                 pqueue_remove(R, n);
-                balance = -1;
-                median = pqueue_peek(L);
+                stat->balance = -1;
+                stat->median = pqueue_peek(L);
             }
             break;
         case +1:
@@ -123,18 +126,19 @@ void *del(pqueue_t *L, pqueue_t *R, node_t *n) {
         case -1:
             break;
     }
-    return median->pri;
+    return stat->median->pri;
 }
 
-void *rep(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri) {
-    if (n->q->cmppri(new_pri, median->pri)) {
+void *rep(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
+    if (n->q->cmppri(new_pri, stat->median->pri)) {
         // shortcut: new and old elements belong to the same queue
         pqueue_change_priority(n->q, new_pri, n);
+        stat->median = pqueue_peek(L);
     } else {
-        del(L, R, n);
-        add(L, R, n, new_pri);
+        del(L, R, n, stat);
+        add(L, R, n, new_pri, stat);
     }
-    return median->pri;
+    return stat->median->pri;
 }
 
 
@@ -143,6 +147,8 @@ void median_filt_pqueue(dtype *x, int N, int w, int *ind) {
 	node_t *nodes, *n;
     dtype *med;
     int i;
+
+    status stat = {0, NULL};
     
     nodes = malloc(w*sizeof(node_t));
 	L = pqueue_init(w/2+1, lt, get_pri, set_pri, get_pos, set_pos);
@@ -150,19 +156,21 @@ void median_filt_pqueue(dtype *x, int N, int w, int *ind) {
 
     for (i=0; i<w; ++i) {
         n = &nodes[i];
-        med = add(L, R, n, x + i);
+        med = add(L, R, n, x + i, &stat);
         ind[i] = med - x;
         //print_queues_median(L, R, med);
+        //printf("L=%d, R=%d\n", (int) pqueue_size(L), (int) pqueue_size(R));
     }
 
     for(; i<N; ++i) {
         n = &nodes[i % w];
-        med = rep(L, R, n, x + i);
+        med = rep(L, R, n, x + i, &stat);
         ind[i] = med - x;
         //print_queues_median(L, R, med);
+        //printf("L=%d, R=%d\n", (int) pqueue_size(L), (int) pqueue_size(R));
     }
-   
-	pqueue_free(L);
+
+    pqueue_free(L);
     pqueue_free(R);
     free(nodes);
 }

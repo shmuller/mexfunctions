@@ -12,22 +12,22 @@
 
 static PyObject* mediansmooth(PyObject *self, PyObject *args)
 {
-    PyObject *a;
+    PyObject *in;
     int w;
-    if (!PyArg_ParseTuple(args, "Oi", &a, &w)) {
+    if (!PyArg_ParseTuple(args, "Oi", &in, &w)) {
         PyErr_SetString(PyExc_TypeError, "x, w expected");
         return NULL;
     }
-    a = PyArray_FromAny(a, NULL, 0, 0, 0, NULL);
+    PyObject *arr = PyArray_FromAny(in, NULL, 0, 0, 0, NULL);
     
-    int ndims = PyArray_NDIM(a);
-    npy_intp *dv = PyArray_DIMS(a);
-    int typenum = PyArray_TYPE(a);
-    void *x = PyArray_DATA(a);
+    int ndims = PyArray_NDIM(arr);
+    npy_intp *dv = PyArray_DIMS(arr);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
     int N = dv[ndims-1];
 
-    a = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
-    int *ind = PyArray_DATA(a);
+    PyObject *retval = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
+    int *ind = PyArray_DATA(retval);
 
     switch (typenum) {
         case NPY_DOUBLE:
@@ -38,28 +38,28 @@ static PyObject* mediansmooth(PyObject *self, PyObject *args)
             break;
     }
 
-    return a;
+    return retval;
 }
 
 
 static PyObject* mediansmooth2(PyObject *self, PyObject *args)
 {
-    PyObject *a;
+    PyObject *in;
     int w;
-    if (!PyArg_ParseTuple(args, "Oi", &a, &w)) {
+    if (!PyArg_ParseTuple(args, "Oi", &in, &w)) {
         PyErr_SetString(PyExc_TypeError, "x, w expected");
         return NULL;
     }
-    a = PyArray_FromAny(a, NULL, 0, 0, 0, NULL);
+    PyObject *arr = PyArray_FromAny(in, NULL, 0, 0, 0, NULL);
     
-    int ndims = PyArray_NDIM(a);
-    npy_intp *dv = PyArray_DIMS(a);
-    int typenum = PyArray_TYPE(a);
-    void *x = PyArray_DATA(a);
+    int ndims = PyArray_NDIM(arr);
+    npy_intp *dv = PyArray_DIMS(arr);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
     int N = dv[ndims-1];
 
-    a = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
-    int *ind = PyArray_DATA(a);
+    PyObject *retval = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
+    int *ind = PyArray_DATA(retval);
 
     switch (typenum) {
         case NPY_DOUBLE:
@@ -67,7 +67,7 @@ static PyObject* mediansmooth2(PyObject *self, PyObject *args)
             break;
     }
 
-    return a;
+    return retval;
 }
 
 
