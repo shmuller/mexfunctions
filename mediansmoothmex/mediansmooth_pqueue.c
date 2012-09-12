@@ -3,43 +3,12 @@
 
 #include "pqueue.h"
 
-typedef double dtype;
-
+// definitions for pqueue
 typedef struct {
 	void *pri;
 	size_t pos;
     pqueue_t *q;
 } node_t;
-
-void pqueue_insert_wrap(pqueue_t *q, node_t *n) {
-    n->q = q;
-    pqueue_insert(q, n);
-}
-
-void *pqueue_replace_head_wrap(pqueue_t *q, node_t *n) {
-    n->q = q;
-    return pqueue_replace_head(q, n);
-}
-
-void pqueue_replace_with_higher_wrap(pqueue_t *q, node_t *o, node_t *n) {
-    n->q = q;
-    pqueue_replace_with_higher(q, o, n);
-}
-
-
-static int compare(void *next, void *curr) {
-    dtype a = *(dtype*)next;
-    dtype b = *(dtype*)curr;
-    return (a>b) - (a<b);
-}
-
-static int lt(void *next, void *curr) {
-	return *(dtype*)next < *(dtype*)curr;
-}
-
-static int gt(void *next, void *curr) {
-	return *(dtype*)next > *(dtype*)curr;
-}
 
 static void *get_pri(void *a) {
 	return ((node_t*)a)->pri;
@@ -57,23 +26,22 @@ static void set_pos(void *a, size_t pos) {
 	((node_t*)a)->pos = pos;
 }
 
-void printfun(FILE *out, void *a) {
-    printf("%f, ", *(dtype*)get_pri(a));
+
+// operations on pqueues
+void pqueue_insert_wrap(pqueue_t *q, node_t *n) {
+    n->q = q;
+    pqueue_insert(q, n);
 }
 
-void print_queues_median(pqueue_t *L, pqueue_t *R, void *med) {
-    pqueue_print(L, stdout, &printfun);
-    printf("|%f|, ", *(dtype*)med);
-    pqueue_print(R, stdout, &printfun);
-    printf("\n");
+void *pqueue_replace_head_wrap(pqueue_t *q, node_t *n) {
+    n->q = q;
+    return pqueue_replace_head(q, n);
 }
 
-
-typedef struct {
-    int balance;
-    node_t *median;
-} status;
-
+void pqueue_replace_with_higher_wrap(pqueue_t *q, node_t *o, node_t *n) {
+    n->q = q;
+    pqueue_replace_with_higher(q, o, n);
+}
 
 void insert(pqueue_t *dest, pqueue_t *src, node_t *n, void *med_pri) {
     int cmp = src->cmppri(n->pri, med_pri);
@@ -87,7 +55,13 @@ void delete(pqueue_t *q_long, pqueue_t *q_short, node_t *n) {
     else
         pqueue_replace_with_higher_wrap(q_short, n, pqueue_pop(q_long));
 }
-    
+
+
+// median status and update operations
+typedef struct {
+    int balance;
+    node_t *median;
+} status;
 
 void *add(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
     n->pri = new_pri;
@@ -162,18 +136,82 @@ void *rep(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
 }
 
 
-void median_filt_pqueue(dtype *x, int N, int w, int *ind) {
+// DATA TYPE SPECIFIC STUFF AFTER HERE
+typedef double dtype;
+
+void printfun(FILE *out, void *a) {
+    printf("%f, ", *(dtype*)get_pri(a));
+}
+
+void print_queues_median(pqueue_t *L, pqueue_t *R, void *med) {
+    pqueue_print(L, stdout, &printfun);
+    printf("|%f|, ", *(dtype*)med);
+    pqueue_print(R, stdout, &printfun);
+    printf("\n");
+}
+
+static int lt(void *next, void *curr) {
+	return *(dtype*)next < *(dtype*)curr;
+}
+
+static int gt(void *next, void *curr) {
+	return *(dtype*)next > *(dtype*)curr;
+}
+
+#define NEXT_NODE (nodes + (j++ % W))
+
+void median_filt_pqueue(dtype *X, int N, int w, int *ind) {
 	pqueue_t *L, *R;
 	node_t *nodes, *n;
-    dtype *med;
-    int i;
+    dtype *med, *x;
+    int i=1, j=0, W = 2*w + 1;
 
     status stat = {0, NULL};
     
-    nodes = malloc(w*sizeof(node_t));
-	L = pqueue_init((w+1)/2, lt, get_pri, set_pri, get_pos, set_pos);
-	R = pqueue_init((w+1)/2, gt, get_pri, set_pri, get_pos, set_pos);    
+    nodes = malloc(W*sizeof(node_t));
+	L = pqueue_init(w + 1, lt, get_pri, set_pri, get_pos, set_pos);
+	R = pqueue_init(w + 1, gt, get_pri, set_pri, get_pos, set_pos);    
 
+    n = nodes;
+    x = X;
+    
+    /*
+    med = add(L, R, NEXT_NODE, x++, &stat);
+    *ind++ = med - X;
+
+    for (; i < w+1; ++i) {
+        med = add(L, R, NEXT_NODE, x++, &stat);
+        med = add(L, R, NEXT_NODE, x++, &stat);
+        *ind++ = med - X;
+    }
+    for (; i < N-w; ++i) {
+        med = rep(L, R, NEXT_NODE, x++, &stat);
+        *ind++ = med - X; 
+    }
+    for (; i < N; ++i) {
+        med = del(L, R, NEXT_NODE, &stat);
+        med = del(L, R, NEXT_NODE, &stat);
+        *ind++ = med - X;
+    }
+    */
+
+    for (i=0; i < w; ++i) {
+        med = add(L, R, NEXT_NODE, x++, &stat);
+    }
+    for (i=0; i < w+1; ++i) {
+        med = add(L, R, NEXT_NODE, x++, &stat);
+        *ind++ = med - X;
+    }
+    for (; i < N-w; ++i) {
+        med = rep(L, R, NEXT_NODE, x++, &stat);
+        *ind++ = med - X; 
+    }
+    for (; i < N; ++i) {
+        med = del(L, R, NEXT_NODE, &stat);
+        *ind++ = med - X;
+    }
+
+    /*
     for (i=0; i<w; ++i) {
         n = &nodes[i];
         med = add(L, R, n, x + i, &stat);
@@ -189,6 +227,7 @@ void median_filt_pqueue(dtype *x, int N, int w, int *ind) {
         //print_queues_median(L, R, med);
         //printf("L=%d, R=%d\n", (int) pqueue_size(L), (int) pqueue_size(R));
     }
+    */
 
     pqueue_free(L);
     pqueue_free(R);
