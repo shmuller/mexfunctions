@@ -21,6 +21,11 @@ void *pqueue_replace_head_wrap(pqueue_t *q, node_t *n) {
     return pqueue_replace_head(q, n);
 }
 
+void pqueue_replace_with_higher_wrap(pqueue_t *q, node_t *o, node_t *n) {
+    n->q = q;
+    pqueue_replace_with_higher(q, o, n);
+}
+
 
 static int compare(void *next, void *curr) {
     dtype a = *(dtype*)next;
@@ -76,6 +81,14 @@ void insert(pqueue_t *dest, pqueue_t *src, node_t *n, void *med_pri) {
     pqueue_insert_wrap(dest, o);
 }
 
+void delete(pqueue_t *q_long, pqueue_t *q_short, node_t *n) {
+    if (n->q == q_long)
+        pqueue_remove(q_long, n);
+    else
+        pqueue_replace_with_higher_wrap(q_short, n, pqueue_pop(q_long));
+}
+    
+
 void *add(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
     n->pri = new_pri;
 
@@ -122,8 +135,14 @@ void *del(pqueue_t *L, pqueue_t *R, node_t *n, status *stat) {
             }
             break;
         case +1:
+            delete(R, L, n);
+            stat->balance = 0;
+            stat->median = pqueue_peek(L);
             break;
         case -1:
+            delete(L, R, n);            
+            stat->balance = 0;
+            stat->median = pqueue_peek(L);
             break;
     }
     return stat->median->pri;
@@ -133,7 +152,8 @@ void *rep(pqueue_t *L, pqueue_t *R, node_t *n, void *new_pri, status *stat) {
     if (n->q->cmppri(new_pri, stat->median->pri)) {
         // shortcut: new and old elements belong to the same queue
         pqueue_change_priority(n->q, new_pri, n);
-        stat->median = pqueue_peek(L);
+        // median comes from the same queue, but may have shifted
+        stat->median = pqueue_peek(stat->median->q);
     } else {
         del(L, R, n, stat);
         add(L, R, n, new_pri, stat);
@@ -151,8 +171,8 @@ void median_filt_pqueue(dtype *x, int N, int w, int *ind) {
     status stat = {0, NULL};
     
     nodes = malloc(w*sizeof(node_t));
-	L = pqueue_init(w/2+1, lt, get_pri, set_pri, get_pos, set_pos);
-	R = pqueue_init(w/2+1, gt, get_pri, set_pri, get_pos, set_pos);    
+	L = pqueue_init((w+1)/2, lt, get_pri, set_pri, get_pos, set_pos);
+	R = pqueue_init((w+1)/2, gt, get_pri, set_pri, get_pos, set_pos);    
 
     for (i=0; i<w; ++i) {
         n = &nodes[i];

@@ -104,6 +104,15 @@ void *pqueue_replace_head(pqueue_t *q, void *d);
 
 
 /**
+ * replace an element with an element known to have higher priority.
+ * @param q the queue
+ * @param n the element to be replaced
+ * @param d the new element
+ */
+void pqueue_replace_with_higher(pqueue_t *q, void *n, void *d);
+
+
+/**
  * insert an item into the queue.
  * @param q the queue
  * @param d the item

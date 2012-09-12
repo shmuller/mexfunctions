@@ -141,6 +141,15 @@ pqueue_replace_head(pqueue_t *q, void *d)
 }
 
 
+void
+pqueue_replace_with_higher(pqueue_t *q, void *n, void *d)
+{
+    size_t posn = q->getpos(n);
+    q->d[posn] = d;
+    bubble_up(q, posn);
+}
+
+
 int
 pqueue_insert(pqueue_t *q, void *d)
 {
