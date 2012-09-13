@@ -263,6 +263,38 @@ void median_filt_pqueue_bdry_2(void *X, int N, int w, int *ind, int bytes, fun_t
 }
 
 
+double mean(void *y, int N, int bytes, as_double_t *as_double) {
+    double m = 0.;
+    int i;
+    for (i=N; i--; ) {
+        m += as_double(y);
+        y += bytes;
+    }
+    return m / N;
+}
+
+double slope(void *y, int N, int bytes, as_double_t *as_double) {
+    double k = 0.;
+    int i, M = N-1;
+    for (i=-M; i<=M; i+=2) {
+        k += i * as_double(y);
+        y += bytes;
+    }
+    return k * 6. / M / N / (N+1);
+}
+
+void median_filt_pqueue_bdry_3(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+    double m = mean(X, N, bytes, fun->as_double);
+    double k = slope(X, N, bytes, fun->as_double);
+    int i;
+
+    for (i=0; i<N; ++i) {
+        ind[i] = k*(i - (N-1)/2.) + m;
+    }
+
+}
+
+
 void median_filt_pqueue(void *X, int N, int w, int *ind, int bdry, int bytes, fun_t *fun) {
     switch (bdry) {
         case 0:
@@ -273,6 +305,9 @@ void median_filt_pqueue(void *X, int N, int w, int *ind, int bdry, int bytes, fu
             break;
         case 2:
             median_filt_pqueue_bdry_2(X, N, w, ind, bytes, fun);
+            break;
+        case 3:
+            median_filt_pqueue_bdry_3(X, N, w, ind, bytes, fun);
             break;
     }
 }
