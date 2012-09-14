@@ -134,15 +134,15 @@ pqueue_change_priority(pqueue_t *q,
 
 
 /**
- * variant assuming that the entry's priority has already been updated.
+ * update queue when entry's priority has changed.
  * @param q the queue
- * @param old_pri the old priority
+ * @param cmp result of comparison with old priority
  * @param d the entry
  */
 void
-pqueue_change_priority2(pqueue_t *q,
-                        pqueue_pri_t old_pri,
-                        void *d);
+pqueue_update(pqueue_t *q,
+              int cmp,
+              void *d);
 
 
 /**

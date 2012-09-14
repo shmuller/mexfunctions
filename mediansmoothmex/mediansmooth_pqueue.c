@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "mediansmooth_pqueue.h"
 
@@ -22,7 +23,7 @@ static void *get_pri(void *a) {
 }
 
 static void set_pri(void *a, void *pri) {
-    // never used!
+    ((node_t*)a)->pri = pri;
 }
 
 static size_t get_pos(void *a) {
@@ -96,9 +97,10 @@ void status_free(status *S) {
     pqueue_free(S->R);
 }
 
-void *add(status *S, node_t *n, void *new_pri) {
-    n->pri = new_pri;
-
+void *add(status *S, node_t *n, void *buf, void *new_pri, int bytes) {
+    n->pri = buf;
+    memcpy(buf, new_pri, bytes);
+    
     if (!S->median)
         S->median = n;
 
@@ -155,18 +157,19 @@ void *del(status *S, node_t *n) {
     return S->median->pri;
 }
 
-void *rep(status *S, node_t *n, void *new_pri) {
-    void *old_pri;
+void *rep(status *S, node_t *n, void *buf, void *new_pri, int bytes) {
+    int cmp;
     if (n->q->cmppri(new_pri, S->median->pri)) {
         // shortcut: new and old elements belong to the same queue
-        old_pri = n->pri;
-        n->pri = new_pri;
-        pqueue_change_priority2(n->q, old_pri, n);
+        cmp = n->q->cmppri(n->pri, new_pri);
+        n->pri = buf;
+        memcpy(buf, new_pri, bytes);
+        pqueue_update(n->q, cmp, n);
         // median comes from the same queue, but may have shifted
         S->median = pqueue_peek(S->median->q);
     } else {
         del(S, n);
-        add(S, n, new_pri);
+        add(S, n, buf, new_pri, bytes);
     }
     return S->median->pri;
 }
@@ -174,31 +177,34 @@ void *rep(status *S, node_t *n, void *new_pri) {
 
 // actual median filter implementations for different boundary treatments
 
-#define NEXT_NODE (nodes + (j++ % W))
+#define NEXT_NODE (nodes + (j % W))
+#define NEXT_BUF (buf + (j % W)*bytes)
 
 void median_filt_pqueue_bdry_0(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
-    void *med, *x = X;
+    void *med, *x, *y;
     int i, j=0, W = 2*w + 1;
-    
-    node_t *nodes = malloc(W*sizeof(node_t));
-	
+
+    node_t *nodes = malloc(W*(sizeof(node_t) + bytes));
+	void *buf = nodes + W;
+
     status S;
     status_init(&S, w + 1, fun->lt, fun->gt);
 
-    for (i=0; i < w; ++i) {
-        med = add(&S, NEXT_NODE, x); x += bytes;
+    x = y = X;
+    for (i=0; i < w; ++i, ++j, x += bytes) {
+        med = add(&S, NEXT_NODE, NEXT_BUF, x, bytes);
     }
-    for (i=0; i < w+1; ++i) {
-        med = add(&S, NEXT_NODE, x); x += bytes;
-        *ind++ = (med - X) / bytes;
+    for (i=0; i < w+1; ++i, ++j, x += bytes, y += bytes) {
+        med = add(&S, NEXT_NODE, NEXT_BUF, x, bytes);
+        memcpy(y, med, bytes);
     }
-    for (; i < N-w; ++i) {
-        med = rep(&S, NEXT_NODE, x); x += bytes;
-        *ind++ = (med - X) / bytes;
+    for (; i < N-w; ++i, ++j, x += bytes, y += bytes) {
+        med = rep(&S, NEXT_NODE, NEXT_BUF, x, bytes);
+        memcpy(y, med, bytes);
     }
-    for (; i < N; ++i) {
+    for (; i < N; ++i, ++j, y += bytes) {
         med = del(&S, NEXT_NODE);
-        *ind++ = (med - X) / bytes;
+        memcpy(y, med, bytes);
     }
 
     status_free(&S);
@@ -207,30 +213,32 @@ void median_filt_pqueue_bdry_0(void *X, int N, int w, int *ind, int bytes, fun_t
 
 
 void median_filt_pqueue_bdry_1(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
-    void *med, *x = X;
+    void *med, *x, *y;
     int i=1, j=0, W = 2*w + 1;
     
-    node_t *nodes = malloc(W*sizeof(node_t));
-	
+    node_t *nodes = malloc(W*(sizeof(node_t) + bytes));
+	void *buf = nodes + W;
+
     status S;
     status_init(&S, w + 1, fun->lt, fun->gt);
 
-    med = add(&S, NEXT_NODE, x); x += bytes;
-    *ind++ = (med - X) / bytes;
+    x = y = X;
+    med = add(&S, NEXT_NODE, NEXT_BUF, x, bytes); ++j; x += bytes;
+    memcpy(y, med, bytes); y += bytes;
 
     for (; i < w+1; ++i) {
-        med = add(&S, NEXT_NODE, x); x += bytes;
-        med = add(&S, NEXT_NODE, x); x += bytes;
-        *ind++ = (med - X) / bytes;
+        med = add(&S, NEXT_NODE, NEXT_BUF, x, bytes); ++j; x += bytes;
+        med = add(&S, NEXT_NODE, NEXT_BUF, x, bytes); ++j; x += bytes;
+        memcpy(y, med, bytes); y += bytes;
     }
     for (; i < N-w; ++i) {
-        med = rep(&S, NEXT_NODE, x); x += bytes;
-        *ind++ = (med - X) / bytes;
+        med = rep(&S, NEXT_NODE, NEXT_BUF, x, bytes); ++j; x += bytes;
+        memcpy(y, med, bytes); y += bytes;
     }
     for (; i < N; ++i) {
-        med = del(&S, NEXT_NODE);
-        med = del(&S, NEXT_NODE);
-        *ind++ = (med - X) / bytes;
+        med = del(&S, NEXT_NODE); ++j;
+        med = del(&S, NEXT_NODE); ++j;
+        memcpy(y, med, bytes); y += bytes;
     }
 
     status_free(&S);
@@ -242,22 +250,23 @@ void median_filt_pqueue_bdry_2(void *X, int N, int w, int *ind, int bytes, fun_t
     void *med, *x = X;
     int i;
     
-    node_t *nodes = malloc(w*sizeof(node_t));
+    node_t *nodes = malloc(w*(sizeof(node_t) + bytes));
+    void *buf = nodes + w;
 	
     status S;
     status_init(&S, (w+1)/2, fun->lt, fun->gt);
 
-    for (i=0; i<w; ++i) {
-        med = add(&S, nodes + i, x); x += bytes;
-        ind[i] = (med - X) / bytes;
-        print_queues_median(S.L, S.R, med, fun->print);
+    for (i=0; i<w; ++i, x += bytes) {
+        med = add(&S, nodes + i, buf + i*bytes, x, bytes);
+        memcpy(x, med, bytes);
+        //print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 
-    for(; i<N; ++i) {
-        med = rep(&S, nodes + (i % w), x); x += bytes;
-        ind[i] = (med - X) / bytes;
-        print_queues_median(S.L, S.R, med, fun->print);
+    for(; i<N; ++i, x += bytes) {
+        med = rep(&S, nodes + (i % w), buf + (i % w)*bytes, x, bytes);
+        memcpy(x, med, bytes);
+        //print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 
