@@ -22,7 +22,7 @@ static void *get_pri(void *a) {
 }
 
 static void set_pri(void *a, void *pri) {
-	((node_t*)a)->pri = pri;
+    // never used!
 }
 
 static size_t get_pos(void *a) {
@@ -156,9 +156,12 @@ void *del(status *S, node_t *n) {
 }
 
 void *rep(status *S, node_t *n, void *new_pri) {
+    void *old_pri;
     if (n->q->cmppri(new_pri, S->median->pri)) {
         // shortcut: new and old elements belong to the same queue
-        pqueue_change_priority(n->q, new_pri, n);
+        old_pri = n->pri;
+        n->pri = new_pri;
+        pqueue_change_priority2(n->q, old_pri, n);
         // median comes from the same queue, but may have shifted
         S->median = pqueue_peek(S->median->q);
     } else {

@@ -194,6 +194,22 @@ pqueue_change_priority(pqueue_t *q,
 }
 
 
+void
+pqueue_change_priority2(pqueue_t *q,
+                        pqueue_pri_t old_pri,
+                        void *d)
+{
+    size_t posn;
+    pqueue_pri_t new_pri = q->getpri(d);
+
+    posn = q->getpos(d);
+    if (q->cmppri(old_pri, new_pri))
+        bubble_up(q, posn);
+    else
+        percolate_down(q, posn);
+}
+
+
 int
 pqueue_remove(pqueue_t *q, void *d)
 {

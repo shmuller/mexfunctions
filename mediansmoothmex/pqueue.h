@@ -122,15 +122,27 @@ int pqueue_insert(pqueue_t *q, void *d);
 
 
 /**
- * move an existing entry to a different priority
+ * move an existing entry to a different priority.
  * @param q the queue
- * @param old the old priority
+ * @param new_pri the new priority
  * @param d the entry
  */
 void
 pqueue_change_priority(pqueue_t *q,
                        pqueue_pri_t new_pri,
                        void *d);
+
+
+/**
+ * variant assuming that the entry's priority has already been updated.
+ * @param q the queue
+ * @param old_pri the old priority
+ * @param d the entry
+ */
+void
+pqueue_change_priority2(pqueue_t *q,
+                        pqueue_pri_t old_pri,
+                        void *d);
 
 
 /**
