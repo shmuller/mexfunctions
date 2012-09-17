@@ -23,12 +23,17 @@ static void print_double(void *a) {
     printf("%f", *(double*)a);
 }
 
-static double as_double_double(void *a) {
+static double to_double_double(void *a) {
     return *(double*)a;
 }
 
+static void from_double_double(void *a, double x) {
+    *(double*)a = x;
+}
+
 void median_filt_pqueue_double(void *X, int N, int w, int *ind, int bdry) {
-    fun_t fun = {&lt_double, &gt_double, &print_double, &as_double_double};
+    fun_t fun = {&lt_double, &gt_double, &print_double, 
+        &to_double_double, &from_double_double};
     median_filt_pqueue(X, N, w, ind, bdry, sizeof(double), &fun);
 }
 
@@ -45,12 +50,17 @@ static void print_float(void *a) {
     printf("%f", *(float*)a);
 }
 
-static double as_double_float(void *a) {
+static double to_double_float(void *a) {
     return *(float*)a;
 }
 
+static void from_double_float(void *a, double x) {
+    *(float*)a = x;
+}
+
 void median_filt_pqueue_float(void *X, int N, int w, int *ind, int bdry) {
-    fun_t fun = {&lt_float, &gt_float, &print_float, &as_double_float};
+    fun_t fun = {&lt_float, &gt_float, &print_float, 
+        &to_double_float, &from_double_float};
     median_filt_pqueue(X, N, w, ind, bdry, sizeof(float), &fun);
 }
 
@@ -67,12 +77,17 @@ static void print_int64(void *a) {
     printf("%lld", *(long long*)a);
 }
 
-static double as_double_int64(void *a) {
+static double to_double_int64(void *a) {
     return *(long long*)a;
 }
 
+static void from_double_int64(void *a, double x) {
+    *(long long*)a = x;
+}
+
 void median_filt_pqueue_int64(void *X, int N, int w, int *ind, int bdry) {
-    fun_t fun = {&lt_int64, &gt_int64, &print_int64, &as_double_int64};
+    fun_t fun = {&lt_int64, &gt_int64, &print_int64, 
+        &to_double_int64, &from_double_int64};
     median_filt_pqueue(X, N, w, ind, bdry, sizeof(long long), &fun);
 }
 
@@ -89,12 +104,17 @@ static void print_int32(void *a) {
     printf("%d", *(int*)a);
 }
 
-static double as_double_int32(void *a) {
+static double to_double_int32(void *a) {
     return *(int*)a;
 }
 
+static void from_double_int32(void *a, double x) {
+    *(int*)a = x;
+}
+
 void median_filt_pqueue_int32(void *X, int N, int w, int *ind, int bdry) {
-    fun_t fun = {&lt_int32, &gt_int32, &print_int32, &as_double_int32};
+    fun_t fun = {&lt_int32, &gt_int32, &print_int32, 
+        &to_double_int32, &from_double_int32};
     median_filt_pqueue(X, N, w, ind, bdry, sizeof(int), &fun);
 }
 
