@@ -188,7 +188,7 @@ void *rep(status *S, node_t *n, void *new_pri, int bytes) {
 
 #define NEXT_NODE (nodes + (j % W)*BYTES)
 
-void median_filt_pqueue_bdry_0(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+void median_filt_pqueue_bdry_0(void *X, int N, int w, int bytes, fun_t *fun) {
     void *med, *x, *y;
     int i, j=0, W = 2*w + 1, BYTES = sizeof(node_t) + bytes;
 
@@ -218,7 +218,7 @@ void median_filt_pqueue_bdry_0(void *X, int N, int w, int *ind, int bytes, fun_t
 }
 
 
-void median_filt_pqueue_bdry_1(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+void median_filt_pqueue_bdry_1(void *X, int N, int w, int bytes, fun_t *fun) {
     void *med, *x, *y;
     int i=1, j=0, W = 2*w + 1, BYTES = sizeof(node_t) + bytes;
     
@@ -250,7 +250,7 @@ void median_filt_pqueue_bdry_1(void *X, int N, int w, int *ind, int bytes, fun_t
 }
 
 
-void median_filt_pqueue_bdry_2(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+void median_filt_pqueue_bdry_2(void *X, int N, int w, int bytes, fun_t *fun) {
     void *med, *x = X;
     int i, BYTES = sizeof(node_t) + bytes;
     
@@ -304,7 +304,7 @@ void linfit(double *kd, void *x, int n, int bytes, to_double_t *to_double) {
 }
 
 
-void median_filt_pqueue_bdry_3(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+void median_filt_pqueue_bdry_3(void *X, int N, int w, int bytes, fun_t *fun) {
     void *med, *x, *y, *buf = malloc(bytes);
     int i, j=0, W = 2*w + 1, BYTES = sizeof(node_t) + bytes;
     double kd0[2], kd1[2];
@@ -342,7 +342,7 @@ void median_filt_pqueue_bdry_3(void *X, int N, int w, int *ind, int bytes, fun_t
 }
 
 
-void median_filt_pqueue_bdry_4(void *X, int N, int w, int *ind, int bytes, fun_t *fun) {
+void median_filt_pqueue_bdry_4(void *X, int N, int w, int bytes, fun_t *fun) {
     void *med, *x, *y, *buf = malloc(bytes);
     int i, j=0, W = 2*w + 1, BYTES = sizeof(node_t) + bytes;
     double kd0[2], kd1[2];
@@ -381,22 +381,22 @@ void median_filt_pqueue_bdry_4(void *X, int N, int w, int *ind, int bytes, fun_t
 }
 
 
-void median_filt_pqueue(void *X, int N, int w, int *ind, int bdry, int bytes, fun_t *fun) {
+void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) {
     switch (bdry) {
         case 0:
-            median_filt_pqueue_bdry_0(X, N, w, ind, bytes, fun);
+            median_filt_pqueue_bdry_0(X, N, w, bytes, fun);
             break;
         case 1:
-            median_filt_pqueue_bdry_1(X, N, w, ind, bytes, fun);
+            median_filt_pqueue_bdry_1(X, N, w, bytes, fun);
             break;
         case 2:
-            median_filt_pqueue_bdry_2(X, N, w, ind, bytes, fun);
+            median_filt_pqueue_bdry_2(X, N, w, bytes, fun);
             break;
         case 3:
-            median_filt_pqueue_bdry_3(X, N, w, ind, bytes, fun);
+            median_filt_pqueue_bdry_3(X, N, w, bytes, fun);
             break;
         case 4:
-            median_filt_pqueue_bdry_4(X, N, w, ind, bytes, fun);
+            median_filt_pqueue_bdry_4(X, N, w, bytes, fun);
             break;
 
     }

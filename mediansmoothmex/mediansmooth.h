@@ -31,10 +31,10 @@ static void from_double_double(void *a, double x) {
     *(double*)a = x;
 }
 
-void median_filt_pqueue_double(void *X, int N, int w, int *ind, int bdry) {
+void median_filt_pqueue_double(void *X, int N, int w, int bdry) {
     fun_t fun = {&lt_double, &gt_double, &print_double, 
         &to_double_double, &from_double_double};
-    median_filt_pqueue(X, N, w, ind, bdry, sizeof(double), &fun);
+    median_filt_pqueue(X, N, w, bdry, sizeof(double), &fun);
 }
 
 // FLOAT
@@ -58,10 +58,10 @@ static void from_double_float(void *a, double x) {
     *(float*)a = x;
 }
 
-void median_filt_pqueue_float(void *X, int N, int w, int *ind, int bdry) {
+void median_filt_pqueue_float(void *X, int N, int w, int bdry) {
     fun_t fun = {&lt_float, &gt_float, &print_float, 
         &to_double_float, &from_double_float};
-    median_filt_pqueue(X, N, w, ind, bdry, sizeof(float), &fun);
+    median_filt_pqueue(X, N, w, bdry, sizeof(float), &fun);
 }
 
 // INT64
@@ -85,10 +85,10 @@ static void from_double_int64(void *a, double x) {
     *(long long*)a = x;
 }
 
-void median_filt_pqueue_int64(void *X, int N, int w, int *ind, int bdry) {
+void median_filt_pqueue_int64(void *X, int N, int w, int bdry) {
     fun_t fun = {&lt_int64, &gt_int64, &print_int64, 
         &to_double_int64, &from_double_int64};
-    median_filt_pqueue(X, N, w, ind, bdry, sizeof(long long), &fun);
+    median_filt_pqueue(X, N, w, bdry, sizeof(long long), &fun);
 }
 
 // INT32
@@ -112,10 +112,10 @@ static void from_double_int32(void *a, double x) {
     *(int*)a = x;
 }
 
-void median_filt_pqueue_int32(void *X, int N, int w, int *ind, int bdry) {
+void median_filt_pqueue_int32(void *X, int N, int w, int bdry) {
     fun_t fun = {&lt_int32, &gt_int32, &print_int32, 
         &to_double_int32, &from_double_int32};
-    median_filt_pqueue(X, N, w, ind, bdry, sizeof(int), &fun);
+    median_filt_pqueue(X, N, w, bdry, sizeof(int), &fun);
 }
 
 

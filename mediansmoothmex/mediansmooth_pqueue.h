@@ -16,7 +16,7 @@ typedef struct {
     from_double_t *from_double;
 } fun_t;
 
-void median_filt_pqueue(void *X, int N, int w, int *ind, int bdry, int bytes, fun_t *fun);
+void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun);
 
 #ifdef __cplusplus
 }

@@ -26,25 +26,21 @@ static PyObject* mediansmooth(PyObject *self, PyObject *args)
     void *x = PyArray_DATA(arr);
     int N = dv[ndims-1];
 
-    PyObject *retval = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
-    int *ind = PyArray_DATA(retval);
-
     switch (typenum) {
         case NPY_DOUBLE:
-            median_filt_pqueue_double(x, N, w, ind, bdry);
+            median_filt_pqueue_double(x, N, w, bdry);
             break;
         case NPY_FLOAT:
-            median_filt_pqueue_float(x, N, w, ind, bdry);
+            median_filt_pqueue_float(x, N, w, bdry);
             break;
         case NPY_INT64:
-            median_filt_pqueue_int64(x, N, w, ind, bdry);
+            median_filt_pqueue_int64(x, N, w, bdry);
             break;
         case NPY_INT32:
-            median_filt_pqueue_int32(x, N, w, ind, bdry);
+            median_filt_pqueue_int32(x, N, w, bdry);
             break;
     }
-
-    return retval;
+    Py_RETURN_NONE;
 }
 
 static PyObject* mediansmooth2(PyObject *self, PyObject *args)
@@ -74,7 +70,6 @@ static PyObject* mediansmooth2(PyObject *self, PyObject *args)
             median_filt_float(x, N, w, ind);
             break;
     }
-
     return retval;
 }
 
