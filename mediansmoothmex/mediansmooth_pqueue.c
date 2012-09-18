@@ -9,13 +9,13 @@
 
 #include "mediansmooth_pqueue.h"
 
-#include "pqueue.h"
+#include "pqueue2.h"
 
 // definitions for pqueue
 typedef struct {
 	void *pri;
 	size_t pos;
-    pqueue_t *q;
+    void *q;
 } node_t;
 
 static void *get_pri(void *a) {
@@ -36,43 +36,43 @@ static void set_pos(void *a, size_t pos) {
 
 
 // operations on pqueues
-void pqueue_insert_wrap(pqueue_t *q, node_t *n) {
+void wrap_insert(void *q, node_t *n) {
     n->q = q;
-    pqueue_insert(q, n);
+    pqueue2_insert(q, n);
 }
 
-void *pqueue_replace_head_wrap(pqueue_t *q, node_t *n) {
+void *wrap_replace_head(void *q, node_t *n) {
     n->q = q;
-    return pqueue_replace_head(q, n);
+    return pqueue2_replace_head(q, n);
 }
 
-void pqueue_replace_with_higher_wrap(pqueue_t *q, node_t *o, node_t *n) {
+void wrap_replace_with_higher(void *q, node_t *o, node_t *n) {
     n->q = q;
-    pqueue_replace_with_higher(q, o, n);
+    pqueue2_replace_with_higher(q, o, n);
 }
 
-void insert(pqueue_t *dest, pqueue_t *src, node_t *n, void *med_pri) {
-    int cmp = src->cmppri(n->pri, med_pri);
-    node_t *o = (cmp) ? pqueue_replace_head_wrap(src, n) : n;
-    pqueue_insert_wrap(dest, o);
+void insert(void *dest, void *src, node_t *n, void *med_pri) {
+    int cmp = ((pqueue2_t*)src)->cmppri(n->pri, med_pri);
+    node_t *o = (cmp) ? wrap_replace_head(src, n) : n;
+    wrap_insert(dest, o);
 }
 
-void delete(pqueue_t *q_long, pqueue_t *q_short, node_t *n) {
+void delete(void *q_long, void *q_short, node_t *n) {
     if (n->q == q_long)
-        pqueue_remove(q_long, n);
+        pqueue2_remove(q_long, n);
     else
-        pqueue_replace_with_higher_wrap(q_short, n, pqueue_pop(q_long));
+        wrap_replace_with_higher(q_short, n, pqueue2_pop(q_long));
 }
 
-void pqueue_printfun(FILE *out, void *a) {
+void pqueue2_printfun(void *out, void *a) {
     ((printfun_t*)out)(get_pri(a));
     printf(", ");
 }
 
-void print_queues_median(pqueue_t *L, pqueue_t *R, void *med, printfun_t *print) {
-    pqueue_print(L, (FILE*) print, &pqueue_printfun);
+void print_queues_median(void *L, void *R, void *med, printfun_t *print) {
+    pqueue2_print(L, print, &pqueue2_printfun);
     printf("|"); print(med); printf("|, ");
-    pqueue_print(R, (FILE*) print, &pqueue_printfun);
+    pqueue2_print(R, print, &pqueue2_printfun);
     printf("\n");
 }
 
@@ -81,20 +81,20 @@ void print_queues_median(pqueue_t *L, pqueue_t *R, void *med, printfun_t *print)
 typedef struct {
     int balance;
     node_t *median;
-    pqueue_t *L;
-    pqueue_t *R;
+    void *L;
+    void *R;
 } status;
 
 void status_init(status *S, int m, void *lt, void *gt) {
     S->balance = 0;
     S->median = NULL;
-    S->L = pqueue_init(m, lt, get_pri, set_pri, get_pos, set_pos);
-	S->R = pqueue_init(m, gt, get_pri, set_pri, get_pos, set_pos);    
+    S->L = pqueue2_init(m, lt, get_pri, set_pri, get_pos, set_pos);
+	S->R = pqueue2_init(m, gt, get_pri, set_pri, get_pos, set_pos);    
 }
 
 void status_free(status *S) {
-    pqueue_free(S->L);
-    pqueue_free(S->R);
+    pqueue2_free(S->L);
+    pqueue2_free(S->R);
 }
 
 void *nodes_init(int W, int BYTES) {
@@ -116,25 +116,25 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
 
     switch (S->balance) {
         case 0:
-            if (S->R->cmppri(n->pri, S->median->pri)) {
-                pqueue_insert_wrap(S->R, n);
+            if (((pqueue2_t*)S->R)->cmppri(n->pri, S->median->pri)) {
+                wrap_insert(S->R, n);
                 S->balance = +1;
-                S->median = pqueue_peek(S->R);
+                S->median = pqueue2_peek(S->R);
             } else {
-                pqueue_insert_wrap(S->L, n);
+                wrap_insert(S->L, n);
                 S->balance = -1;
-                S->median = pqueue_peek(S->L);
+                S->median = pqueue2_peek(S->L);
             }
             break;
         case +1:
             insert(S->L, S->R, n, S->median->pri);
             S->balance = 0;
-            S->median = pqueue_peek(S->L);
+            S->median = pqueue2_peek(S->L);
             break;
         case -1:
             insert(S->R, S->L, n, S->median->pri);
             S->balance = 0;
-            S->median = pqueue_peek(S->L);
+            S->median = pqueue2_peek(S->L);
             break;
     }
     return S->median->pri;
@@ -144,24 +144,24 @@ void *del(status *S, node_t *n) {
     switch (S->balance) {
         case 0:
             if (n->q == S->L) {
-                pqueue_remove(S->L, n);
+                pqueue2_remove(S->L, n);
                 S->balance = +1;
-                S->median = pqueue_peek(S->R);
+                S->median = pqueue2_peek(S->R);
             } else {
-                pqueue_remove(S->R, n);
+                pqueue2_remove(S->R, n);
                 S->balance = -1;
-                S->median = pqueue_peek(S->L);
+                S->median = pqueue2_peek(S->L);
             }
             break;
         case +1:
             delete(S->R, S->L, n);
             S->balance = 0;
-            S->median = pqueue_peek(S->L);
+            S->median = pqueue2_peek(S->L);
             break;
         case -1:
             delete(S->L, S->R, n);
             S->balance = 0;
-            S->median = pqueue_peek(S->L);
+            S->median = pqueue2_peek(S->L);
             break;
     }
     return S->median->pri;
@@ -169,13 +169,13 @@ void *del(status *S, node_t *n) {
 
 void *rep(status *S, node_t *n, void *new_pri, int bytes) {
     int cmp;
-    if (n->q->cmppri(new_pri, S->median->pri)) {
+    if (((pqueue2_t*)n->q)->cmppri(new_pri, S->median->pri)) {
         // shortcut: new and old elements belong to the same queue
-        cmp = n->q->cmppri(n->pri, new_pri);
+        cmp = ((pqueue2_t*)n->q)->cmppri(n->pri, new_pri);
         memcpy(n->pri, new_pri, bytes);
-        pqueue_update(n->q, cmp, n);
+        pqueue2_update(n->q, cmp, n);
         // median comes from the same queue, but may have shifted
-        S->median = pqueue_peek(S->median->q);
+        S->median = pqueue2_peek(S->median->q);
     } else {
         del(S, n);
         add(S, n, new_pri, bytes);
@@ -261,14 +261,14 @@ void median_filt_pqueue_bdry_2(void *X, int N, int w, int bytes, fun_t *fun) {
     for (i=0; i<w; ++i, x += bytes) {
         med = add(&S, nodes + i*BYTES, x, bytes);
         memcpy(x, med, bytes);
-        //print_queues_median(S.L, S.R, med, fun->print);
+        print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 
     for(; i<N; ++i, x += bytes) {
         med = rep(&S, nodes + (i % w)*BYTES, x, bytes);
         memcpy(x, med, bytes);
-        //print_queues_median(S.L, S.R, med, fun->print);
+        print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 

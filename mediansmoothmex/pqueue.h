@@ -27,6 +27,8 @@
 #ifndef PQUEUE_H
 #define PQUEUE_H
 
+#include <stdlib.h>
+
 /** priority data type */
 typedef void* pqueue_pri_t;
 
@@ -42,7 +44,7 @@ typedef void (*pqueue_set_pos_f)(void *a, size_t pos);
 
 
 /** debug callback function to print a entry */
-typedef void (*pqueue_print_entry_f)(FILE *out, void *a);
+typedef void (*pqueue_print_entry_f)(void *out, void *a);
 
 
 /** the priority queue handle */
@@ -182,7 +184,7 @@ void *pqueue_peek(pqueue_t *q);
  */
 void
 pqueue_print(pqueue_t *q, 
-             FILE *out, 
+             void *out, 
              pqueue_print_entry_f print);
 
 
@@ -196,7 +198,7 @@ pqueue_print(pqueue_t *q,
  */
 void
 pqueue_dump(pqueue_t *q, 
-            FILE *out,
+            void *out,
             pqueue_print_entry_f print);
 
 

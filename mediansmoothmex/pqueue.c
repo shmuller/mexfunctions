@@ -250,7 +250,7 @@ pqueue_peek(pqueue_t *q)
 
 void
 pqueue_dump(pqueue_t *q,
-            FILE *out,
+            void *out,
             pqueue_print_entry_f print)
 {
     int i;
@@ -283,7 +283,7 @@ set_pri(void *d, pqueue_pri_t pri)
 
 void
 pqueue_print(pqueue_t *q,
-             FILE *out,
+             void *out,
              pqueue_print_entry_f print)
 {
     pqueue_t *dup;
