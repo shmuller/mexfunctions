@@ -168,18 +168,18 @@ void *del(status *S, node_t *n) {
 }
 
 void *rep(status *S, node_t *n, void *new_pri, int bytes) {
-    int cmp;
-    if (((pqueue2_t*)n->q)->cmppri(new_pri, S->median->pri)) {
-        // shortcut: new and old elements belong to the same queue
-        cmp = ((pqueue2_t*)n->q)->cmppri(n->pri, new_pri);
-        memcpy(n->pri, new_pri, bytes);
-        pqueue2_update(n->q, cmp, n);
-        // median comes from the same queue, but may have shifted
-        S->median = pqueue2_peek(S->median->q);
-    } else {
+    //int cmp;
+    //if (((pqueue2_t*)n->q)->cmppri(new_pri, S->median->pri)) {
+    //    // shortcut: new and old elements belong to the same queue
+    //    cmp = ((pqueue2_t*)n->q)->cmppri(n->pri, new_pri);
+    //    memcpy(n->pri, new_pri, bytes);
+    //    pqueue2_update(n->q, cmp, n);
+    //    // median comes from the same queue, but may have shifted
+    //    S->median = pqueue2_peek(S->median->q);
+    //} else {
         del(S, n);
         add(S, n, new_pri, bytes);
-    }
+    //}
     return S->median->pri;
 }
 

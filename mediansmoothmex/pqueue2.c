@@ -56,20 +56,24 @@ void pqueue2_print(pqueue2_t *Q, void *out, void *print) {
 #else
 
 typedef struct {
+    int n_head;
+    int n_bulk;
     void *head;
     void *bulk;
 } dbl_queue_t;
 
-void *pqueue2_init(size_t n, void *cmppri, 
+void *pqueue2_init(size_t n_bulk, void *cmppri, 
         void *getpri, void *setpri, void *getpos, void *setpos) 
 {
-    static const int m = 16;
+    static const int n_head = 16;
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
 
     dbl_queue_t *q = malloc(sizeof(dbl_queue_t));
-    q->head = pqueue_init(m, cmppri, getpri, setpri, getpos, setpos);
-    q->bulk = pqueue_init(n, cmppri, getpri, setpri, getpos, setpos);
+    q->n_head = n_head;
+    q->n_bulk = n_bulk;
+    q->head = pqueue_init(n_head, cmppri, getpri, setpri, getpos, setpos);
+    q->bulk = pqueue_init(n_bulk, cmppri, getpri, setpri, getpos, setpos);
     Q->q = q;
     return Q;
 }
@@ -83,13 +87,18 @@ void pqueue2_free(pqueue2_t *Q) {
 }
 
 void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
-    dbl_queue_t *q = Q->q;
-    return pqueue_replace_head(q->bulk, d);
+    //dbl_queue_t *q = Q->q;
+    //return pqueue_replace_head(q->bulk, d);
+    void *n = pqueue2_pop(Q);
+    pqueue2_insert(Q, d);
+    return n;
 }
 
 void pqueue2_replace_with_higher(pqueue2_t *Q, void *n, void *d) {
-    dbl_queue_t *q = Q->q;
-    pqueue_replace_with_higher(q->bulk, n, d);
+    //dbl_queue_t *q = Q->q;
+    //pqueue_replace_with_higher(q->bulk, n, d);
+    pqueue2_remove(Q, n);
+    pqueue2_insert(Q, d);
 }
 
 int pqueue2_insert(pqueue2_t *Q, void *d) {
