@@ -150,10 +150,17 @@ pqueue_update(pqueue_t *q,
 /**
  * pop the highest-ranking item from the queue.
  * @param p the queue
- * @param d where to copy the entry to
  * @return NULL on error, otherwise the entry
  */
 void *pqueue_pop(pqueue_t *q);
+
+
+/**
+ * pop the lowest-ranking item from the queue.
+ * @param p the queue
+ * @return NULL on error, otherwise the entry
+ */
+void *pqueue_pop_last(pqueue_t *q);
 
 
 /**
@@ -168,10 +175,17 @@ int pqueue_remove(pqueue_t *q, void *d);
 /**
  * access highest-ranking item without removing it.
  * @param q the queue
- * @param d the entry
  * @return NULL on error, otherwise the entry
  */
 void *pqueue_peek(pqueue_t *q);
+
+
+/**
+ * access lowest-ranking item without removing it.
+ * @param q the queue
+ * @return NULL on error, otherwise the entry
+ */
+void *pqueue_peek_last(pqueue_t *q);
 
 
 /**

@@ -238,6 +238,16 @@ pqueue_pop(pqueue_t *q)
 
 
 void *
+pqueue_pop_last(pqueue_t *q)
+{
+    void *tail = pqueue_peek_last(q);
+    if (tail)
+        pqueue_remove(q, tail);
+    return tail;
+}
+
+
+void *
 pqueue_peek(pqueue_t *q)
 {
     void *d;
@@ -245,6 +255,25 @@ pqueue_peek(pqueue_t *q)
         return NULL;
     d = q->d[1];
     return d;
+}
+
+
+void *
+pqueue_peek_last(pqueue_t *q)
+{
+    void *last, *d;
+    size_t posn;
+    if (!q || q->size == 1)
+        return NULL;
+
+    posn = q->size - 1;
+    last = q->d[posn];
+    while (left(posn) >= q->size) {
+        d = q->d[--posn];
+        if (q->cmppri(q->getpri(d), q->getpri(last)))
+            last = d;
+    }
+    return last;
 }
 
 
