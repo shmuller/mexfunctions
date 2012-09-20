@@ -30,8 +30,6 @@ static void set_pos(void *a, size_t pos) {
 
 
 // operations on pqueues
-int count_expensive;
-
 void wrap_insert(pqueue2_t *q, node_t *n) {
     n->id = q->id;
     pqueue2_insert(q, n);
@@ -50,7 +48,6 @@ void wrap_replace_with_higher(pqueue2_t *q, node_t *o, node_t *n) {
 void insert(pqueue2_t *dest, pqueue2_t *src, node_t *n, void *med_pri) {
     int cmp = src->cmppri(n->pri, med_pri);
     node_t *o = (cmp) ? wrap_replace_head(src, n) : n;
-    if (cmp) ++count_expensive;
     wrap_insert(dest, o);
 }
 
@@ -113,6 +110,7 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
 
     switch (S->balance) {
         case 0:
+            ++count.add_0;
             if (S->R->cmppri(n->pri, S->median->pri)) {
                 wrap_insert(S->R, n);
                 S->balance = +1;
@@ -124,11 +122,13 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
             }
             break;
         case +1:
+            ++count.add_1;
             insert(S->L, S->R, n, S->median->pri);
             S->balance = 0;
             S->median = pqueue2_peek(S->L);
             break;
         case -1:
+            ++count.add_1;
             insert(S->R, S->L, n, S->median->pri);
             S->balance = 0;
             S->median = pqueue2_peek(S->L);
@@ -140,6 +140,7 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
 void *del(status *S, node_t *n) {
     switch (S->balance) {
         case 0:
+            ++count.del_0;
             if (n->id == S->L->id) {
                 pqueue2_remove(S->L, n);
                 S->balance = +1;
@@ -151,11 +152,13 @@ void *del(status *S, node_t *n) {
             }
             break;
         case +1:
+            ++count.del_1;
             delete(S->R, S->L, n);
             S->balance = 0;
             S->median = pqueue2_peek(S->L);
             break;
         case -1:
+            ++count.del_1;
             delete(S->L, S->R, n);
             S->balance = 0;
             S->median = pqueue2_peek(S->L);
@@ -165,18 +168,21 @@ void *del(status *S, node_t *n) {
 }
 
 void *rep(status *S, node_t *n, void *new_pri, int bytes) {
-    //int cmp;
-    //if (((pqueue2_t*)n->q)->cmppri(new_pri, S->median->pri)) {
-    //    // shortcut: new and old elements belong to the same queue
-    //    cmp = ((pqueue2_t*)n->q)->cmppri(n->pri, new_pri);
-    //    memcpy(n->pri, new_pri, bytes);
-    //    pqueue2_update(n->q, cmp, n);
-    //    // median comes from the same queue, but may have shifted
-    //    S->median = pqueue2_peek(S->median->q);
-    //} else {
+    int cmp;
+    pqueue2_t *q = (n->id == 0) ? S->L : S->R;
+    if (q->cmppri(new_pri, S->median->pri)) {
+        // shortcut: new and old elements belong to the same queue
+        ++count.update;
+        cmp = q->cmppri(n->pri, new_pri);
+        memcpy(n->pri, new_pri, bytes);
+        pqueue2_update(q, cmp, n);
+        // if median comes from the same queue, it may have shifted
+        if (S->median->id == n->id)
+            S->median = pqueue2_peek(q);
+    } else {
         del(S, n);
         add(S, n, new_pri, bytes);
-    //}
+    }
     return S->median->pri;
 }
 
@@ -380,7 +386,6 @@ void median_filt_pqueue_bdry_4(void *X, int N, int w, int bytes, fun_t *fun) {
 
 void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) {
     pqueue2_stats_reset();
-    count_expensive = 0;
 
     switch (bdry) {
         case 0:
@@ -401,8 +406,33 @@ void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) 
 
     }
 
-    printf("count_expensive = %d\n", count_expensive);
     pqueue2_stats_print();
+}
+
+
+void pqueue2_stats_reset() {
+    count.add_0 = count.add_1 = 0;
+    count.del_0 = count.del_1 = 0;
+    count.update = 0;
+    count.update_is_wrong = 0;
+    count.insert_head = 0;
+    count.insert_bulk = 0;
+    count.remove_head = 0;
+    count.remove_bulk = 0;
+    count.replace_head = 0;
+    count.replace_with_higher = 0;
+}
+
+void pqueue2_stats_print() {
+    printf("add_0 = %d,\tadd_1 = %d\n", count.add_0, count.add_1);
+    printf("del_0 = %d,\tdel_1 = %d\n", count.del_0, count.del_1);
+    printf("update = %d, update_is_wrong = %d\n", count.update, count.update_is_wrong);
+    printf("insert_head = %d\n", count.insert_head);
+    printf("insert_bulk = %d\n", count.insert_bulk);
+    printf("remove_head = %d\n", count.remove_head);
+    printf("remove_bulk = %d\n", count.remove_bulk);
+    printf("replace_head = %d\n", count.replace_head);
+    printf("replace_with_higher = %d\n", count.replace_with_higher);
 }
 
 

@@ -18,9 +18,6 @@ typedef struct {
     void *q;
 } pqueue2_t;
 
-void pqueue2_stats_reset();
-void pqueue2_stats_print();
-
 void *pqueue2_init(unsigned char id, size_t n, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos);
 
@@ -36,4 +33,24 @@ void *pqueue2_peek_last(pqueue2_t *q);
 void pqueue2_print(pqueue2_t *q, void *out, void *print);
 void pqueue2_dump(pqueue2_t *q, void *out, void *print);
 
+// debugging
+typedef struct {
+    int add_0;
+    int add_1;
+    int del_0;
+    int del_1;
+    int update;
+    int update_is_wrong;
+    int insert_head;
+    int insert_bulk;
+    int remove_head;
+    int remove_bulk;
+    int replace_head;
+    int replace_with_higher;
+} count_t;
+
+count_t count;
+
+void pqueue2_stats_reset();
+void pqueue2_stats_print();
 

@@ -4,26 +4,6 @@
 
 #include <stdio.h>
 
-int count_insert_head;
-int count_insert_bulk;
-int count_remove_head;
-int count_remove_bulk;
-
-void pqueue2_stats_reset() {
-    count_insert_head = 0;
-    count_insert_bulk = 0;
-    count_remove_head = 0;
-    count_remove_bulk = 0;
-}
-
-void pqueue2_stats_print() {
-    printf("count_insert_head = %d\n", count_insert_head);
-    printf("count_insert_bulk = %d\n", count_insert_bulk);
-    printf("count_remove_head = %d\n", count_remove_head);
-    printf("count_remove_bulk = %d\n", count_remove_bulk);
-}
-
-
 typedef struct {
     int n_head;
     int n_bulk;
@@ -33,24 +13,24 @@ typedef struct {
 
 
 int insert_head(dbl_queue_t *q, void *d) {
-    ++count_insert_head;
+    ++count.insert_head;
     ((node_t*)d)->id2 = 0;
     return pqueue_insert(q->head, d);
 }
 
 int insert_bulk(dbl_queue_t *q, void *d) {
-    ++count_insert_bulk;
+    ++count.insert_bulk;
     ((node_t*)d)->id2 = 1;
     return pqueue_insert(q->bulk, d);
 }
 
 int remove_head(dbl_queue_t *q, void *d) {
-    ++count_remove_head;
+    ++count.remove_head;
     return pqueue_remove(q->head, d);
 }
 
 int remove_bulk(dbl_queue_t *q, void *d) {
-    ++count_remove_bulk;
+    ++count.remove_bulk;
     return pqueue_remove(q->bulk, d);
 }
 
@@ -84,6 +64,7 @@ void pqueue2_free(pqueue2_t *Q) {
 void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
     //dbl_queue_t *q = Q->q;
     //return pqueue_replace_head(q->bulk, d);
+    ++count.replace_head;
     void *n = pqueue2_pop(Q);
     pqueue2_insert(Q, d);
     return n;
@@ -92,6 +73,7 @@ void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
 void pqueue2_replace_with_higher(pqueue2_t *Q, void *n, void *d) {
     //dbl_queue_t *q = Q->q;
     //pqueue_replace_with_higher(q->bulk, n, d);
+    ++count.replace_with_higher;
     pqueue2_remove(Q, n);
     pqueue2_insert(Q, d);
 }
@@ -131,7 +113,20 @@ int pqueue2_insert(pqueue2_t *Q, void *d) {
 
 void pqueue2_update(pqueue2_t *Q, int cmp, void *d) {
     dbl_queue_t *q = Q->q;
-    pqueue_update(q->bulk, cmp, d);
+    int is_wrong;
+    if (((node_t*)d)->id2 == 0) {
+        pqueue_update(q->head, cmp, d);
+        is_wrong = (d == pqueue_peek_last(q->head));
+    } else {
+        pqueue_update(q->bulk, cmp, d);
+        is_wrong = (d == pqueue_peek(q->bulk));
+    }
+
+    if (is_wrong) {
+        ++count.update_is_wrong;
+        pqueue2_remove(Q, d);
+        pqueue2_insert(Q, d);
+    }
 }
 
 void *pqueue2_pop(pqueue2_t *Q) {

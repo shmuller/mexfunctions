@@ -2,28 +2,6 @@
 
 #include "pqueue.h"
 
-#include <stdio.h>
-
-int count_insert_head;
-int count_insert_bulk;
-int count_remove_head;
-int count_remove_bulk;
-
-void pqueue2_stats_reset() {
-    count_insert_head = 0;
-    count_insert_bulk = 0;
-    count_remove_head = 0;
-    count_remove_bulk = 0;
-}
-
-void pqueue2_stats_print() {
-    printf("count_insert_head = %d\n", count_insert_head);
-    printf("count_insert_bulk = %d\n", count_insert_bulk);
-    printf("count_remove_head = %d\n", count_remove_head);
-    printf("count_remove_bulk = %d\n", count_remove_bulk);
-}
-
-
 void *pqueue2_init(unsigned char id, size_t n, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos) 
 {
@@ -41,6 +19,7 @@ void pqueue2_free(pqueue2_t *Q) {
 }
 
 void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
+    ++count.replace_head;
     return pqueue_replace_head(Q->q, d);
     //void *n = pqueue2_pop(Q);
     //pqueue2_insert(Q, d);
@@ -48,13 +27,14 @@ void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
 }
 
 void pqueue2_replace_with_higher(pqueue2_t *Q, void *n, void *d) {
+    ++count.replace_with_higher;
     pqueue_replace_with_higher(Q->q, n, d);
     //pqueue2_remove(Q, n);
     //pqueue2_insert(Q, d);
 }
 
 int pqueue2_insert(pqueue2_t *Q, void *d) {
-    ++count_insert_head;
+    ++count.insert_head;
     return pqueue_insert(Q->q, d);
 }
 
@@ -67,7 +47,7 @@ void *pqueue2_pop(pqueue2_t *Q) {
 }
 
 int pqueue2_remove(pqueue2_t *Q, void *d) {
-    ++count_remove_head;
+    ++count.remove_head;
     return pqueue_remove(Q->q, d);
 }
 
