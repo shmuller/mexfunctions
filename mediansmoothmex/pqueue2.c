@@ -62,8 +62,6 @@ void pqueue2_free(pqueue2_t *Q) {
 }
 
 void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
-    //dbl_queue_t *q = Q->q;
-    //return pqueue_replace_head(q->bulk, d);
     ++count.replace_head;
     void *n = pqueue2_pop(Q);
     pqueue2_insert(Q, d);
@@ -71,11 +69,36 @@ void *pqueue2_replace_head(pqueue2_t *Q, void *d) {
 }
 
 void pqueue2_replace_with_higher(pqueue2_t *Q, void *n, void *d) {
-    //dbl_queue_t *q = Q->q;
-    //pqueue_replace_with_higher(q->bulk, n, d);
     ++count.replace_with_higher;
     pqueue2_remove(Q, n);
     pqueue2_insert(Q, d);
+    
+    /*
+    // working explicit implementation, but doesn't take advantage of head
+    dbl_queue_t *q = Q->q;
+    void *h;
+
+    if (((node_t*)n)->id2 == 0) {
+        // old element is already in head, thus new one is also
+        ((node_t*)d)->id2 = 0;
+        pqueue_replace_with_higher(q->head, n, d);
+    } else {
+        // old element is in bulk
+        h = pqueue_peek_last(q->head);
+        if (h && Q->cmppri(Q->getpri(h), Q->getpri(d))) {
+            // new element ranks higher than last element of head
+            ((node_t*)d)->id2 = 0;
+            pqueue_replace_with_higher(q->head, h, d);
+            ((node_t*)h)->id2 = 1;
+            pqueue_replace_with_higher(q->bulk, n, h);
+        } else {
+            // new element belongs to bulk
+            ((node_t*)d)->id2 = 1;
+            pqueue_replace_with_higher(q->bulk, n, d);
+        }
+    }
+    */
+    
 }
 
 int pqueue2_insert(pqueue2_t *Q, void *d) {
