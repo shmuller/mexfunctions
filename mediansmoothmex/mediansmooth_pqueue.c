@@ -36,6 +36,8 @@ static void set_pos(void *a, size_t pos) {
 
 
 // operations on pqueues
+int count_expensive;
+
 void wrap_insert(void *q, node_t *n) {
     n->q = q;
     pqueue2_insert(q, n);
@@ -54,6 +56,7 @@ void wrap_replace_with_higher(void *q, node_t *o, node_t *n) {
 void insert(void *dest, void *src, node_t *n, void *med_pri) {
     int cmp = ((pqueue2_t*)src)->cmppri(n->pri, med_pri);
     node_t *o = (cmp) ? wrap_replace_head(src, n) : n;
+    if (cmp) ++count_expensive;
     wrap_insert(dest, o);
 }
 
@@ -261,14 +264,14 @@ void median_filt_pqueue_bdry_2(void *X, int N, int w, int bytes, fun_t *fun) {
     for (i=0; i<w; ++i, x += bytes) {
         med = add(&S, nodes + i*BYTES, x, bytes);
         memcpy(x, med, bytes);
-        print_queues_median(S.L, S.R, med, fun->print);
+        //print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 
     for(; i<N; ++i, x += bytes) {
         med = rep(&S, nodes + (i % w)*BYTES, x, bytes);
         memcpy(x, med, bytes);
-        print_queues_median(S.L, S.R, med, fun->print);
+        //print_queues_median(S.L, S.R, med, fun->print);
         //printf("L=%d, R=%d\n", (int) pqueue_size(S.L), (int) pqueue_size(S.R));
     }
 
@@ -382,6 +385,9 @@ void median_filt_pqueue_bdry_4(void *X, int N, int w, int bytes, fun_t *fun) {
 
 
 void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) {
+    pqueue2_stats_reset();
+    count_expensive = 0;
+
     switch (bdry) {
         case 0:
             median_filt_pqueue_bdry_0(X, N, w, bytes, fun);
@@ -400,6 +406,9 @@ void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) 
             break;
 
     }
+
+    printf("count_expensive = %d\n", count_expensive);
+    pqueue2_stats_print();
 }
 
 

@@ -6,10 +6,30 @@
 
 #define PQUEUE2
 
+int count_insert_head;
+int count_insert_bulk;
+int count_remove_head;
+int count_remove_bulk;
+
+void pqueue2_stats_reset() {
+    count_insert_head = 0;
+    count_insert_bulk = 0;
+    count_remove_head = 0;
+    count_remove_bulk = 0;
+}
+
+void pqueue2_stats_print() {
+    printf("count_insert_head = %d\n", count_insert_head);
+    printf("count_insert_bulk = %d\n", count_insert_bulk);
+    printf("count_remove_head = %d\n", count_remove_head);
+    printf("count_remove_bulk = %d\n", count_remove_bulk);
+}
+
+
 #ifndef PQUEUE2
 
 void *pqueue2_init(size_t n, void *cmppri, 
-        void *getpri, void *setpri, void *getpos, void *setpos) 
+    void *getpri, void *setpri, void *getpos, void *setpos) 
 {
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
@@ -37,6 +57,7 @@ void pqueue2_replace_with_higher(pqueue2_t *Q, void *n, void *d) {
 }
 
 int pqueue2_insert(pqueue2_t *Q, void *d) {
+    ++count_insert_head;
     return pqueue_insert(Q->q, d);
 }
 
@@ -49,6 +70,7 @@ void *pqueue2_pop(pqueue2_t *Q) {
 }
 
 int pqueue2_remove(pqueue2_t *Q, void *d) {
+    ++count_remove_head;
     return pqueue_remove(Q->q, d);
 }
 
@@ -78,10 +100,32 @@ typedef struct {
     void *bulk;
 } dbl_queue_t;
 
+
+int insert_head(dbl_queue_t *q, void *d) {
+    ++count_insert_head;
+    return pqueue_insert(q->head, d);
+}
+
+int insert_bulk(dbl_queue_t *q, void *d) {
+    ++count_insert_bulk;
+    return pqueue_insert(q->bulk, d);
+}
+
+int remove_head(dbl_queue_t *q, void *d) {
+    ++count_remove_head;
+    return pqueue_remove(q->head, d);
+}
+
+int remove_bulk(dbl_queue_t *q, void *d) {
+    ++count_remove_bulk;
+    return pqueue_remove(q->bulk, d);
+}
+
+
 void *pqueue2_init(size_t n_bulk, void *cmppri, 
-        void *getpri, void *setpri, void *getpos, void *setpos) 
+    void *getpri, void *setpri, void *getpos, void *setpos) 
 {
-    static const int n_head = 32;
+    static const int n_head = 16;
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
     Q->getpri = getpri;
@@ -127,23 +171,23 @@ int pqueue2_insert(pqueue2_t *Q, void *d) {
         // new element ranks higher than first element of bulk
         if (pqueue_size(q->head) < q->n_head) {
             // head is not full
-            pqueue_insert(q->head, d);
+            insert_head(q, d);
         } else {
             // head is full, need to rebalance
             h = pqueue_peek_last(q->head);
-            if (Q->cmppri(Q->getpri(h), Q->getpri(d))) {
+            if (h && Q->cmppri(Q->getpri(h), Q->getpri(d))) {
                 // new element ranks higher than last element of head
-                pqueue_remove(q->head, h);
-                pqueue_insert(q->head, d);
-                pqueue_insert(q->bulk, h);
+                remove_head(q, h);
+                insert_head(q, d);
+                insert_bulk(q, h);
             } else {
                 // new element belongs to top of bulk
-                pqueue_insert(q->bulk, d);
+                insert_bulk(q, d);
             }
         }        
     } else {
         // new element ranks lower than first element of the bulk
-        pqueue_insert(q->bulk, d);
+        insert_bulk(q, d);
     }
     return 0;
 }
@@ -167,10 +211,10 @@ int pqueue2_remove(pqueue2_t *Q, void *d) {
     void *b = pqueue_peek(q->bulk);
     if (!b || Q->cmppri(Q->getpri(b), Q->getpri(d))) {
         // deletion element ranks higher than first element of bulk (is in head)
-        return pqueue_remove(q->head, d);
+        return remove_head(q, d);
     } else {
         // deletion element is in bulk
-        return pqueue_remove(q->bulk, d);
+        return remove_bulk(q, d);
     }
 }
 
@@ -203,9 +247,7 @@ void pqueue2_dump(pqueue2_t *Q, void *out, void *print) {
     pqueue_dump(q->bulk, out, print);
 }
 
-
 #endif
-
 
 
 
