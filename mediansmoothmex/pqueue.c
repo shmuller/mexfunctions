@@ -268,7 +268,7 @@ pqueue_peek_last(pqueue_t *q)
 
     posn = q->size - 1;
     last = q->d[posn];
-    while (left(posn) >= q->size) {
+    if (posn > 1) while (left(posn) >= q->size) {
         d = q->d[--posn];
         if (q->cmppri(q->getpri(d), q->getpri(last)))
             last = d;

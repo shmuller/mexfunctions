@@ -128,7 +128,7 @@ int remove_bulk(dbl_queue_t *q, void *d) {
 void *pqueue2_init(unsigned char id, size_t n_bulk, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos) 
 {
-    static const int n_head = 4;
+    static const int n_head = 3;
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
     Q->getpri = getpri;
@@ -194,7 +194,8 @@ int pqueue2_insert(pqueue2_t *Q, void *d) {
         insert_bulk(q, d);
     }
 
-    printf("%d: head: %d, bulk: %d\n", Q->id, pqueue_size(q->head), pqueue_size(q->bulk));
+    if (Q->id == 0)
+        printf("%d: head: %d, bulk: %d\n", Q->id, pqueue_size(q->head), pqueue_size(q->bulk));
     return 0;
 }
 
