@@ -43,7 +43,7 @@ static PyObject* mediansmooth(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyObject* mediansmooth2(PyObject *self, PyObject *args)
+static PyObject* mediansmooth_old(PyObject *self, PyObject *args)
 {
     PyObject *in;
     int w;
@@ -75,8 +75,8 @@ static PyObject* mediansmooth2(PyObject *self, PyObject *args)
 
 
 static PyMethodDef methods[] = {
-    {"mediansmooth", mediansmooth, METH_VARARGS, "Sliding median filter - pqueue"},
-    {"mediansmooth2", mediansmooth2, METH_VARARGS, "Sliding median filter - old"},
+    {"mediansmooth", mediansmooth, METH_VARARGS, "Sliding median filter"},
+    {"mediansmooth_old", mediansmooth_old, METH_VARARGS, "Sliding median filter - old"},
     {NULL, NULL, 0, NULL}
 };
  
@@ -84,6 +84,13 @@ PyMODINIT_FUNC
 initmediansmooth(void)
 {
     Py_InitModule("mediansmooth", methods);
+    import_array();
+}
+
+PyMODINIT_FUNC
+initmediansmooth2(void)
+{
+    Py_InitModule("mediansmooth2", methods);
     import_array();
 }
 
