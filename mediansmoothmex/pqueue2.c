@@ -28,12 +28,13 @@ void pqueue2_stats_print() {
 
 #ifndef PQUEUE2
 
-void *pqueue2_init(size_t n, void *cmppri, 
+void *pqueue2_init(unsigned char id, size_t n, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos) 
 {
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
     Q->getpri = getpri;
+    Q->id = id;
     Q->q = pqueue_init(n, cmppri, getpri, setpri, getpos, setpos);
     return Q;
 }
@@ -103,11 +104,13 @@ typedef struct {
 
 int insert_head(dbl_queue_t *q, void *d) {
     ++count_insert_head;
+    ((node_t*)d)->id2 = 0;
     return pqueue_insert(q->head, d);
 }
 
 int insert_bulk(dbl_queue_t *q, void *d) {
     ++count_insert_bulk;
+    ((node_t*)d)->id2 = 1;
     return pqueue_insert(q->bulk, d);
 }
 
@@ -122,13 +125,14 @@ int remove_bulk(dbl_queue_t *q, void *d) {
 }
 
 
-void *pqueue2_init(size_t n_bulk, void *cmppri, 
+void *pqueue2_init(unsigned char id, size_t n_bulk, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos) 
 {
-    static const int n_head = 16;
+    static const int n_head = 4;
     pqueue2_t *Q = malloc(sizeof(pqueue2_t));
     Q->cmppri = cmppri;
     Q->getpri = getpri;
+    Q->id = id;
 
     dbl_queue_t *q = malloc(sizeof(dbl_queue_t));
     q->n_head = n_head;
@@ -189,6 +193,8 @@ int pqueue2_insert(pqueue2_t *Q, void *d) {
         // new element ranks lower than first element of the bulk
         insert_bulk(q, d);
     }
+
+    printf("%d: head: %d, bulk: %d\n", Q->id, pqueue_size(q->head), pqueue_size(q->bulk));
     return 0;
 }
 
@@ -207,15 +213,10 @@ void *pqueue2_pop(pqueue2_t *Q) {
 
 int pqueue2_remove(pqueue2_t *Q, void *d) {
     dbl_queue_t *q = Q->q;
-    
-    void *b = pqueue_peek(q->bulk);
-    if (!b || Q->cmppri(Q->getpri(b), Q->getpri(d))) {
-        // deletion element ranks higher than first element of bulk (is in head)
+    if (((node_t*)d)->id2 == 0)
         return remove_head(q, d);
-    } else {
-        // deletion element is in bulk
+    else
         return remove_bulk(q, d);
-    }
 }
 
 void *pqueue2_peek(pqueue2_t *Q) {

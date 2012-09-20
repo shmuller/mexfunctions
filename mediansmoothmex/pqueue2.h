@@ -1,19 +1,27 @@
 
 #include <stdlib.h> /* size_t */
 
+typedef struct {
+	void *pri;
+	size_t pos;
+    unsigned char id;
+    unsigned char id2;
+} node_t;
+
 typedef int (pqueue2_cmp_pri_f)(void *, void *);
 typedef void* (pqueue2_get_pri_f)(void *a);
 
 typedef struct {
     pqueue2_cmp_pri_f *cmppri;
     pqueue2_get_pri_f *getpri;
+    unsigned char id;
     void *q;
 } pqueue2_t;
 
 void pqueue2_stats_reset();
 void pqueue2_stats_print();
 
-void *pqueue2_init(size_t n, void *cmppri, 
+void *pqueue2_init(unsigned char id, size_t n, void *cmppri, 
     void *getpri, void *setpri, void *getpos, void *setpos);
 
 void pqueue2_free(pqueue2_t *q);

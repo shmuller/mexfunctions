@@ -12,12 +12,6 @@
 #include "pqueue2.h"
 
 // definitions for pqueue
-typedef struct {
-	void *pri;
-	size_t pos;
-    void *q;
-} node_t;
-
 static void *get_pri(void *a) {
 	return ((node_t*)a)->pri;
 }
@@ -38,30 +32,30 @@ static void set_pos(void *a, size_t pos) {
 // operations on pqueues
 int count_expensive;
 
-void wrap_insert(void *q, node_t *n) {
-    n->q = q;
+void wrap_insert(pqueue2_t *q, node_t *n) {
+    n->id = q->id;
     pqueue2_insert(q, n);
 }
 
-void *wrap_replace_head(void *q, node_t *n) {
-    n->q = q;
+void *wrap_replace_head(pqueue2_t *q, node_t *n) {
+    n->id = q->id;
     return pqueue2_replace_head(q, n);
 }
 
-void wrap_replace_with_higher(void *q, node_t *o, node_t *n) {
-    n->q = q;
+void wrap_replace_with_higher(pqueue2_t *q, node_t *o, node_t *n) {
+    n->id = q->id;
     pqueue2_replace_with_higher(q, o, n);
 }
 
-void insert(void *dest, void *src, node_t *n, void *med_pri) {
-    int cmp = ((pqueue2_t*)src)->cmppri(n->pri, med_pri);
+void insert(pqueue2_t *dest, pqueue2_t *src, node_t *n, void *med_pri) {
+    int cmp = src->cmppri(n->pri, med_pri);
     node_t *o = (cmp) ? wrap_replace_head(src, n) : n;
     if (cmp) ++count_expensive;
     wrap_insert(dest, o);
 }
 
-void delete(void *q_long, void *q_short, node_t *n) {
-    if (n->q == q_long)
+void delete(pqueue2_t *q_long, pqueue2_t *q_short, node_t *n) {
+    if (n->id == q_long->id)
         pqueue2_remove(q_long, n);
     else
         wrap_replace_with_higher(q_short, n, pqueue2_pop(q_long));
@@ -84,15 +78,15 @@ void print_queues_median(void *L, void *R, void *med, printfun_t *print) {
 typedef struct {
     int balance;
     node_t *median;
-    void *L;
-    void *R;
+    pqueue2_t *L;
+    pqueue2_t *R;
 } status;
 
 void status_init(status *S, int m, void *lt, void *gt) {
     S->balance = 0;
     S->median = NULL;
-    S->L = pqueue2_init(m, lt, get_pri, set_pri, get_pos, set_pos);
-	S->R = pqueue2_init(m, gt, get_pri, set_pri, get_pos, set_pos);    
+    S->L = pqueue2_init(0, m, lt, get_pri, set_pri, get_pos, set_pos);
+	S->R = pqueue2_init(1, m, gt, get_pri, set_pri, get_pos, set_pos);
 }
 
 void status_free(status *S) {
@@ -119,7 +113,7 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
 
     switch (S->balance) {
         case 0:
-            if (((pqueue2_t*)S->R)->cmppri(n->pri, S->median->pri)) {
+            if (S->R->cmppri(n->pri, S->median->pri)) {
                 wrap_insert(S->R, n);
                 S->balance = +1;
                 S->median = pqueue2_peek(S->R);
@@ -146,7 +140,7 @@ void *add(status *S, node_t *n, void *new_pri, int bytes) {
 void *del(status *S, node_t *n) {
     switch (S->balance) {
         case 0:
-            if (n->q == S->L) {
+            if (n->id == S->L->id) {
                 pqueue2_remove(S->L, n);
                 S->balance = +1;
                 S->median = pqueue2_peek(S->R);
