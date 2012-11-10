@@ -8,9 +8,9 @@ target_link_libraries(dblMaxw specfun atomic common)
 add_executable(angle_int_test angle_int_test.c)
 target_link_libraries(angle_int_test dblMaxw)
 
-if(${mkoctfile_EXEC})
+if(mkoctfile_EXEC)
 add_subdirectory(octave)
-endif(${mkoctfile_EXEC})
+endif(mkoctfile_EXEC)
 
 add_subdirectory(python)
 

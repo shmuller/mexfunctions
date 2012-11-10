@@ -8,9 +8,9 @@ add_dependencies(mediansmooth mediansmooth_template.c)
 add_library(mediansmooth2 SHARED mediansmooth.c mediansmooth_pqueue.c pqueue2.c pqueue.c)
 add_dependencies(mediansmooth2 mediansmooth_template.c)
 
-if(${mkoctfile_EXEC})
+if(mkoctfile_EXEC)
 add_subdirectory(octave)
-endif(${mkoctfile_EXEC})
+endif(mkoctfile_EXEC)
 
 add_subdirectory(python)
 

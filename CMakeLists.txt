@@ -4,6 +4,8 @@ project(mexfunctions)
 
 find_program(mkoctfile_EXEC NAMES mkoctfile PATHS ENV PATH)
 
+message(STATUS "mkoctfile_EXEC=${mkoctfile_EXEC}")
+
 # user must explicitly type "make octave" and "make python"
 add_custom_target(octave)
 add_custom_target(python)
