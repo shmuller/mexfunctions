@@ -4,7 +4,9 @@ project(cardano)
 
 add_library(cardano SHARED cardano.c)
 
+if(${mkoctfile_EXEC})
 add_subdirectory(octave)
+endif(${mkoctfile_EXEC})
 
 set(CMAKE_BUILD_TYPE Release)
 

@@ -22,7 +22,10 @@ target_link_libraries(mdsclient_static ${mdsplus_LIBRARIES})
 add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)
 
+if(${mkoctfile_EXEC})
 add_subdirectory(octave)
+endif(${mkoctfile_EXEC})
+
 add_subdirectory(python)
 
 set(CMAKE_BUILD_TYPE Release)

@@ -9,7 +9,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-#include "_triblock.h"
+#include "../_triblock.h"
 
 static PyObject *step(PyObject *self, PyObject *args)
 {

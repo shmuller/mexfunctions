@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 
 project(mexfunctions)
 
+find_program(mkoctfile_EXEC NAMES mkoctfile PATHS ENV PATH)
+
+# user must explicitly type "make octave" and "make python"
+add_custom_target(octave)
 add_custom_target(python)
 
 add_subdirectory(common)

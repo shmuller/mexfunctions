@@ -9,7 +9,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-#include "dblMaxw.h"
+#include "../dblMaxw.h"
 
 int dims_ok(PyObject *in, int m, npy_int *dims)
 {
