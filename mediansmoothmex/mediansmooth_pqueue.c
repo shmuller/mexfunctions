@@ -406,7 +406,7 @@ void median_filt_pqueue(void *X, int N, int w, int bdry, int bytes, fun_t *fun) 
 
     }
 
-    pqueue2_stats_print();
+    //pqueue2_stats_print();
 }
 
 
