@@ -18,6 +18,7 @@ add_subdirectory(cardanomex)
 add_subdirectory(mdsclient)
 add_subdirectory(mediansmoothmex)
 add_subdirectory(triblockmex)
+add_subdirectory(minpack)
 
 set(CMAKE_BUILD_TYPE Release)
 
