@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <minpack.h>
 
@@ -36,8 +37,16 @@ int main() {
 
     leastsq1(test, &D);
 
-    free(mem);
+    printf("P = [%f, %f]\n", D.P[0], D.P[1]);
 
+    D.P[0] = 0.8;
+    D.P[1] = 1.2;
+
+    leastsq(test, &D);
+
+    printf("P = [%f, %f]\n", D.P[0], D.P[1]);
+
+    free(mem);
     return 0;
 }
 

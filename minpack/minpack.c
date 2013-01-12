@@ -4,8 +4,6 @@
 
 #include "minpack.h"
 
-#define lmdif lmdif_
-
 extern void lmdif_(void *fcn, int *m, int *n, double *x, double *fvec,
     double *ftol, double *xtol, double *gtol, int *maxfev, double *epsfcn,
     double *diag, int *mode, double *factor, int *nprint, int *info, int *nfev,
@@ -27,27 +25,24 @@ static int wrapper(int *m, int *n, double *x, double *fvec, int *iflag)
     func *f = CONTAINER.f;
     data *D = CONTAINER.D;
 
-    //printf("test: P = [%f, %f], [%f, %f]\n",
-    //        D->P[0], D->P[1], x[0], x[1]);
-    //fflush(stdout);
-
-    memcpy(D->P, x, (*n)*sizeof(double));
+    D->P = x;
+    D->y = fvec;
     f(D);
-    memcpy(fvec, D->y, (*m)*sizeof(double));
     return 0;
 }
 
 int leastsq(func *f, data *D)
 {
-    double xtol = 1.49012e-8, ftol = 1.49012e-8;
-    double gtol = 0.0, epsfcn = 0.0, factor = 1.0e2;
-    int mode = 1, nprint = 0, info = 99, nfev, ldfjac;
-    int n = D->n, m = D->m, maxfev = 200*(n+1);
+    int m = D->m, n = D->n;
+    double *x = D->P, *fvec = D->y;
+    
+    double ftol = 1.49012e-8, xtol = 1.49012e-8, gtol = 0.0, epsfcn = 0.0, factor = 1.0e2;
+    int maxfev = 200*(n+1), mode = 1, nprint = 0, info = 99, nfev = -1, ldfjac = m;
 
-    void *mem = calloc((n+n*m+n+3*n+m)*sizeof(double)+n*sizeof(int), 1);
+    void *mem = malloc((m*n + 5*n + m)*sizeof(double) + n*sizeof(int));
     double *diag = mem;
     double *fjac = diag + n;
-    double *qtf = fjac + n*m;
+    double *qtf = fjac + m*n;
     double *wa1 = qtf + n;
     double *wa2 = wa1 + n;
     double *wa3 = wa2 + n;
@@ -57,11 +52,12 @@ int leastsq(func *f, data *D)
     CONTAINER.f = f;
     CONTAINER.D = D;
 
-    lmdif(wrapper, &m, &n, D->P, D->y, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
-          diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
-          wa1, wa2, wa3, wa4);
+    lmdif_(wrapper, &m, &n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
+            diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
+            wa1, wa2, wa3, wa4);
 
-    printf("info = %d\n", info);
+    D->P = x;
+    D->y = fvec;
     
     free(mem);
     return 0;
@@ -70,47 +66,22 @@ int leastsq(func *f, data *D)
 int leastsq1(func *f, data *D)
 {
     double tol = 1.49012e-8;
-    int m = D->m, n = D->n, lwa = n*m + 5*n + m, info = 99;
+    int m = D->m, n = D->n, lwa = m*n + 5*n + m, info = 99;
 
-    void *mem = calloc(lwa*sizeof(double) + n*sizeof(int), 1);
+    double *x = D->P, *fvec = D->y;
+
+    void *mem = malloc(lwa*sizeof(double) + n*sizeof(int));
     double *wa = mem;
     int *iwa = (int*)(wa + lwa);
 
     CONTAINER.f = f;
     CONTAINER.D = D;
 
-    double *fvec = malloc(m*sizeof(double));
-
-    double *x = malloc(n*sizeof(double));
-    memcpy(x, D->P, n*sizeof(double));
-
-    int i;
-    printf("m = %d, n = %d\n", D->m, D->n);
-
-    for (i = 0; i < m; ++i) 
-        printf("%f ", D->x[i]);
-    printf("\n");
-
-    for (i = 0; i < m; ++i) 
-        printf("%f ", D->y[i]);
-    printf("\n");
-
-    for (i = 0; i < m; ++i) 
-        printf("%f ", D->ydata[i]);
-    printf("\n");
-
-    for (i = 0; i < n; ++i) 
-        printf("%f ", D->P[i]);
-    printf("\n");
-
     lmdif1_(wrapper, &m, &n, x, fvec, &tol, &info, iwa, wa, &lwa);
 
-    printf("info = %d\n", info);
-    
-    printf("P = [%f, %f]\n", D->P[0], D->P[1]);
-
-    free(x);
-    free(fvec);
+    D->P = x;
+    D->y = fvec;
+   
     free(mem);
     return 0;
 }
