@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(dblMaxw)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(dblMaxw SHARED dblMaxw.c angle_int.c ../quadmex/gauss_legendre.c)
 target_link_libraries(dblMaxw specfun atomic common)
 

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(cardano)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(cardano SHARED cardano.c)
 
 if(${mkoctfile_EXEC})

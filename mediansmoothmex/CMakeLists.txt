@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(mediansmooth)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(mediansmooth SHARED mediansmooth.c mediansmooth_pqueue.c pqueue_wrap.c pqueue.c)
 add_dependencies(mediansmooth mediansmooth_template.c)
 

@@ -5,6 +5,8 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
 
 project(mdsclient)
 
+set(CMAKE_BUILD_TYPE Release)
+
 set(mdsplus_USE_STATIC "ON" CACHE BOOL "Link against static mdsplus libraries.")
 
 find_package(mdsplus REQUIRED)

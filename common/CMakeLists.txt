@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(common)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(common SHARED common.c)
 
 add_library(common_static STATIC common.c)

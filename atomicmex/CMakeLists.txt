@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(atomic)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(atomic SHARED atomic.c)
 target_link_libraries(atomic common)
 

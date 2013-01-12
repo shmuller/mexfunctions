@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(_triblock)
 
+set(CMAKE_BUILD_TYPE Release)
+
 add_library(_triblock SHARED _triblock.c)
 target_link_libraries(_triblock lapack blas)
 

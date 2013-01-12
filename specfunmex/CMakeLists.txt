@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 
 project(specfun)
+
+set(CMAKE_BUILD_TYPE Release)
+
 enable_language(Fortran)
 
 add_library(specfun SHARED specfun.f90)
