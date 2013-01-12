@@ -1,20 +1,19 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "minpack.h"
 
-#define chkder chkder_
-#define hybrd hybrd_
-#define hybrj hybrj_
 #define lmdif lmdif_
-#define lmder lmder_
-#define lmstr lmstr_
 
-extern void chkder_(int*,int*,double*,double*,double*,int*,double*,double*,int*,double*);
-extern void hybrd_(void*,int*,double*,double*,double*,int*,int*,int*,double*,double*,int*,double*,int*,int*,int*,double*,int*,double*,int*,double*,double*,double*,double*,double*);
-extern void hybrj_(void*,int*,double*,double*,double*,int*,double*,int*,double*,int*,double*,int*,int*,int*,int*,double*,int*,double*,double*,double*,double*,double*);
-extern void lmdif_(void*,int*,int*,double*,double*,double*,double*,double*,int*,double*,double*,int*,double*,int*,int*,int*,double*,int*,int*,double*,double*,double*,double*,double*);
-extern void lmder_(void*,int*,int*,double*,double*,double*,int*,double*,double*,double*,int*,double*,int*,double*,int*,int*,int*,int*,int*,double*,double*,double*,double*,double*);
-extern void lmstr_(void*,int*,int*,double*,double*,double*,int*,double*,double*,double*,int*,double*,int*,double*,int*,int*,int*,int*,int*,double*,double*,double*,double*,double*);
+extern void lmdif_(void *fcn, int *m, int *n, double *x, double *fvec,
+    double *ftol, double *xtol, double *gtol, int *maxfev, double *epsfcn,
+    double *diag, int *mode, double *factor, int *nprint, int *info, int *nfev,
+    double *fjac, int *ldfjac, int *ipvt, double *qtf, 
+    double *wa1, double *wa2, double *wa3, double *wa4);
 
+extern void lmdif1_(void *fcn, int *m, int *n, double *x, double *fvec,
+    double *tol, int *info, int *iwa, double *wa, int *lwa);
 
 typedef struct {
     func *f;
@@ -27,7 +26,14 @@ static int wrapper(int *m, int *n, double *x, double *fvec, int *iflag)
 {
     func *f = CONTAINER.f;
     data *D = CONTAINER.D;
+
+    printf("P = [%f, %f], [%f, %f]\n",
+            D->P[0], D->P[1], x[0], x[1]);
+    fflush(stdout);
+
+    memcpy(D->P, x, (*n)*sizeof(double));
     f(D);
+    memcpy(fvec, D->y, (*m)*sizeof(double));
     return 0;
 }
 
@@ -35,10 +41,10 @@ int leastsq(func *f, data *D)
 {
     double xtol = 1.49012e-8, ftol = 1.49012e-8;
     double gtol = 0.0, epsfcn = 0.0, factor = 1.0e2;
-    int mode = 1, nprint = 0, info, nfev, ldfjac;
+    int mode = 1, nprint = 0, info = 99, nfev, ldfjac;
     int n = D->n, m = D->m, maxfev = 200*(n+1);
 
-    void *mem = malloc((n+n*m+n+3*n+m)*sizeof(double)+n*sizeof(int));
+    void *mem = calloc((n+n*m+n+3*n+m)*sizeof(double)+n*sizeof(int), 1);
     double *diag = mem;
     double *fjac = diag + n;
     double *qtf = fjac + n*m;
@@ -54,7 +60,36 @@ int leastsq(func *f, data *D)
     lmdif(wrapper, &m, &n, D->P, D->y, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
           diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
           wa1, wa2, wa3, wa4);
+
+    printf("info = %d\n", info);
     
+    free(mem);
+    return 0;
+}
+
+int leastsq1(func *f, data *D)
+{
+    double tol = 1.49012e-8;
+    int m = D->m, n = D->m, lwa = n*m + 5*n + m, info = 99;
+
+    void *mem = calloc(lwa*sizeof(double) + n*sizeof(int), 1);
+    double *wa = mem;
+    int *iwa = (int*)(wa + lwa);
+
+    CONTAINER.f = f;
+    CONTAINER.D = D;
+
+    double *fvec = malloc(m*sizeof(double));
+
+    double *x = malloc(n*sizeof(double));
+    memcpy(x, D->P, n*sizeof(double));
+
+    lmdif1_(wrapper, &m, &n, x, fvec, &tol, &info, iwa, wa, &lwa);
+
+    printf("info = %d\n", info);
+    
+    free(x);
+    free(fvec);
     free(mem);
     return 0;
 }

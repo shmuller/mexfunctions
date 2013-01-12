@@ -14,4 +14,6 @@ typedef void (func)(data *D);
 
 int leastsq(func *f, data *D);
 
+int leastsq1(func *f, data *D);
+
 
