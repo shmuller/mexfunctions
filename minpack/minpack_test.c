@@ -13,7 +13,7 @@ static void test(data *D) {
 }
 
 int main() {
-    data D;
+    data D = {0};
 
     D.m = 10;
     D.n = 2;

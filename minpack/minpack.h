@@ -3,6 +3,7 @@ typedef struct {
     int n;
     int m;
     double *P;
+    int *do_var;
     double *x;
     double *y;
     double *ydata;

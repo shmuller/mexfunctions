@@ -16,6 +16,8 @@ set_target_properties(minpack_static PROPERTIES COMPILE_FLAGS "-fPIC")
 add_executable(minpack_test minpack_test.c)
 target_link_libraries(minpack_test minpack)
 
+add_subdirectory(python)
+
 install(TARGETS minpack minpack_static minpack_test
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib

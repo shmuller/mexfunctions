@@ -31,16 +31,34 @@ static int wrapper(int *m, int *n, double *x, double *fvec, int *iflag)
     return 0;
 }
 
+static int wrapper_mask(int *m, int *n, double *x, double *fvec, int *iflag)
+{
+    func *f = CONTAINER.f;
+    data *D = CONTAINER.D;
+
+    int i;
+    for (i=0; i < D->n; ++i) if (D->do_var[i]) D->P[i] = *x++;
+
+    D->y = fvec;
+    f(D);
+    return 0;
+}
+
+
 int leastsq(func *f, data *D)
 {
-    int m = D->m, n = D->n;
-    double *x = D->P, *fvec = D->y;
+    int i, m = D->m, n = D->n;
+    
+    if (D->do_var) for (i=0, n=0; i < D->n; ++i) if (D->do_var[i]) ++n;
+    
+    double *fvec = D->y;
     
     double ftol = 1.49012e-8, xtol = 1.49012e-8, gtol = 0.0, epsfcn = 0.0, factor = 1.0e2;
     int maxfev = 200*(n+1), mode = 1, nprint = 0, info = 99, nfev = -1, ldfjac = m;
 
-    void *mem = malloc((m*n + 5*n + m)*sizeof(double) + n*sizeof(int));
-    double *diag = mem;
+    void *mem = malloc((m*n + 6*n + m)*sizeof(double) + n*sizeof(int));
+    double *x = mem;
+    double *diag = x + n;
     double *fjac = diag + n;
     double *qtf = fjac + m*n;
     double *wa1 = qtf + n;
@@ -48,15 +66,28 @@ int leastsq(func *f, data *D)
     double *wa3 = wa2 + n;
     double *wa4 = wa3 + n;
     int *ipvt = (int*)(wa4 + m);
-    
+
     CONTAINER.f = f;
     CONTAINER.D = D;
 
-    lmdif_(wrapper, &m, &n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
+    if (D->do_var) {
+        for (i=0; i < D->n; ++i) if (D->do_var[i]) *x++ = D->P[i];
+        x = mem;
+
+        lmdif_(wrapper_mask, &m, &n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
             diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
             wa1, wa2, wa3, wa4);
 
-    D->P = x;
+        for (i=0; i < D->n; ++i) if (D->do_var[i]) D->P[i] = *x++;
+
+    } else {
+        x = D->P;
+        lmdif_(wrapper, &m, &n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
+            diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
+            wa1, wa2, wa3, wa4);
+        D->P = x;
+    }
+
     D->y = fvec;
     
     free(mem);

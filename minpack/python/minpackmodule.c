@@ -28,7 +28,7 @@ void fun(data *D)
 
 static PyObject *meth_leastsq(PyObject *self, PyObject *args)
 {
-    data DATA;
+    data DATA = {0};
     data *D = &DATA;
     container2 *C = &CONTAINER2;
     double *P_save, *y_save;
