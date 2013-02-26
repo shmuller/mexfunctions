@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "minpack.h"
 
@@ -36,9 +37,15 @@ static int wrapper_mask(int *m, int *n, double *x, double *fvec, int *iflag)
     func *f = CONTAINER.f;
     data *D = CONTAINER.D;
 
-    int i;
-    for (i=0; i < D->n; ++i) if (D->do_var[i]) D->P[i] = *x++;
-
+    int i, do_var;
+    for (i=0; i < D->n; ++i) {
+        do_var = D->do_var[i];
+        if (do_var == 1) {
+            D->P[i] = *x++;
+        } else if (do_var == 2) {
+            D->P[i] = exp(*x++);
+        }
+    }
     D->y = fvec;
     f(D);
     return 0;
@@ -47,7 +54,7 @@ static int wrapper_mask(int *m, int *n, double *x, double *fvec, int *iflag)
 
 int leastsq(func *f, data *D)
 {
-    int i, m = D->m, n = D->n;
+    int i, m = D->m, n = D->n, do_var;
     
     if (D->do_var) for (i=0, n=0; i < D->n; ++i) if (D->do_var[i]) ++n;
     
@@ -71,14 +78,28 @@ int leastsq(func *f, data *D)
     CONTAINER.D = D;
 
     if (D->do_var) {
-        for (i=0; i < D->n; ++i) if (D->do_var[i]) *x++ = D->P[i];
+        for (i=0; i < D->n; ++i) {
+            do_var = D->do_var[i];
+            if (do_var == 1) {
+                *x++ = D->P[i];
+            } else if (do_var == 2) {
+                *x++ = log(D->P[i]);
+            }
+        }
         x = mem;
 
         lmdif_(wrapper_mask, &m, &n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
             diag, &mode, &factor, &nprint, &info, &nfev, fjac, &ldfjac, ipvt, qtf, 
             wa1, wa2, wa3, wa4);
 
-        for (i=0; i < D->n; ++i) if (D->do_var[i]) D->P[i] = *x++;
+        for (i=0; i < D->n; ++i) {
+            do_var = D->do_var[i];
+            if (do_var == 1) {
+                D->P[i] = *x++;
+            } else if (do_var == 2) {
+                D->P[i] = exp(*x++);
+            }
+        }
 
     } else {
         x = D->P;
