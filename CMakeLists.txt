@@ -19,6 +19,7 @@ add_subdirectory(mdsclient)
 add_subdirectory(mediansmoothmex)
 add_subdirectory(triblockmex)
 add_subdirectory(minpack)
+add_subdirectory(fitfun)
 
 set(CMAKE_BUILD_TYPE Release)
 
