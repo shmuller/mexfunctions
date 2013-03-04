@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "../minpack/minpack.h"
+#include "fitfun.h"
 
 #define template(fun, defs, body, expr)                        \
 void fun(data *D) {                                            \

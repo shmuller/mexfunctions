@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include <minpack.h>
+#include "../fitfun.h"
 
 #define get_arr(args, i) PyArray_DATA(PyTuple_GET_ITEM(args, i))
 
