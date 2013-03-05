@@ -1,4 +1,4 @@
-#include "../minpack/minpack.h"
+#include <minpack.h>
 
 #define template_proto(fun) \
 void fun(data *D);          \

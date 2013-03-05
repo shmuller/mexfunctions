@@ -17,7 +17,7 @@ class struct_data(C.Structure):
         ('w', p_t),
         ('a', p_t)]
 
-data = struct_data()
+D = struct_data()
 
 def get_ptr_ctypes(x):
     return x.ctypes.data_as(p_t)
@@ -25,18 +25,23 @@ def get_ptr_ctypes(x):
 def get_ptr_array(x):
     return C.cast(x.__array_interface__['data'][0], p_t)
 
-#get_ptr = get_ptr_ctypes
+try:
+    import accel
+    def get_ptr(x):
+        return C.cast(accel.get_ptr(x), p_t)
+except ImportError:
+    get_ptr = get_ptr_array
+
 get_ptr = get_ptr_array
 
-
 def parse_args(P, x, y, a=None):
-    data.P = get_ptr(P)
-    data.x = get_ptr(x)
-    data.y = get_ptr(y)
-    data.n = C.c_int(P.size)
-    data.m = C.c_int(x.size)
+    D.P = get_ptr(P)
+    D.x = get_ptr(x)
+    D.y = get_ptr(y)
+    D.n = C.c_int(P.size)
+    D.m = C.c_int(x.size)
     if a is not None:
-        data.a = get_ptr(a)
+        D.a = get_ptr(a)
 
 def parse_args_ydata(P, x, y, ydata, a=None):
     parse_args(P, x, y, a)
@@ -45,31 +50,31 @@ def parse_args_ydata(P, x, y, ydata, a=None):
 
 libname = C.util.find_library('fitfun')
 
-_fitfun = C.CDLL(libname)
+cfitfun = C.CDLL(libname)
 
 def _fun_factory(name):
     for suffix in ('', '_diff', '_rms', '_fit'):
-        getattr(_fitfun, name + suffix).argtypes = [C.POINTER(struct_data)]
+        getattr(cfitfun, name + suffix).argtypes = [C.POINTER(struct_data)]
 
-    getattr(_fitfun, name + '_rms').restype = C.c_double
+    getattr(cfitfun, name + '_rms').restype = C.c_double
 
-    def fun(self, P, x, y, a=None):
+    def fun(P, x, y, a=None):
         parse_args(P, x, y, a)
-        getattr(_fitfun, name)(C.byref(data))
+        getattr(cfitfun, name)(C.byref(D))
         return y
 
-    def fun_diff(self, P, x, y, ydata, a=None):
+    def fun_diff(P, x, y, ydata, a=None):
         parse_args_ydata(P, x, y, ydata, a)
-        getattr(_fitfun, name + '_diff')(C.byref(data))
+        getattr(cfitfun, name + '_diff')(C.byref(D))
         return y
 
-    def fun_rms(self, P, x, y, a=None):
+    def fun_rms(P, x, y, a=None):
         parse_args(P, x, y, a)
-        return getattr(_fitfun, name + '_rms')(C.byref(data))
+        return getattr(cfitfun, name + '_rms')(C.byref(D))
 
-    def fun_fit(self, P, x, y, ydata, a=None):
+    def fun_fit(P, x, y, ydata, a=None):
         parse_args_ydata(P, x, y, ydata, a)
-        getattr(_fitfun, name + '_fit')(C.byref(data))
+        getattr(cfitfun, name + '_fit')(C.byref(D))
         return P
 
     return fun, fun_diff, fun_rms, fun_fit
