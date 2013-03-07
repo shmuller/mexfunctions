@@ -2,6 +2,7 @@ import ctypes as C
 import ctypes.util
 
 p_t = C.POINTER(C.c_double)
+p_int_t = C.POINTER(C.c_int)
 
 class struct_data(C.Structure):
     __slots__ = ['n', 'm', 'P', 'do_var', 'x', 'y', 'ydata', 'w', 'a']
@@ -10,7 +11,7 @@ class struct_data(C.Structure):
         ('n', C.c_int),
         ('m', C.c_int),
         ('P', p_t),
-        ('do_var', C.POINTER(C.c_int)),
+        ('do_var', p_int_t),
         ('x', p_t),
         ('y', p_t),
         ('ydata', p_t),
@@ -19,16 +20,16 @@ class struct_data(C.Structure):
 
 D = struct_data()
 
-def get_ptr_ctypes(x):
-    return x.ctypes.data_as(p_t)
+def get_ptr_ctypes(x, t=p_t):
+    return x.ctypes.data_as(t)
 
-def get_ptr_array(x):
-    return C.cast(x.__array_interface__['data'][0], p_t)
+def get_ptr_array(x, t=p_t):
+    return C.cast(x.__array_interface__['data'][0], t)
 
 try:
     import accel
-    def get_ptr(x):
-        return C.cast(accel.get_ptr(x), p_t)
+    def get_ptr(x, t=p_t):
+        return C.cast(accel.get_ptr(x), t)
 except ImportError:
     get_ptr = get_ptr_array
 
@@ -45,7 +46,7 @@ def parse_args(P, x, y, a=None):
 
 def parse_args_ydata(P, x, y, ydata, a=None):
     parse_args(P, x, y, a)
-    data.ydata = get_ptr(ydata)
+    D.ydata = get_ptr(ydata)
 
 
 libname = C.util.find_library('fitfun')
@@ -72,8 +73,10 @@ def _fun_factory(name):
         parse_args(P, x, y, a)
         return getattr(cfitfun, name + '_rms')(C.byref(D))
 
-    def fun_fit(P, x, y, ydata, a=None):
+    def fun_fit(P, x, y, ydata, a=None, do_var=None):
         parse_args_ydata(P, x, y, ydata, a)
+        if do_var is not None:
+            D.do_var = get_ptr(do_var, p_int_t)
         getattr(cfitfun, name + '_fit')(C.byref(D))
         return P
 

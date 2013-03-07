@@ -23,7 +23,7 @@ template_pxd = """\
 
 template_header = """\
 import cython
-from numpy cimport ndarray, {dtype}_t
+from numpy cimport ndarray, {dtype}_t, int32_t
 ctypedef {dtype}_t DTYPE_t
 
 cimport {cfitfun}
@@ -67,8 +67,10 @@ cpdef {fun}_rms({p_t} P, {p_t} x, {p_t} y):
     parse_args(P, x, y)
     return {cfitfun}.{fun}_rms(&D)
 
-cpdef {fun}_fit({p_t} P, {p_t} x, {p_t} y, {p_t} ydata):
+cpdef {fun}_fit({p_t} P, {p_t} x, {p_t} y, {p_t} ydata, ndarray do_var=None):
     parse_args_ydata(P, x, y, ydata)
+    if do_var is not None:
+        D.do_var = <int*> do_var.data
     {cfitfun}.{fun}_fit(&D)
     return P
 
@@ -90,8 +92,10 @@ cpdef {fun}_rms({p_t} P, {p_t} x, {p_t} y, {p_t} a):
     parse_args_a(P, x, y, a)
     return {cfitfun}.{fun}_rms(&D)
 
-cpdef {fun}_fit({p_t} P, {p_t} x, {p_t} y, {p_t} ydata, {p_t} a):
+cpdef {fun}_fit({p_t} P, {p_t} x, {p_t} y, {p_t} ydata, {p_t} a, ndarray do_var=None):
     parse_args_a_ydata(P, x, y, ydata, a)
+    if do_var is not None:
+        D.do_var = <int*> do_var.data
     {cfitfun}.{fun}_fit(&D)
     return P
 
