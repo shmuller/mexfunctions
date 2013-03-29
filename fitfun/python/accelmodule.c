@@ -1,12 +1,12 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-PyObject *get_ptr(PyObject *self, PyObject *obj) {
-    return Py_BuildValue("N", PyLong_FromVoidPtr(PyArray_DATA(obj)));
+PyObject *_get_ptr(PyObject *self, PyObject *obj) {
+    return PyLong_FromVoidPtr(PyArray_DATA(obj));
 }
 
 static PyMethodDef methods[] = {
-    {"get_ptr", get_ptr, METH_O, "Wrapper to PyArray_DATA()"},
+    {"_get_ptr", _get_ptr, METH_O, "Wrapper to PyArray_DATA()"},
     {NULL, NULL, 0, NULL}
 };
 

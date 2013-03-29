@@ -27,13 +27,12 @@ def get_ptr_array(x, t=p_t):
     return C.cast(x.__array_interface__['data'][0], t)
 
 try:
-    import accel
+    from accel import _get_ptr
     def get_ptr(x, t=p_t):
-        return C.cast(accel.get_ptr(x), t)
+        return C.cast(_get_ptr(x), t)
 except ImportError:
     get_ptr = get_ptr_array
 
-get_ptr = get_ptr_array
 
 def parse_args(P, x, y, a=None):
     D.P = get_ptr(P)
