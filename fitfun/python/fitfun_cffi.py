@@ -47,7 +47,7 @@ template_header = """\
 void _{fun}(int n, p_t P, int m, p_t x, p_t y);
 void _{fun}_diff(int n, p_t P, int m, p_t x, p_t y, p_t ydata);
 double _{fun}_rms(int n, p_t P, int m, p_t x, p_t y);
-void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata);
+void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t do_var);
 
 """
 
@@ -55,7 +55,7 @@ template_header_a = """\
 void _{fun}(int n, p_t P, int m, p_t x, p_t y, p_t a);
 void _{fun}_diff(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t a);
 double _{fun}_rms(int n, p_t P, int m, p_t x, p_t y, p_t a);
-void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t a);
+void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t a, p_t do_var);
 
 """
 
@@ -76,8 +76,9 @@ double _{fun}_rms(int n, p_t P, int m, p_t x, p_t y) {left}
     return {fun}_rms(&D);
 {right}
 
-void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata) {left}
+void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t do_var) {left}
     parse_args_ydata(n, P, m, x, y, ydata);
+    if (do_var) D.do_var = (int*) do_var;
     {fun}_fit(&D);
 {right}
 
@@ -100,8 +101,9 @@ double _{fun}_rms(int n, p_t P, int m, p_t x, p_t y, p_t a) {left}
     return {fun}_rms(&D);
 {right}
 
-void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t a) {left}
+void _{fun}_fit(int n, p_t P, int m, p_t x, p_t y, p_t ydata, p_t a, p_t do_var) {left}
     parse_args_a_ydata(n, P, m, x, y, ydata, a);
+    if (do_var) D.do_var = (int*) do_var;
     {fun}_fit(&D);
 {right}
 
@@ -149,9 +151,11 @@ def _fun_factory(name):
         return getattr(ff, name_rms)(P.size, ptr(P), 
                                      x.size, ptr(x), ptr(y))
 
-    def fun_fit(P, x, y, ydata):
+    def fun_fit(P, x, y, ydata, do_var=0):
+        if do_var is not 0:
+            do_var = ptr(do_var)
         getattr(ff, name_fit)(P.size, ptr(P), 
-                              x.size, ptr(x), ptr(y), ptr(ydata))
+                              x.size, ptr(x), ptr(y), ptr(ydata), do_var)
         return P
     return fun, fun_diff, fun_rms, fun_fit
 
@@ -173,9 +177,11 @@ def _fun_a_factory(name):
         return getattr(ff, name_rms)(P.size, ptr(P), 
                                      x.size, ptr(x), ptr(y), ptr(a))
 
-    def fun_fit(P, x, y, ydata, a):
+    def fun_fit(P, x, y, ydata, a, do_var=0):
+        if do_var is not 0:
+            do_var = ptr(do_var)
         getattr(ff, name_fit)(P.size, ptr(P), 
-                              x.size, ptr(x), ptr(y), ptr(ydata), ptr(a))
+                              x.size, ptr(x), ptr(y), ptr(ydata), ptr(a), do_var)
         return P
     return fun, fun_diff, fun_rms, fun_fit
 
