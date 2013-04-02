@@ -50,7 +50,8 @@ libname = find_library('fitfun')
 cfitfun = CDLL(libname)
 
 def _fun_factory(name):
-    getattr(cfitfun, name + '_rms').restype = c_double
+    name_diff, name_rms, name_fit = name + '_diff', name + '_rms', name + '_fit'
+    getattr(cfitfun, name_rms).restype = c_double
 
     def fun(P, x, y, a=None):
         parse_args(P, x, y, a)
@@ -59,27 +60,28 @@ def _fun_factory(name):
 
     def fun_diff(P, x, y, ydata, a=None):
         parse_args_ydata(P, x, y, ydata, a)
-        getattr(cfitfun, name + '_diff')(byref(D))
+        getattr(cfitfun, name_diff)(byref(D))
         return y
 
     def fun_rms(P, x, y, a=None):
         parse_args(P, x, y, a)
-        return getattr(cfitfun, name + '_rms')(byref(D))
+        return getattr(cfitfun, name_rms)(byref(D))
 
     def fun_fit(P, x, y, ydata, a=None, do_var=None):
         parse_args_ydata(P, x, y, ydata, a)
         if do_var is not None:
             D.do_var = get_ptr(do_var)
-        getattr(cfitfun, name + '_fit')(byref(D))
+        getattr(cfitfun, name_fit)(byref(D))
         return P
 
     return fun, fun_diff, fun_rms, fun_fit
 
 e2, e2_diff, e2_rms, e2_fit  = _fun_factory('e2')
 IV3, IV3_diff, IV3_rms, IV3_fit = _fun_factory('IV3')
+IVdbl, IVdbl_diff, IVdbl_rms, IVdbl_fit = _fun_factory('IVdbl')
+
 IV4, IV4_diff, IV4_rms, IV4_fit = _fun_factory('IV4')
 IV5, IV5_diff, IV5_rms, IV5_fit = _fun_factory('IV5')
 IV6, IV6_diff, IV6_rms, IV6_fit = _fun_factory('IV6')
-IVdbl, IVdbl_diff, IVdbl_rms, IVdbl_fit = _fun_factory('IVdbl')
 IVdbl2, IVdbl2_diff, IVdbl2_rms, IVdbl2_fit = _fun_factory('IVdbl2')
 

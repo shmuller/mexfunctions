@@ -1,9 +1,11 @@
 from distutils.core import setup, Extension
 from Cython.Distutils import build_ext
 
+import fitfun_cffi
+
 include_dirs = []
-ext_modules = []
-py_modules = ['fitfun_ctypes']
+ext_modules = [fitfun_cffi.ffi.verifier.get_extension()]
+py_modules = ['fitfun_ctypes', 'fitfun_cffi']
 
 try:
     import numpy as np
