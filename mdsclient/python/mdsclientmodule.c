@@ -72,7 +72,7 @@ void py2mds_dims(Descrip *D, const PyObject *in)
     mkDescrip_dims(D, ndims, dims, num, siz);
 }
 
-void py2mds(Descrip *D, const PyObject *in)
+void py2mds(Descrip *D, PyObject *in)
 {
     if (PyString_Check(in)) {
         D->siz = PyString_Size(in);
@@ -92,10 +92,10 @@ void py2mds(Descrip *D, const PyObject *in)
 
 void mds2py(PyObject **out, const Descrip *D)
 {
-    int i, tmp, typenum;
+    int i, typenum;
     mds2py_type(D->w_dtype, &typenum);
 
-    npy_int *dims = (D->ndims==0) ? NULL : malloc(D->ndims*sizeof(npy_int));
+    npy_intp *dims = (D->ndims==0) ? NULL : malloc(D->ndims*sizeof(npy_intp));
     for(i=0; i<D->ndims; i++) dims[i] = D->dims[D->ndims-1-i];
 
     if (D->w_dtype == w_dtype_UNKNOWN) {
@@ -103,7 +103,11 @@ void mds2py(PyObject **out, const Descrip *D)
     } else if (D->w_dtype == w_dtype_CSTRING) {
         *out = Py_BuildValue("s#", D->ptr, D->num);
     } else {
-        *out = PyArray_FromDims(D->ndims, dims, typenum);
+        /* Mdsplus allocates memory in GetMdsMsg() in mdstcpip/GetMdsMsg.c. However,
+         * D->ptr doesn't point to the beginning of the allocated memory, so Python 
+         * would be unable to free it. Hence we must make a copy of the data section.
+         */
+        *out = PyArray_SimpleNew(D->ndims, dims, typenum);
         memcpy(PyArray_DATA(*out), D->ptr, D->num*D->siz);
     }
     if (dims) free(dims);
