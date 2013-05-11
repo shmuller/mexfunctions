@@ -20,7 +20,7 @@ add_subdirectory(mediansmoothmex)
 add_subdirectory(triblockmex)
 add_subdirectory(minpack)
 add_subdirectory(fitfun)
-add_subdirectory(fitpack)
+add_subdirectory(dierckx)
 
 set(CMAKE_BUILD_TYPE Release)
 
