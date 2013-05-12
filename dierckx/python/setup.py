@@ -3,9 +3,10 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('', parent_package, top_path)
 
     config.add_extension('dierckx', 
-                         sources = ['dierckx.pyf'], 
-                         libraries = ['dierckx'], 
-                         extra_f77_compile_args = ['-fdefault-real-8'])
+                         #sources = ['dierckx.pyf'],
+                         #f2py_options = ['--no-wrap-functions'],
+                         sources = ['dierckxmodule.c', 'fortranobject.c'],
+                         libraries = ['dierckx'])
     return config
 
 if __name__ == "__main__":
