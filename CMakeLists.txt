@@ -21,6 +21,7 @@ add_subdirectory(triblockmex)
 add_subdirectory(minpack)
 add_subdirectory(fitfun)
 add_subdirectory(dierckx)
+add_subdirectory(odepack)
 
 set(CMAKE_BUILD_TYPE Release)
 
