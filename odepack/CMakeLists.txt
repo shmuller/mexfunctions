@@ -6,7 +6,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 enable_language(Fortran)
 
-set(odepack_SRC opkdmain.f opkda1.f opkda2.f)
+set(odepack_SRC odepack.c opkdmain.f opkda1.f opkda2.f)
 
 add_library(odepack SHARED ${odepack_SRC})
 
