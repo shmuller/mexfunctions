@@ -14,9 +14,12 @@ add_library(odepack_static STATIC ${odepack_SRC})
 set_target_properties(odepack_static PROPERTIES OUTPUT_NAME odepack)
 set_target_properties(odepack_static PROPERTIES COMPILE_FLAGS "-fPIC")
 
+add_executable(odepack_test odepack_test.c)
+target_link_libraries(odepack_test odepack)
+
 add_subdirectory(python)
 
-install(TARGETS odepack odepack_static
+install(TARGETS odepack odepack_static odepack_test
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
