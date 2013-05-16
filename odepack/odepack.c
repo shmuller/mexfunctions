@@ -10,14 +10,14 @@ extern dlsoda_(void *f, int *neq, double *y, double *t, double *tout, int *itol,
 
 data *DD;
 
-void wrapper(int *neq, double *t, double *y, double *ydot) {
+void def_wrapper(int *neq, double *t, double *y, double *ydot) {
     DD->t = t;
     DD->y = y;
     DD->ydot = ydot;
-    DD->dy_dt(DD);
+    ((odefun*)DD->dy_dt)(DD);
 }
 
-int odeint(data *D) {
+int odesolve(data *D) {
     int neq=D->neq, itol=1, itask=1, istate=1, iopt=0, jt=2;
     double rtol=1.49012e-8, atol=1.49012e-8;
     
@@ -30,6 +30,8 @@ int odeint(data *D) {
 
     void *jac = NULL;
     
+    if (D->wrapper == NULL) D->wrapper = def_wrapper;
+
     DD = D;
 
     int i, j;
@@ -42,7 +44,7 @@ int odeint(data *D) {
         t[1] = t[0]; ++t;
         for (j=0; j<neq; ++j,++y) y[neq] = y[0];
 
-        dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+        dlsoda_(D->wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
                 &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
     }
 

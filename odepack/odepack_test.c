@@ -16,7 +16,7 @@ int main() {
     double time[] = {0., 1., 2., 3.};
     double res[SIZE(time)*2] = {1., 1.};
 
-    data DATA;
+    data DATA = {0};
     data *D = &DATA;
 
     D->dy_dt = fun;
@@ -25,7 +25,7 @@ int main() {
     D->time = time;
     D->res = res;
 
-    odeint(D);
+    odesolve(D);
 
     for (i=0; i<D->n; i++) {
         printf("%e, %e, %e\n", D->res[2*i], D->res[2*i+1], exp(-D->time[i]));
