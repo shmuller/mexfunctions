@@ -32,17 +32,19 @@ int odeint(data *D) {
     
     DD = D;
 
-    int i;
+    int i, j;
     double *t = D->time;
     double *y = D->res;
     double tout;
 
-    tout = t[1];
-    t[1] = t[0]; ++t;
-    for (i=0; i<neq; ++i,++y) y[neq] = y[0];
+    for (i=D->n; --i; ) {
+        tout = t[1];
+        t[1] = t[0]; ++t;
+        for (j=0; j<neq; ++j,++y) y[neq] = y[0];
 
-    dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
-            &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
+        dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+                &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
+    }
 
     free(mem);
 }

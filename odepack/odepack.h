@@ -12,10 +12,11 @@ typedef struct _data data;
 struct _data {
     void (*dy_dt)(data*);   // function calculating the RHS of the ode
     int neq;                // number of equations (length of y, ydot)
+    int n;                  // number of time points (length of time, res)
     double *time;           // full time vector
     double *res;            // full results vector
     double *t;              // current time
-    double *y;              // current time
+    double *y;              // current value
     double *ydot;           // vector in which to return current RHS
     void (*jac)(data*);     // function calculating the jacobian
     void (*term)(data*);    // function checking termination conditions
