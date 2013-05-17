@@ -22,9 +22,10 @@ int odesolve(data *D) {
     int lrw = 22 + neq*max(16, neq+9) + 3*ng;
     int liw = 20 + neq;
 
-    void *mem = malloc(lrw*sizeof(double) + liw*sizeof(int));
+    void *mem = malloc(lrw*sizeof(double) + (liw + ng)*sizeof(int));
     double *rwork = mem;
     int *iwork = (int*)(rwork + lrw);
+    int *jroot = iwork + liw;
 
     void *jac = NULL;
 
@@ -33,8 +34,8 @@ int odesolve(data *D) {
     double *y = D->y;
     double t0;
 
-    odefunf_t *f = D->f;
-    odefun_t *term = D->term;
+    odefun_t *f = D->f;
+    oderoot_t *g = D->g;
 
     DD = D;
 
@@ -42,20 +43,21 @@ int odesolve(data *D) {
     t0 = *t++;
     for (j=neq; j--; ++y) y[neq] = y[0];
     
-    if (term) {
+    if (ng == 0) {
         for (i=D->n; --i; y+=neq,++t) {
             dlsoda_(f, &neq, y, &t0, t, &itol, &rtol, &atol, 
                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
-
-            if (term(D)) {
-                --i;
-                break;
-            }
         }
     } else {
         for (i=D->n; --i; y+=neq,++t) {
-            dlsoda_(f, &neq, y, &t0, t, &itol, &rtol, &atol, 
-                    &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
+            dlsodar_(f, &neq, y, &t0, t, &itol, &rtol, &atol, 
+                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt,
+                     g, &ng, jroot);
+
+            if (istate == 3) {
+                --i;
+                break;
+            }
         }
     }
     D->points_done = D->n - i;

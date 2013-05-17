@@ -9,12 +9,9 @@ void f(int *neq, double *t, double *y, double *ydot) {
     ydot[1] = -y[1];
 }
 
-/*
-int term(data *D) {
-    printf("t = %.10e, y[0] = %.10e, y[1] = %.10e\n", D->t[0], D->y[0], D->y[1]);
-    return *D->t > 3.;
+void g(int *neq, double *t, double *y, int *ng, double *gout) {
+    gout[0] = *t - 3.;
 }
-*/
 
 #define SIZE(x) (sizeof(x)/sizeof(x[0]))
 
@@ -32,7 +29,9 @@ int main() {
     D->n = SIZE(t);
     D->t = t;
     D->y = y;
-    //D->term = term;
+
+    D->ng = 1;
+    D->g = g;
 
     odesolve(D);
 
