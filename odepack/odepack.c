@@ -33,19 +33,20 @@ int odesolve(data *D) {
     int i, j;
     double *t = D->time;
     double *y = D->res;
-    double tout;
+    double t0;
 
     odefunf_t *wrapper = (D->wrapper) ? D->wrapper : def_wrapper;
     odefun_t *term = D->term;
 
     DD = D;
+
+    // setup initial conditions
+    t0 = *t++;
+    for (j=neq; j--; ++y) y[neq] = y[0];
     
     if (term) {
-        for (i=D->n; --i; ) {
-            tout = t[1]; t[1] = t[0]; ++t;
-            for (j=neq; j--; ++y) y[neq] = y[0];
-
-            dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+        for (i=D->n; --i; y+=neq,++t) {
+            dlsoda_(wrapper, &neq, y, &t0, t, &itol, &rtol, &atol, 
                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
 
             if (term(D)) {
@@ -54,11 +55,8 @@ int odesolve(data *D) {
             }
         }
     } else {
-        for (i=D->n; --i; ) {
-            tout = t[1]; t[1] = t[0]; ++t;
-            for (j=neq; j--; ++y) y[neq] = y[0];
-
-            dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+        for (i=D->n; --i; y+=neq,++t) {
+            dlsoda_(wrapper, &neq, y, &t0, t, &itol, &rtol, &atol, 
                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
         }
     }
