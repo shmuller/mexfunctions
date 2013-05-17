@@ -14,7 +14,7 @@ void def_wrapper(int *neq, double *t, double *y, double *ydot) {
     DD->t = t;
     DD->y = y;
     DD->ydot = ydot;
-    ((odefun*)DD->dy_dt)(DD);
+    DD->dy_dt(DD);
 }
 
 int odesolve(data *D) {
@@ -39,15 +39,22 @@ int odesolve(data *D) {
     double *y = D->res;
     double tout;
 
+    odefun_t *term = (odefun_t*) D->term;
+
     for (i=D->n; --i; ) {
         tout = t[1];
         t[1] = t[0]; ++t;
-        for (j=0; j<neq; ++j,++y) y[neq] = y[0];
+        for (j=neq; j--; ++y) y[neq] = y[0];
 
         dlsoda_(D->wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
                 &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
-    }
 
+        if (term && term(D)) {
+            --i;
+            break;
+        }
+    }
+    D->points_done = D->n - i;
     free(mem);
 }
 
