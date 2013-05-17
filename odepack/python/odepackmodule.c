@@ -4,7 +4,7 @@
 
 #include <odepack.h>
 
-data DATA = {0};
+data DATA;
 data *D = &DATA;
 
 PyObject *odefun=NULL, *odeargs=NULL, *odeterm=NULL;
@@ -33,6 +33,9 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
     PyObject *res, *time, *t, *y, *ydot;
     void *y_save, *t_save, *ydot_save;
 
+    // reset all structure fields to 0 between calls
+    DATA = empty_data;
+
     D->wrapper = python_wrapper;
 
     // get callback function, results and time vectors
@@ -54,7 +57,7 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
 
     if (nargs > 4) {
         odeterm = PyTuple_GET_ITEM(args, 4);
-        D->term = python_term;
+        D->term = (odeterm != Py_None) ? python_term : NULL;
     }
 
     // parse odeargs for y, t and ydot

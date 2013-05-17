@@ -28,6 +28,8 @@ struct _data {
     int points_done;          // number of time points done
 };
 
+static const data empty_data = {0};
+
 int odesolve(data *D);
 
 

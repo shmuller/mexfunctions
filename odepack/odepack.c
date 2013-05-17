@@ -29,29 +29,37 @@ int odesolve(data *D) {
     int *iwork = (int*)(rwork + lrw);
 
     void *jac = NULL;
-    
-    if (D->wrapper == NULL) D->wrapper = def_wrapper;
-
-    DD = D;
 
     int i, j;
     double *t = D->time;
     double *y = D->res;
     double tout;
 
-    odefun_t *term = (odefun_t*) D->term;
+    odefunf_t *wrapper = (D->wrapper) ? D->wrapper : def_wrapper;
+    odefun_t *term = D->term;
 
-    for (i=D->n; --i; ) {
-        tout = t[1];
-        t[1] = t[0]; ++t;
-        for (j=neq; j--; ++y) y[neq] = y[0];
+    DD = D;
+    
+    if (term) {
+        for (i=D->n; --i; ) {
+            tout = t[1]; t[1] = t[0]; ++t;
+            for (j=neq; j--; ++y) y[neq] = y[0];
 
-        dlsoda_(D->wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
-                &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
+            dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+                    &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
 
-        if (term && term(D)) {
-            --i;
-            break;
+            if (term(D)) {
+                --i;
+                break;
+            }
+        }
+    } else {
+        for (i=D->n; --i; ) {
+            tout = t[1]; t[1] = t[0]; ++t;
+            for (j=neq; j--; ++y) y[neq] = y[0];
+
+            dlsoda_(wrapper, &neq, y, t, &tout, &itol, &rtol, &atol, 
+                    &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
         }
     }
     D->points_done = D->n - i;
