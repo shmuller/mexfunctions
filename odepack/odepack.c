@@ -8,20 +8,18 @@ extern dlsoda_(void *f, int *neq, double *y, double *t, double *tout, int *itol,
                double *rtol, double *atol, int *itask, int *istate, int *iopt, 
                double *rwork, int *lrw, int *iwork, int *liw, void *jac, int *jt);
 
+extern dlsodar_(void *f, int *neq, double *y, double *t, double *tout, int *itol,
+                double *rtol, double *atol, int *itask, int *istate, int *iopt, 
+                double *rwork, int *lrw, int *iwork, int *liw, void *jac, int *jt,
+                void *g, int *ng, int *jroot);
+
 data *DD;
 
-void def_wrapper(int *neq, double *t, double *y, double *ydot) {
-    DD->t = t;
-    DD->y = y;
-    DD->ydot = ydot;
-    DD->dy_dt(DD);
-}
-
 int odesolve(data *D) {
-    int neq=D->neq, itol=1, itask=1, istate=1, iopt=0, jt=2;
+    int neq=D->neq, itol=1, itask=1, istate=1, iopt=0, jt=2, ng=D->ng;
     double rtol=1.49012e-8, atol=1.49012e-8;
     
-    int lrw = 22 + neq*max(16, neq+9);
+    int lrw = 22 + neq*max(16, neq+9) + 3*ng;
     int liw = 20 + neq;
 
     void *mem = malloc(lrw*sizeof(double) + liw*sizeof(int));
@@ -31,11 +29,11 @@ int odesolve(data *D) {
     void *jac = NULL;
 
     int i, j;
-    double *t = D->time;
-    double *y = D->res;
+    double *t = D->t;
+    double *y = D->y;
     double t0;
 
-    odefunf_t *wrapper = (D->wrapper) ? D->wrapper : def_wrapper;
+    odefunf_t *f = D->f;
     odefun_t *term = D->term;
 
     DD = D;
@@ -46,7 +44,7 @@ int odesolve(data *D) {
     
     if (term) {
         for (i=D->n; --i; y+=neq,++t) {
-            dlsoda_(wrapper, &neq, y, &t0, t, &itol, &rtol, &atol, 
+            dlsoda_(f, &neq, y, &t0, t, &itol, &rtol, &atol, 
                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
 
             if (term(D)) {
@@ -56,7 +54,7 @@ int odesolve(data *D) {
         }
     } else {
         for (i=D->n; --i; y+=neq,++t) {
-            dlsoda_(wrapper, &neq, y, &t0, t, &itol, &rtol, &atol, 
+            dlsoda_(f, &neq, y, &t0, t, &itol, &rtol, &atol, 
                     &itask, &istate, &iopt, rwork, &lrw, iwork, &liw, jac, &jt);
         }
     }

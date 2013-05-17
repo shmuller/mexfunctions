@@ -8,14 +8,14 @@ data DATA;
 data *D = &DATA;
 
 PyObject *odefun=NULL, *odeargs=NULL, *odeterm=NULL;
+void **p_y=NULL, **p_t=NULL, **p_ydot=NULL;
 
-
-void python_wrapper(int *neq, double *t, double *y, double *ydot)
+void python_f(int *neq, double *t, double *y, double *ydot)
 {
     // temporarily override data sections of Python arguments
-    *(double**)D->y = y;
-    *(double**)D->t = t;
-    *(double**)D->ydot = ydot;
+    *p_y = y;
+    *p_t = t;
+    *p_ydot = ydot;
 
     // call back to Python for function evaluation
     PyEval_CallObject(odefun, odeargs);
@@ -36,15 +36,15 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
     // reset all structure fields to 0 between calls
     DATA = empty_data;
 
-    D->wrapper = python_wrapper;
+    D->f = python_f;
 
     // get callback function, results and time vectors
     odefun = PyTuple_GET_ITEM(args, 0);
     res  = PyTuple_GET_ITEM(args, 1);
     time = PyTuple_GET_ITEM(args, 2);
 
-    D->res  = PyArray_DATA(res);
-    D->time = PyArray_DATA(time);
+    D->y = PyArray_DATA(res);
+    D->t = PyArray_DATA(time);
 
     D->n = PyArray_DIM(time, 0);
     for (i=PyArray_NDIM(res), D->neq=1.; i--; ) {
@@ -66,22 +66,22 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
     ydot = PyTuple_GET_ITEM(odeargs, 2);
 
     // store the addresses of the data blocks for simple substitution
-    D->y = (double*) &((PyArrayObject*)y)->data;
-    D->t = (double*) &((PyArrayObject*)t)->data;
-    D->ydot = (double*) &((PyArrayObject*)ydot)->data;
+    p_y = (void**) &((PyArrayObject*)y)->data;
+    p_t = (void**) &((PyArrayObject*)t)->data;
+    p_ydot = (void**) &((PyArrayObject*)ydot)->data;
     
     // save the original data vectors
-    y_save = *(void**)D->y;
-    t_save = *(void**)D->t;
-    ydot_save = *(void**)D->ydot;
+    y_save = *p_y;
+    t_save = *p_t;
+    ydot_save = *p_ydot;
 
     // call solver
     odesolve(D);
 
     // reattach original data vectors to Python arguments
-    *(void**)D->y = y_save;
-    *(void**)D->t = t_save;
-    *(void**)D->ydot = ydot_save;
+    *p_y = y_save;
+    *p_t = t_save;
+    *p_ydot = ydot_save;
 
     // return points_done
     return Py_BuildValue("i", D->points_done);
