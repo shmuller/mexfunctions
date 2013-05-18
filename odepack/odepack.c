@@ -13,9 +13,20 @@ extern dlsodar_(void *f, int *neq, double *y, double *t, double *tout, int *itol
                 double *rwork, int *lrw, int *iwork, int *liw, void *jac, int *jt,
                 void *g, int *ng, int *jroot);
 
-data *DD;
 
-int odesolve(data *D) {
+int *ibbox=NULL;
+double *bbox=NULL;
+
+void bbox_g(int *neq, double *t, double *y, int *ng, double *gout) {
+    int i, *ibb=ibbox;
+    double *bb=bbox;
+    for (i=*ng; i--; ) {
+        *gout++ = y[*ibb++] - *bb++;
+    }
+}
+
+
+void odesolve(data *D) {
     int neq=D->neq, itol=1, itask=1, istate=1, iopt=0, jt=2, ng=D->ng;
     double rtol=1.49012e-8, atol=1.49012e-8;
     
@@ -35,9 +46,9 @@ int odesolve(data *D) {
     double t0;
 
     odefun_t *f = D->f;
-    oderoot_t *g = D->g;
-
-    DD = D;
+    oderoot_t *g = (D->g) ? D->g : bbox_g;
+    ibbox = D->ibbox;
+    bbox = D->bbox;
 
     // setup initial conditions
     t0 = *t++;
@@ -55,6 +66,7 @@ int odesolve(data *D) {
                      g, &ng, jroot);
 
             if (istate == 3) {
+                *t = t0;
                 --i;
                 break;
             }

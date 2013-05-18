@@ -7,7 +7,7 @@
 data DATA;
 data *D = &DATA;
 
-PyObject *odefun=NULL, *odeargs=NULL, *oderoot=NULL;
+PyObject *odefun=NULL, *odeargs=NULL, *rootfun=NULL, *rootargs=NULL;
 void **p_y=NULL, **p_t=NULL, **p_ydot=NULL, **p_gout=NULL;
 
 
@@ -18,7 +18,7 @@ void python_f(int *neq, double *t, double *y, double *ydot) {
     *p_ydot = ydot;
 
     // call back to Python for function evaluation
-    PyEval_CallObject(odefun, odeargs);
+    PyObject_Call(odefun, odeargs, NULL);
 }
 
 void python_g(int *neq, double *t, double *y, int *ng, double *gout) {
@@ -28,14 +28,14 @@ void python_g(int *neq, double *t, double *y, int *ng, double *gout) {
     *p_gout = gout;
 
     // call back to Python for constraint evaluation
-    PyEval_CallObject(oderoot, odeargs);
+    PyObject_Call(rootfun, rootargs, NULL);
 }
 
 
 static PyObject *meth_odesolve(PyObject *self, PyObject *args)
 {
     int i, nargs=PyTuple_GET_SIZE(args);
-    PyObject *res, *time, *y, *t, *ydot, *gout;
+    PyObject *res, *time, *work, *y, *t, *ydot, *gout;
     void *y_save, *t_save, *ydot_save, *gout_save;
 
     // reset all structure fields to 0 between calls
@@ -58,12 +58,14 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
     D->neq /= D->n;
     
     // get arguments to be passed to odefun
-    odeargs = PyTuple_GET_ITEM(args, 3);
+    work = PyTuple_GET_ITEM(args, 3);
 
     // parse odeargs for y, t and ydot
-    y    = PyTuple_GET_ITEM(odeargs, 0);
-    t    = PyTuple_GET_ITEM(odeargs, 1);
-    ydot = PyTuple_GET_ITEM(odeargs, 2);
+    y    = PyTuple_GET_ITEM(work, 0);
+    t    = PyTuple_GET_ITEM(work, 1);
+    ydot = PyTuple_GET_ITEM(work, 2);
+
+    odeargs = PyTuple_Pack(3, y, t, ydot);
 
     // store the addresses of the data blocks for simple substitution
     p_y = (void**) &((PyArrayObject*)y)->data;
@@ -80,11 +82,19 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
         odesolve(D);
     } else {
         D->g = python_g;
-        oderoot = PyTuple_GET_ITEM(args, 4);
-        gout = PyTuple_GET_ITEM(odeargs, 3);
+        rootfun = PyTuple_GET_ITEM(args, 4);
+        gout = PyTuple_GET_ITEM(work, 3);
+
+        rootargs = PyTuple_Pack(3, y, t, gout);
+
         D->ng = PyArray_DIM(gout, 0);
         p_gout = (void**) &((PyArrayObject*)gout)->data;
         gout_save = *p_gout;
+
+        int ibb[] = {0, 0, 1, 1};
+        D->g = bbox_g;
+        D->ibbox = ibb;
+        D->bbox = gout_save;
 
         // call solver with termination conditions
         odesolve(D);

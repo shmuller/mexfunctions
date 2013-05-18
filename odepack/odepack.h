@@ -18,14 +18,17 @@ struct _data {
     int n;                    // number of time points (length of time, res)
     double *t;                // full time vector
     double *y;                // full results vector
-    void *jac;                // function calculating the jacobian
     int points_done;          // number of time points done
     int ng;                   // number of constraints in g
     oderoot_t *g;             // constraint function
+    int *ibbox;               // indices of y for which bbox is checked (length ng)
+    double *bbox;             // bounding box (length ng)
 };
 
 static const data empty_data = {0};
 
-int odesolve(data *D);
+oderoot_t bbox_g;
+
+void odesolve(data *D);
 
 

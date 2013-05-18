@@ -10,7 +10,7 @@ void f(int *neq, double *t, double *y, double *ydot) {
 }
 
 void g(int *neq, double *t, double *y, int *ng, double *gout) {
-    gout[0] = *t - 3.;
+    gout[0] = y[0] - 0.2;
 }
 
 #define SIZE(x) (sizeof(x)/sizeof(x[0]))
