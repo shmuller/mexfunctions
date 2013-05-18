@@ -35,7 +35,7 @@ void python_g(int *neq, double *t, double *y, int *ng, double *gout) {
 static PyObject *meth_odesolve(PyObject *self, PyObject *args)
 {
     int i, nargs=PyTuple_GET_SIZE(args);
-    PyObject *res, *time, *work, *y, *t, *ydot, *gout;
+    PyObject *res, *time, *work, *y, *t, *ydot, *gout, *ibbox, *bbox;
     void *y_save, *t_save, *ydot_save, *gout_save;
 
     // reset all structure fields to 0 between calls
@@ -81,25 +81,33 @@ static PyObject *meth_odesolve(PyObject *self, PyObject *args)
         // call solver without termination conditions
         odesolve(D);
     } else {
-        D->g = python_g;
         rootfun = PyTuple_GET_ITEM(args, 4);
-        gout = PyTuple_GET_ITEM(work, 3);
 
-        rootargs = PyTuple_Pack(3, y, t, gout);
+        if (PyCallable_Check(rootfun)) {
+            gout = PyTuple_GET_ITEM(work, 3);
+            rootargs = PyTuple_Pack(3, y, t, gout);
 
-        D->ng = PyArray_DIM(gout, 0);
-        p_gout = (void**) &((PyArrayObject*)gout)->data;
-        gout_save = *p_gout;
+            D->g = python_g;
+            D->ng = PyArray_DIM(gout, 0);
+            p_gout = (void**) &((PyArrayObject*)gout)->data;
+            gout_save = *p_gout;
 
-        int ibb[] = {0, 0, 1, 1};
-        D->g = bbox_g;
-        D->ibbox = ibb;
-        D->bbox = gout_save;
+            // call solver with termination conditions from Python callback
+            odesolve(D);
 
-        // call solver with termination conditions
-        odesolve(D);
-
-        *p_gout = gout_save;
+            *p_gout = gout_save;
+        } else {
+            ibbox = PyTuple_GET_ITEM(args, 5);
+            bbox = PyTuple_GET_ITEM(args, 6);
+            
+            D->g = bbox_g;
+            D->ng = PyArray_DIM(ibbox, 0);
+            D->ibbox = PyArray_DATA(ibbox);
+            D->bbox = PyArray_DATA(bbox);
+ 
+            // call solve with builtin termination conditions
+            odesolve(D);        
+        }
     }
         
     // reattach original data vectors to Python arguments

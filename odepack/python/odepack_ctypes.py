@@ -7,7 +7,6 @@ odefun_t = CFUNCTYPE(None, POINTER(c_int), POINTER(c_double),
 oderoot_t = CFUNCTYPE(None, POINTER(c_int), POINTER(c_double), 
                       POINTER(c_double), POINTER(c_int), POINTER(c_double))
 
-
 class struct_data(Structure):
     __slots__ = ['f', 'neq', 'n', 't', 'y', 'points_done', 'ng', 'g', 'ibbox', 'bbox']
 
@@ -41,6 +40,23 @@ libname = find_library('odepack')
 codepack = CDLL(libname)
 codepack.odesolve.argtypes = [POINTER(struct_data)]
 
+def odesolve(f, y, t, ng=0, g=None, ibbox=None, bbox=None):
+    D.f = odefun_t(f)
+    D.n, D.neq = y.shape
+    D.y, D.t = get_ptr(y), get_ptr(t)
+
+    if ng != 0:
+        D.ng = ng
+        if g is None:
+            D.g = oderoot_t()
+            D.ibbox, D.bbox = get_ptr(ibbox), get_ptr(bbox)
+        else:
+            D.g = oderoot_t(g)
+
+    codepack.odesolve(byref(D))
+    return D.points_done
+
+
 if __name__ == "__main__":
     try:
         import numpy as np
@@ -48,47 +64,38 @@ if __name__ == "__main__":
         import numpypy as np
 
     neq = 2
-    n = 7
-    ng = 1
+    n = 6
 
     def f(neq, t, y, ydot):
         ydot[0] = -y[0]
         ydot[1] = -y[1]
 
+    y = np.ones((n, neq))
+    t = np.arange(n, dtype=np.float64)
+
+    points_done = odesolve(f, y, t)
+    t1, y1 = t[:points_done], y[:points_done]
+
+    print y1[:,0]
+    print np.exp(-t1)
+
+
     def g(neq, t, y, ng, gout):
         gout[0] = y[0] - 0.2
 
-    y = np.ones((n, neq))
+    points_done = odesolve(f, y, t, 1, g)
+    t2, y2 = t[:points_done], y[:points_done]
 
-    t = np.arange(n, dtype=np.float64)
-    
-    D.f = odefun_t(f)
-    D.neq = neq
-    D.n = n
-    D.t = get_ptr(t)
-    D.y = get_ptr(y)
-    
-    #D.ng = 1
-    #D.g = oderoot_t(g)
+    print y2[:,0]
+    print np.exp(-t2)
 
-    #"""
+
     ibbox = np.array([0], 'i')
     bbox = np.array([0.2])
 
-    D.g = oderoot_t()
-    D.ng = 1
-    D.ibbox = get_ptr(ibbox)
-    D.bbox = get_ptr(bbox)
-    #"""
-    codepack.odesolve(byref(D))
+    points_done = odesolve(f, y, t, 1, None, ibbox, bbox)
+    t3, y3 = t[:points_done], y[:points_done]
 
-    points_done = D.points_done
-
-    t = t[:points_done]
-    y = y[:points_done]
-
-    print y[:, 0]
-    print y[:, 1]
-    print np.exp(-t)
-
+    print y3[:,0]
+    print np.exp(-t3)
 
