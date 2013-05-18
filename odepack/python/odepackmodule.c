@@ -126,8 +126,8 @@ static PyMethodDef methods[] = {
 };
  
 PyMODINIT_FUNC
-initodepack(void)
+init_odepack(void)
 {
-    Py_InitModule("odepack", methods);
+    Py_InitModule("_odepack", methods);
 }
 

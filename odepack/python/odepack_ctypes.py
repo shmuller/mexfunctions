@@ -1,3 +1,5 @@
+from odepack_test import test_odesolve
+
 from ctypes import *
 from ctypes.util import find_library
 
@@ -40,8 +42,19 @@ libname = find_library('odepack')
 codepack = CDLL(libname)
 codepack.odesolve.argtypes = [POINTER(struct_data)]
 
+def _cast_odefun_t(f):
+    def wrapper(neq, t, y, ydot):
+        f(y, t, ydot)
+    return odefun_t(wrapper)
+
+def _cast_oderoot_t(g):
+    def wrapper(neq, t, y, ng, gout):
+        g(y, t, gout)
+    return oderoot_t(wrapper)
+
+
 def odesolve(f, y, t, ng=0, g=None, ibbox=None, bbox=None):
-    D.f = odefun_t(f)
+    D.f = _cast_odefun_t(f)
     D.n, D.neq = y.shape
     D.y, D.t = get_ptr(y), get_ptr(t)
 
@@ -51,51 +64,12 @@ def odesolve(f, y, t, ng=0, g=None, ibbox=None, bbox=None):
             D.g = oderoot_t()
             D.ibbox, D.bbox = get_ptr(ibbox), get_ptr(bbox)
         else:
-            D.g = oderoot_t(g)
+            D.g = _cast_oderoot_t(g)
 
     codepack.odesolve(byref(D))
     return D.points_done
 
 
 if __name__ == "__main__":
-    try:
-        import numpy as np
-    except ImportError:
-        import numpypy as np
-
-    neq = 2
-    n = 6
-
-    def f(neq, t, y, ydot):
-        ydot[0] = -y[0]
-        ydot[1] = -y[1]
-
-    y = np.ones((n, neq))
-    t = np.arange(n, dtype=np.float64)
-
-    points_done = odesolve(f, y, t)
-    t1, y1 = t[:points_done], y[:points_done]
-
-    print y1[:,0]
-    print np.exp(-t1)
-
-
-    def g(neq, t, y, ng, gout):
-        gout[0] = y[0] - 0.2
-
-    points_done = odesolve(f, y, t, 1, g)
-    t2, y2 = t[:points_done], y[:points_done]
-
-    print y2[:,0]
-    print np.exp(-t2)
-
-
-    ibbox = np.array([0], 'i')
-    bbox = np.array([0.2])
-
-    points_done = odesolve(f, y, t, 1, None, ibbox, bbox)
-    t3, y3 = t[:points_done], y[:points_done]
-
-    print y3[:,0]
-    print np.exp(-t3)
+    test_odesolve(odesolve)
 

@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 import numpy as np
 
-module1 = Extension('odepack', 
+module1 = Extension('_odepack', 
         sources = ['odepackmodule.c'], 
         libraries = ['odepack'])
  
