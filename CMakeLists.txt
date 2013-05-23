@@ -22,6 +22,7 @@ add_subdirectory(minpack)
 add_subdirectory(fitfun)
 add_subdirectory(dierckx)
 add_subdirectory(odepack)
+add_subdirectory(fieldline)
 
 set(CMAKE_BUILD_TYPE Release)
 
