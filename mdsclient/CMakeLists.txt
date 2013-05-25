@@ -1,25 +1,18 @@
 cmake_minimum_required(VERSION 2.0)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
-
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.so")
 
 project(mdsclient)
 
 set(CMAKE_BUILD_TYPE Release)
 
-set(mdsplus_USE_STATIC "ON" CACHE BOOL "Link against static mdsplus libraries.")
+file(GLOB mdsiputil_SRC "mdsiputil/*.c")
 
-find_package(mdsplus REQUIRED)
+include_directories(mdsiputil)
 
-include_directories(${mdsplus_INCLUDE_DIRS})
+add_library(mdsclient SHARED mdsclient.c tcp.c ${mdsiputil_SRC})
 
-add_library(mdsclient SHARED mdsclient.c tcp.c)
-target_link_libraries(mdsclient ${mdsplus_LIBRARIES})
-
-add_library(mdsclient_static STATIC mdsclient.c tcp.c)
+add_library(mdsclient_static STATIC mdsclient.c tcp.c ${mdsiputil_SRC})
 set_target_properties(mdsclient_static PROPERTIES OUTPUT_NAME mdsclient)
 set_target_properties(mdsclient_static PROPERTIES COMPILE_FLAGS -fPIC)
-target_link_libraries(mdsclient_static ${mdsplus_LIBRARIES})
 
 add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)
@@ -29,8 +22,6 @@ add_subdirectory(octave)
 endif(mkoctfile_EXEC)
 
 add_subdirectory(python)
-
-set(CMAKE_BUILD_TYPE Release)
 
 install(TARGETS mdsclient_test mdsclient mdsclient_static 
 	RUNTIME DESTINATION bin
