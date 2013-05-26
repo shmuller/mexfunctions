@@ -13,8 +13,7 @@ int sm_error(const char *errstr)
 
 int main()
 {
-    char host[] = "localhost:8020";
-    //char host[] = "mdsplus.aug.ipp.mpg.de:8000";
+    char host[] = "localhost:8001";
     int sock;
 
     if ((sock=sm_mdsconnect(host)) < 0) {
@@ -24,9 +23,7 @@ int main()
 
     printf("sock = %d\n", sock);
 
-    //sm_mdsopen(sock, "rcp", 132777);
-
-    char cmd[] = "[]";
+    char cmd[] = "1+2";
 
     Descrip l, *R; 
 	    
@@ -42,12 +39,10 @@ int main()
     void *mem;
     sm_mdsvalue(sock, &l, 1, R, &mem);
 
-    //printf("out = %d\n", *(int*)l.ptr);
+    printf("out = %d\n", *(int*)l.ptr);
 
     if (mem) free(mem);
     free(R);
-
-    //sm_mdsclose(sock);
 
     sm_mdsdisconnect(sock);
 

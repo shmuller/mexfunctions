@@ -34,13 +34,13 @@ Message *GetMdsMsgOOB(SOCKET sock, int *status);
 #endif
 int SendMdsMsg(SOCKET sock, Message *m, int oob);
 int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void * *dptr, Message **m);
-#ifdef _WIN32
+//#ifdef _WIN32
 #define MIN_PARALLEL -1
 #define mdsipParallelInfo(a,c) 0
-#else
-#define MIN_PARALLEL 10000
-extern int mdsipParallelInfo(int,int **);
-#endif
+//#else
+//#define MIN_PARALLEL 10000
+//extern int mdsipParallelInfo(int,int **);
+//#endif
 
 extern void SetSocketOptions(SOCKET s, int reuse);
 static int initialized = 0;
