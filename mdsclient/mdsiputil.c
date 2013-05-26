@@ -29,14 +29,9 @@ extern int uncompress();
 #endif
 Message *GetMdsMsg(SOCKET sock, int *status);
 int SendMdsMsg(SOCKET sock, Message *m, int oob);
-int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void * *dptr, Message **m);
 
 void FlipHeader(MsgHdr *header);
 static void FlipData(Message *m);
-//extern int SocketSend(SOCKET s, char *bptr, int num, int oob);
-//extern int SocketRecv(SOCKET s, char *bptr, int num,int oob);
-//extern int CloseSocket(SOCKET s);
-//extern void FlushSocket(SOCKET sock);
 
 #define SocketSend send
 #define SocketRecv recv
@@ -182,8 +177,9 @@ short ArgLen(struct descrip *d)
   return len;
 }
 
-int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void * *dptr, Message **m)
+int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void * *dptr, void * *mem)
 {
+  Message **m = (Message**) mem;
   int status;
   int i;
   *m = 0;
