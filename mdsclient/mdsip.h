@@ -164,23 +164,26 @@ int errno = 0;
 #endif
 
 
-typedef struct _msghdr { int msglen bits32;
-			 int status bits32;
-                         short length bits16;
-                         unsigned char nargs;
-                         unsigned char descriptor_idx;
-                         unsigned char message_id;
-			 unsigned char dtype;
-                         signed char client_type;
-                         unsigned char ndims;
+typedef struct _msghdr {
+    int msglen bits32;
+	int status bits32;
+    short length bits16;
+    unsigned char nargs;
+    unsigned char descriptor_idx;
+    unsigned char message_id;
+	unsigned char dtype;
+    signed char client_type;
+    unsigned char ndims;
 #if defined(__CRAY) || defined(CRAY)
-			 long  dims[(MAX_DIMS+1)/2];
+	long dims[(MAX_DIMS+1)/2];
 #else
-                         int  dims[MAX_DIMS];
-                         int  fill;
+    int dims[MAX_DIMS];
+    int fill;
 #endif
-                       } MsgHdr;
+} MsgHdr;
 
-typedef struct _mds_message { MsgHdr h;
-                          char bytes[1];
-			} Message, *MsgPtr;
+typedef struct _mds_message {
+    MsgHdr h;
+    char bytes[1];
+} Message;
+
