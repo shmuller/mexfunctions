@@ -4,15 +4,16 @@ project(mdsclient)
 
 set(CMAKE_BUILD_TYPE Release)
 
-file(GLOB mdsiputil_SRC "mdsiputil/*.c")
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
 
-include_directories(mdsiputil)
+add_library(mdsclient SHARED mdsclient.c tcp.c mdsiputil.c)
+target_link_libraries(mdsclient ${ZLIB_LIBRARIES})
 
-add_library(mdsclient SHARED mdsclient.c tcp.c ${mdsiputil_SRC})
-
-add_library(mdsclient_static STATIC mdsclient.c tcp.c ${mdsiputil_SRC})
+add_library(mdsclient_static STATIC mdsclient.c tcp.c mdsiputil.c)
 set_target_properties(mdsclient_static PROPERTIES OUTPUT_NAME mdsclient)
 set_target_properties(mdsclient_static PROPERTIES COMPILE_FLAGS -fPIC)
+target_link_libraries(mdsclient_static ${ZLIB_LIBRARIES})
 
 add_executable(mdsclient_test mdsclient_test.c)
 target_link_libraries(mdsclient_test mdsclient)

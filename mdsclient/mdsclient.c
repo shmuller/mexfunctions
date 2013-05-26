@@ -5,7 +5,7 @@
 
 #include "mdsclient.h"
 
-#include <ipdesc.h>
+#include "ipdesc.h"
 
 #ifndef status_ok
 #define status_ok(status) (((status) & 1) == 1)

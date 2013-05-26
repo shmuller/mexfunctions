@@ -99,11 +99,7 @@
 #else            
 #include <stdarg.h>
 #endif
-#ifdef __MWERKS__
 #include "ipdesc.h"
-#else
-#include <ipdesc.h>
-#endif
 #include <string.h>
 #include <stdlib.h>
 
