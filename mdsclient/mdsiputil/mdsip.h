@@ -167,23 +167,6 @@ int errno = 0;
 #define bits16
 #endif
 
-typedef struct _eventinfo { char          data[12];
-                            int          eventid;
-			    void      (*astadr)(void *, int, char *);
-                            void          *astprm;
-                          } MdsEventInfo;
-
-typedef struct _jeventinfo { char          data[12];
-                             char          eventid;
-                          } JMdsEventInfo;
-
-typedef struct _eventlist { SOCKET        sock;
-                            int          eventid;
-			    char           jeventid;
-                            MdsEventInfo  *info;
-			    int		  info_len;
-                            struct _eventlist *next;
-                          } MdsEventList;
 
 typedef struct _msghdr { int msglen bits32;
 			 int status bits32;
