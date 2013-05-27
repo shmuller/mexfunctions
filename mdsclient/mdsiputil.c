@@ -283,32 +283,33 @@ int SendMdsMsg(SOCKET sock, Message *m, int oob)
   return status;
 }
 
-Message *GetMdsMsg(SOCKET sock, int *status)
+Message *GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes, int *status)
 {
   MsgHdr header;
   Message *msg = 0;
   int msglen = 0;
   *status = 0;
-  *status = GetBytes(sock, (char *)&header, sizeof(MsgHdr), 0);
+  *status = GetBytes(sock, (char *)h, sizeof(MsgHdr), 0);
   if (*status &1)
   {
-    if ( Endian(header.client_type) != Endian(ClientType()) ) FlipHeader(&header);
+    if ( Endian(h->client_type) != Endian(ClientType()) ) FlipHeader(h);
 #ifdef DEBUG
     printf("msglen = %d\nstatus = %d\nlength = %d\nnargs = %d\ndescriptor_idx = %d\nmessage_id = %d\ndtype = %d\n",
-               header.msglen,header.status,header.length,header.nargs,header.descriptor_idx,header.message_id,header.dtype);
-    printf("client_type = %d\nndims = %d\n",header.client_type,header.ndims);
+               h->msglen,h->status,h->length,h->nargs,h->descriptor_idx,h->message_id,h->dtype);
+    printf("client_type = %d\nndims = %d\n",h->client_type,h->ndims);
 #endif
-    if (CType(header.client_type) > CRAY_CLIENT || header.ndims > MAX_DIMS)
+    if (CType(h->client_type) > CRAY_CLIENT || h->ndims > MAX_DIMS)
     {
       CloseSocket(sock);
-      fprintf(stderr,"\rGetMdsMsg shutdown socket %d: bad msg header, header.ndims=%d, client_type=%d\n",sock,header.ndims,CType(header.client_type));
+      fprintf(stderr,"\rGetMdsMsg shutdown socket %d: bad msg header, header.ndims=%d, client_type=%d\n",sock,h->ndims,CType(h->client_type));
       *status = 0;
       return 0;
     }  
-    msglen = header.msglen;
-    msg = malloc(header.msglen);
-    msg->h = header;
+    msglen = h->msglen;
+    msg = malloc(h->msglen);
+    *bytes = msg->bytes;
     *status = GetBytes(sock, msg->bytes, msglen - sizeof(MsgHdr), 0);
+    /*
     if (*status & 1 && IsCompressed(header.client_type))
     {
       Message *m;
@@ -329,8 +330,9 @@ Message *GetMdsMsg(SOCKET sock, int *status)
       else
 	free(m);
     }
-    if (*status & 1 && (Endian(header.client_type) != Endian(ClientType())))
-      FlipData(&msg->h, msg->bytes);
+    */
+    if (*status & 1 && (Endian(h->client_type) != Endian(ClientType())))
+      FlipData(h, msg->bytes);
   }
   return msg;
 }
@@ -381,11 +383,13 @@ int *dims, char *bytes)
 int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void * *dptr, void * *mem)
 {
   Message **m = (Message**) mem;
+  MsgHdr h;
+  char *bytes = 0;
   int status;
   int i;
   *m = 0;
   *numbytes = 0;
-  *m = GetMdsMsg(sock, &status);
+  *m = GetMdsMsg(sock, &h, &bytes, &status);
   if (status != 1)
   {
     *dtype = 0;
@@ -400,31 +404,31 @@ int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *
     }
     return 0;
   }
-  if ((*m)->h.ndims)
+  if (h.ndims)
   {
-    *numbytes = (*m)->h.length;
-    for (i=0;i<(*m)->h.ndims;i++)
+    *numbytes = h.length;
+    for (i=0;i<h.ndims;i++)
     {
 #ifdef __CRAY
-      dims[i] = i % 2 ? (*m)->h.dims[i/2] & 0xffffffff : (*m)->h.dims[i/2] >> 32;
+      dims[i] = i % 2 ? h.dims[i/2] & 0xffffffff : h.dims[i/2] >> 32;
 #else
-      dims[i] = (*m)->h.dims[i];
+      dims[i] = h.dims[i];
 #endif
       *numbytes *= dims[i];
 #ifdef DEBUG
       printf("dim[%d] = %d\n",i,dims[i]);
 #endif
     }
-    for (i=(*m)->h.ndims;i < MAX_DIMS; i++)
+    for (i=h.ndims;i < MAX_DIMS; i++)
       dims[i] = 0;
   }
   else
   {
-    *numbytes = (*m)->h.length;
+    *numbytes = h.length;
     for (i=0;i<MAX_DIMS;i++)
       dims[i] = 0;
   }
-  if ((int)(sizeof(MsgHdr) + *numbytes) != (*m)->h.msglen)
+  if ((int)(sizeof(MsgHdr) + *numbytes) != h.msglen)
   {
     *numbytes = 0;
     if (*m) {
@@ -433,11 +437,11 @@ int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *
     }
     return 0;
   }
-  *dtype = (*m)->h.dtype;
-  *length = (*m)->h.length;
-  *ndims = (*m)->h.ndims;
-  *dptr = (*m)->bytes;
-  return (*m)->h.status;
+  *dtype = h.dtype;
+  *length = h.length;
+  *ndims = h.ndims;
+  *dptr = bytes;
+  return h.status;
 }
 
 
