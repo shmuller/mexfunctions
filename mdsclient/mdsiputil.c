@@ -306,8 +306,8 @@ Message *GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes, int *status)
       return 0;
     }  
     msglen = h->msglen;
-    msg = malloc(h->msglen);
-    *bytes = msg->bytes;
+    *bytes = malloc(h->msglen);
+    msg = (Message*) *bytes;
     *status = GetBytes(sock, *bytes, msglen - sizeof(MsgHdr), 0);
     
     if (*status & 1 && IsCompressed(h->client_type))
@@ -318,19 +318,19 @@ Message *GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes, int *status)
       memcpy(&msglen, *bytes, 4);
       if (Endian(h->client_type) != Endian(ClientType()))
         FlipBytes(4,(char *)&msglen);
-      m = malloc(msglen);
-      b = m->bytes;
+      b = malloc(msglen);
+      m = (Message*) b;
       dlen = msglen - sizeof(MsgHdr);
       *status = uncompress(b, &dlen, *bytes + 4, h->msglen - sizeof(MsgHdr) - 4) == 0;
       if (*status & 1)
       {
         h->msglen = msglen;
+        free(*bytes);
         *bytes = b;
-        free(msg);
         msg = m;
       }
       else
-	    free(m);
+	    free(b);
     }
     
     if (*status & 1 && (Endian(h->client_type) != Endian(ClientType())))
