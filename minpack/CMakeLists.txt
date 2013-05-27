@@ -5,11 +5,12 @@ enable_language(Fortran)
 
 set(CMAKE_BUILD_TYPE Release)
 
-add_library(minpack SHARED minpack.c dpmpar.f enorm.f fdjac2.f lmder.f 
-    lmdif.f lmdif1.f lmpar.f qrfac.f qrsolv.f)
+set(minpack_SRC minpack.c 
+    dpmpar.f enorm.f fdjac2.f lmder.f lmdif.f lmdif1.f lmpar.f qrfac.f qrsolv.f)
 
-add_library(minpack_static STATIC minpack.c dpmpar.f enorm.f fdjac2.f lmder.f 
-    lmdif.f lmdif1.f lmpar.f qrfac.f qrsolv.f)
+add_library(minpack SHARED ${minpack_SRC})
+
+add_library(minpack_static STATIC ${minpack_SRC})
 set_target_properties(minpack_static PROPERTIES OUTPUT_NAME minpack)
 set_target_properties(minpack_static PROPERTIES COMPILE_FLAGS "-fPIC")
 

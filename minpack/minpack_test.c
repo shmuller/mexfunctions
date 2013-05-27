@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <minpack.h>
+#include "minpack.h"
 
 static void test(data *D) {
     int i;

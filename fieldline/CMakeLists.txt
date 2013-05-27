@@ -6,6 +6,8 @@ set(CMAKE_BUILD_TYPE Release)
 
 set(fieldline_SRC fieldline.c)
 
+include_directories(../odepack ../dierckx)
+
 add_library(fieldline SHARED ${fieldline_SRC})
 target_link_libraries(fieldline odepack dierckx)
 

@@ -4,6 +4,8 @@ project(fitfun)
 
 set(CMAKE_BUILD_TYPE Release)
 
+include_directories(../minpack)
+
 add_library(fitfun SHARED fitfun.c)
 target_link_libraries(fitfun minpack)
 
