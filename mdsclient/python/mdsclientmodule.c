@@ -159,7 +159,7 @@ static PyObject* mdsvalue(PyObject *self, PyObject *args)
 
     PyObject *retval;
     mds2py(&retval, &l);
-    if (mem) free(mem);
+    if (l.ptr) free(l.ptr);
 
     for(i=0; i<nR; i++) if (R[i].dims) free(R[i].dims);
     free(R);
