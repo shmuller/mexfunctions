@@ -79,7 +79,7 @@ Descrip *mkDescrip(Descrip *l, w_dtype_t w_dtype, char ndims, int *dims, int num
 }
 
 
-int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem) 
+int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r) 
 {
     struct descrip exparg, *arg;
     char dtype;
@@ -99,7 +99,6 @@ int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem)
     num = (siz==0) ? 0 : numbytes/siz;
 
     mkDescrip(l, w_dtype, arg->ndims, arg->dims, num, siz, arg->ptr);
-    *mem = l->ptr;
     return 1;
 }
 

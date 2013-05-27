@@ -153,9 +153,8 @@ static PyObject* mdsvalue(PyObject *self, PyObject *args)
         py2mds(&R[i], PyTuple_GetItem(args,i));
     }
 
-    void *mem;
     sock = *((int*)R[0].ptr);
-    sm_mdsvalue(sock, &l, nR-1, R+1, &mem);
+    sm_mdsvalue(sock, &l, nR-1, R+1);
 
     PyObject *retval;
     mds2py(&retval, &l);

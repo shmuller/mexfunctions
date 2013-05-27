@@ -36,12 +36,11 @@ int main()
     //mkDescrip(&R[1], w_dtype_DOUBLE, 1, &one, 1, sizeof(double), &x);
 
 
-    void *mem;
-    sm_mdsvalue(sock, &l, 1, R, &mem);
+    sm_mdsvalue(sock, &l, 1, R);
 
     printf("out = %d\n", *(int*)l.ptr);
 
-    if (mem) free(mem);
+    if (l.ptr) free(l.ptr);
     free(R);
 
     sm_mdsdisconnect(sock);
