@@ -283,14 +283,11 @@ int SendMdsMsg(SOCKET sock, Message *m, int oob)
   return status;
 }
 
-Message *GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes, int *status)
+int GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes)
 {
-  MsgHdr header;
-  Message *msg = 0;
   int msglen = 0;
-  *status = 0;
-  *status = GetBytes(sock, (char *)h, sizeof(MsgHdr), 0);
-  if (*status &1)
+  int status = GetBytes(sock, (char *)h, sizeof(MsgHdr), 0);
+  if (status &1)
   {
     if ( Endian(h->client_type) != Endian(ClientType()) ) FlipHeader(h);
 #ifdef DEBUG
@@ -302,41 +299,37 @@ Message *GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes, int *status)
     {
       CloseSocket(sock);
       fprintf(stderr,"\rGetMdsMsg shutdown socket %d: bad msg header, header.ndims=%d, client_type=%d\n",sock,h->ndims,CType(h->client_type));
-      *status = 0;
+      status = 0;
       return 0;
     }  
     msglen = h->msglen;
     *bytes = malloc(h->msglen);
-    msg = (Message*) *bytes;
-    *status = GetBytes(sock, *bytes, msglen - sizeof(MsgHdr), 0);
+    status = GetBytes(sock, *bytes, msglen - sizeof(MsgHdr), 0);
     
-    if (*status & 1 && IsCompressed(h->client_type))
+    if (status & 1 && IsCompressed(h->client_type))
     {
-      Message *m;
       char *b;
       unsigned long dlen;
       memcpy(&msglen, *bytes, 4);
       if (Endian(h->client_type) != Endian(ClientType()))
         FlipBytes(4,(char *)&msglen);
       b = malloc(msglen);
-      m = (Message*) b;
       dlen = msglen - sizeof(MsgHdr);
-      *status = uncompress(b, &dlen, *bytes + 4, h->msglen - sizeof(MsgHdr) - 4) == 0;
-      if (*status & 1)
+      status = uncompress(b, &dlen, *bytes + 4, h->msglen - sizeof(MsgHdr) - 4) == 0;
+      if (status & 1)
       {
         h->msglen = msglen;
         free(*bytes);
         *bytes = b;
-        msg = m;
       }
       else
 	    free(b);
     }
     
-    if (*status & 1 && (Endian(h->client_type) != Endian(ClientType())))
+    if (status & 1 && (Endian(h->client_type) != Endian(ClientType())))
       FlipData(h, *bytes);
   }
-  return msg;
+  return status;
 }
 
 
@@ -386,11 +379,10 @@ int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *
 {
   MsgHdr h;
   char *bytes = 0;
-  int status;
   int i;
-  *m = 0;
   *numbytes = 0;
-  *m = GetMdsMsg(sock, &h, &bytes, &status);
+  int status = GetMdsMsg(sock, &h, &bytes);
+  *m = bytes;
   if (status != 1)
   {
     *dtype = 0;
