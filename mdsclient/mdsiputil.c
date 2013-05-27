@@ -299,7 +299,7 @@ int GetMdsMsg(SOCKET sock, MsgHdr *h, char **bytes)
     {
       CloseSocket(sock);
       fprintf(stderr,"\rGetMdsMsg shutdown socket %d: bad msg header, header.ndims=%d, client_type=%d\n",sock,h->ndims,CType(h->client_type));
-      status = 0;
+      *bytes = 0;
       return 0;
     }  
     msglen = h->msglen;
@@ -375,25 +375,23 @@ int *dims, char *bytes)
   return status;
 }
 
-int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void **dptr, void **m)
+int  GetAnswerData(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, int *numbytes, void **dptr)
 {
   MsgHdr h;
-  char *bytes = 0;
   int i;
   *numbytes = 0;
-  int status = GetMdsMsg(sock, &h, &bytes);
-  *m = bytes;
+  *dptr = 0;
+  int status = GetMdsMsg(sock, &h, (char**) dptr);
   if (status != 1)
   {
     *dtype = 0;
     *length = 0;
     *ndims = 0;
     *numbytes = 0;
-    *dptr = 0;
-    if (*m) 
+    if (*dptr)
     {
-      free(*m);
-      *m=0;
+      free(*dptr);
+      *dptr = 0;
     }
     return 0;
   }
@@ -424,16 +422,15 @@ int  GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *
   if ((int)(sizeof(MsgHdr) + *numbytes) != h.msglen)
   {
     *numbytes = 0;
-    if (*m) {
-      	free(*m);
-        *m=0;
+    if (*dptr) {
+      free(*dptr);
+      *dptr=0;
     }
     return 0;
   }
   *dtype = h.dtype;
   *length = h.length;
   *ndims = h.ndims;
-  *dptr = bytes;
   return h.status;
 }
 

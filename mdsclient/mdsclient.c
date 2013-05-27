@@ -92,9 +92,9 @@ int sm_mdsvalue(int sock, Descrip *l, int nr, Descrip *r, void **mem)
         stat = SendArg(sock, i, arg->dtype, nr, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
     }
 
-    *mem = NULL;
-    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, mem);
-    
+    stat = GetAnswerData(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr);
+    *mem = arg->ptr;
+
     w_dtype = get_w_dtype(arg->dtype);
     siz = (w_dtype==w_dtype_CSTRING) ? sizeof(char) : ArgLen(arg);
     num = (siz==0) ? 0 : numbytes/siz;
@@ -109,11 +109,11 @@ int tcpauth(int sock, char *user_p)
 {  
     struct descrip exparg, *arg;
     int numbytes = 0, stat = 0;
-    void *mem = NULL;
 	
     arg = MakeDescrip(&exparg,DTYPE_CSTRING,0,NULL,user_p);
     stat = SendArg(sock, 0, arg->dtype, 1, ArgLen(arg), arg->ndims, arg->dims, arg->ptr);
-    stat = GetAnswerInfoTS(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr, &mem);
+    stat = GetAnswerData(sock, &arg->dtype, &arg->length, &arg->ndims, arg->dims, &numbytes, &arg->ptr);
+    if (arg->ptr) free(arg->ptr);
     if (!status_ok(stat)) {
         tcpclose(sock);
         return -5;

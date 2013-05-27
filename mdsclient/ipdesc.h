@@ -54,8 +54,8 @@ short ArgLen(struct descrip *d);
 int SendArg(SOCKET sock, unsigned char idx, char dtype, unsigned char nargs, 
     short length, char ndims, int *dims, char *bytes);
 
-int GetAnswerInfoTS(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, 
-    int *numbytes, void **dptr, void **mem);
+int GetAnswerData(SOCKET sock, char *dtype, short *length, char *ndims, int *dims, 
+    int *numbytes, void **dptr);
 
 
 #ifdef __cplusplus
