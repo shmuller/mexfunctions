@@ -90,7 +90,7 @@ void py2mds(Descrip *D, PyObject *in)
 }
 
 
-void mds2py(PyObject **out, const Descrip *D)
+void mds2py(PyObject **out, Descrip *D)
 {
     int i, typenum;
     mds2py_type(D->w_dtype, &typenum);
@@ -107,8 +107,16 @@ void mds2py(PyObject **out, const Descrip *D)
          * D->ptr doesn't point to the beginning of the allocated memory, so Python 
          * would be unable to free it. Hence we must make a copy of the data section.
          */
-        *out = PyArray_SimpleNew(D->ndims, dims, typenum);
-        memcpy(PyArray_DATA(*out), D->ptr, D->num*D->siz);
+        //*out = PyArray_SimpleNew(D->ndims, dims, typenum);
+        //memcpy(PyArray_DATA(*out), D->ptr, D->num*D->siz);
+
+        /* SHM 2013/05/27: The sources relevant for Mdsplus client functionality were
+         * extracted into mdsiputil.c and modified in such a way that a pointer to the 
+         * beginning of the data section is returned. The memory can thus be used
+         * directly by Numpy.
+         */
+        *out = PyArray_SimpleNewFromData(D->ndims, dims, typenum, D->ptr);
+        D->ptr = NULL; // flag to avoid freeing
     }
     if (dims) free(dims);
 }
