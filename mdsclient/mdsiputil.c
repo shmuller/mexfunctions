@@ -1,4 +1,3 @@
-
 #include "mdsip.h"
 #ifdef BUFSIZ
 #undef BUFSIZ
@@ -9,7 +8,6 @@
 #endif
 #ifdef WIN32
 #include <io.h>
-#define MSG_DONTWAIT 0
 #else
 #include <unistd.h>
 #ifndef HAVE_VXWORKS_H
@@ -18,14 +16,12 @@
 #endif
 static unsigned char message_id = 1;
 #ifdef NOCOMPRESSION
-static int CompressionLevel = 0;
 #define compress2(a,b,c,d,e) -1
 #define uncompress(a,b,c,d) -1
+static int CompressionLevel = 0;
 #else
 #include <zlib.h>
 static int CompressionLevel = 0;
-extern int compress2();
-extern int uncompress();
 #endif
 
 #define SocketSend send
@@ -205,7 +201,7 @@ void FlipHeader(MsgHdr *header)
 #endif
 }
 
-static void FlipData(Message *m)
+static void FlipData(MsgHdr *h, char *bytes)
 {
   int num = 1;
   int i;
@@ -214,20 +210,20 @@ static void FlipData(Message *m)
   for (i=0;i<MAX_DIMS;i++)
   {
 #ifdef __CRAY
-    dims[i] = i % 2 ? m->h.dims[i/2] & 0xffffffff : m->h.dims[i/2] >> 32;
+    dims[i] = i % 2 ? h->dims[i/2] & 0xffffffff : h->dims[i/2] >> 32;
 #else
-    dims[i] = m->h.dims[i];
+    dims[i] = h->dims[i];
 #endif
   }
-  if (m->h.ndims) for (i=0;i<m->h.ndims;i++) num *= dims[i];
+  if (h->ndims) for (i=0;i<h->ndims;i++) num *= dims[i];
 #ifdef DEBUG
   printf("num to flip = %d\n",num);
 #endif
-  switch (m->h.dtype)
+  switch (h->dtype)
   {
 #ifndef __CRAY
     case DTYPE_COMPLEX:
-    case DTYPE_COMPLEX_DOUBLE: for (i=0,ptr=m->bytes;i<(num * 2);i++,ptr += m->h.length/2) FlipBytes(m->h.length/2,ptr); break;
+    case DTYPE_COMPLEX_DOUBLE: for (i=0,ptr=bytes;i<(num * 2);i++,ptr += h->length/2) FlipBytes(h->length/2,ptr); break;
     case DTYPE_FLOAT:   
     case DTYPE_DOUBLE:
 #endif
@@ -236,7 +232,7 @@ static void FlipData(Message *m)
     case DTYPE_USHORT:
     case DTYPE_SHORT:  
     case DTYPE_ULONG:
-    case DTYPE_LONG:       for (i=0,ptr=m->bytes;i<num;i++,ptr += m->h.length) FlipBytes(m->h.length,ptr); break;
+    case DTYPE_LONG:       for (i=0,ptr=bytes;i<num;i++,ptr += h->length) FlipBytes(h->length,ptr); break;
   }
 }
 
@@ -261,7 +257,7 @@ int SendMdsMsg(SOCKET sock, Message *m, int oob)
   {
     if (Endian(m->h.client_type) != Endian(ClientType()))
     {
-      FlipData(m);
+      FlipData(&m->h, m->bytes);
       FlipHeader(&m->h);
       do_swap = 1; /* Recall that the header field msglen needs to be swapped */
     }
@@ -334,7 +330,7 @@ Message *GetMdsMsg(SOCKET sock, int *status)
 	free(m);
     }
     if (*status & 1 && (Endian(header.client_type) != Endian(ClientType())))
-      FlipData(msg);
+      FlipData(&msg->h, msg->bytes);
   }
   return msg;
 }
