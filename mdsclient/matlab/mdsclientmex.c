@@ -191,12 +191,11 @@ void mexFunction(int nL, mxArray *retval[], int nR, const mxArray *args[])
     } 
     else if (strcmp(cmd,"mdsvalue")==0)
     {
-        void *mem;
         sock = *((int*)R[1].ptr);
-        sm_mdsvalue(sock, &l, nR-2, R+2, &mem);
+        sm_mdsvalue(sock, &l, nR-2, R+2);
 
         mds2mex(retval, &l);
-        if (mem) free(mem);
+        if (l.ptr) free(l.ptr);
     }
     else if (strcmp(cmd,"mdsdisconnect")==0)
     {
