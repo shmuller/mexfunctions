@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <minpack.h>
 
 #define template_proto(fun) \
@@ -13,4 +17,9 @@ template_proto(IV5)
 template_proto(IV6)
 template_proto(IVdbl)
 template_proto(IVdbl2)
+
+#ifdef __cplusplus
+}
+#endif
+
 

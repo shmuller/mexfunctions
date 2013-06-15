@@ -110,5 +110,6 @@ PyMODINIT_FUNC
 initfitfun(void)
 {
     Py_InitModule("fitfun", methods);
+    import_array();
 }
 

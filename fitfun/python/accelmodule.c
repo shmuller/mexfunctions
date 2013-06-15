@@ -14,5 +14,6 @@ PyMODINIT_FUNC
 initaccel(void)
 {
     Py_InitModule("accel", methods);
+    import_array();
 }
 

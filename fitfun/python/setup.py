@@ -1,16 +1,9 @@
 from distutils.core import setup, Extension
-from Cython.Distutils import build_ext
 
 include_dirs = []
 ext_modules = []
 py_modules = ['fitfun_ctypes']
-
-try:
-    import fitfun_cffi
-    ext_modules.append(fitfun_cffi.ffi.verifier.get_extension())
-    py_modules.append('fitfun_cffi')
-except ImportError:
-    pass
+cmdclass = dict()
 
 try:
     import numpy as np
@@ -23,6 +16,21 @@ try:
                               sources = ['fitfunmodule.c'],
                               libraries = ['fitfun'])
 
+    ext_modules.extend([module_accel, module_fitfun])
+except ImportError:
+    # most likely pypy failing to import numpy, so install ctypes version
+    # under fitfun.py
+    py_modules.append('fitfun')
+
+try:
+    import fitfun_cffi
+    ext_modules.append(fitfun_cffi.ffi.verifier.get_extension())
+    py_modules.append('fitfun_cffi')
+except ImportError:
+    pass
+
+try:
+    from Cython.Distutils import build_ext
     from fitfun_cython_autogen import AutoGen
 
     funs = ('e2', 'IV3', 'IVdbl')
@@ -36,18 +44,18 @@ try:
                                      sources = ['fitfun_cython.pyx'],
                                      libraries = ['fitfun'])
 
-    ext_modules.extend([module_accel, module_fitfun, module_fitfun_cython])
-
+    ext_modules.append(module_fitfun_cython)
+    cmdclass['build_ext'] = build_ext
 except ImportError:
-    # most likely pypy failing to import numpy, so install ctypes version
-    # under fitfun.py
-    py_modules.append('fitfun')
- 
+    pass
+
+
 setup(name = 'fitfun',
       version = '0.0',
       description = 'Package for fitting functions',
-      cmdclass = {'build_ext': build_ext},
+      cmdclass = cmdclass,
       py_modules = py_modules,
       include_dirs = include_dirs,
       ext_modules = ext_modules)
+
 
