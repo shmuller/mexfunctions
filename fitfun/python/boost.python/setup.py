@@ -6,7 +6,7 @@ extension_version = '0.0'
 
 include_dirs = [np.get_include()]
 library_dirs = []
-libraries = ['boost_python-mt']
+libraries = ['boost_python-mt', 'fitfun']
 source_files = ['fitfun_boost.cpp']
 
 # create the extension and add it to the python distribution
@@ -25,7 +25,7 @@ extension_version = '0.0'
 
 include_dirs = []
 library_dirs = []
-libraries = ['boost_python-mt', 'boost_numpy']
+libraries = ['boost_python-mt', 'boost_numpy', 'fitfun']
 source_files = ['fitfun_boost_numpy.cpp']
 
 # create the extension and add it to the python distribution
