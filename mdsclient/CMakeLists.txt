@@ -30,3 +30,4 @@ install(TARGETS mdsclient_test mdsclient mdsclient_static
 	ARCHIVE DESTINATION lib
 )
 
+install(FILES mdsclient.h DESTINATION include)

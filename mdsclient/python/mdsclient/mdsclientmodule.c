@@ -13,7 +13,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-#include "../mdsclient.h"
+#include <mdsclient.h>
 
 #define ERROR(t,m) PyErr_SetString(t,m); return NULL
 
@@ -175,53 +175,21 @@ static PyObject* mdsvalue(PyObject *self, PyObject *args)
 }
 
 
-static PyObject* insert_arg(PyObject *args, int idx, PyObject *arg)
-{
-    int i, len=PyTuple_GET_SIZE(args);
-    PyObject *new_args = PyTuple_New(len+1);
-    for(i=0; i<idx; i++) {
-        PyTuple_SET_ITEM(new_args, i, PyTuple_GET_ITEM(args,i));
-    }
-    PyTuple_SET_ITEM(new_args, idx, arg);
-    for(; i<len; i++) {
-        PyTuple_SET_ITEM(new_args, i+1, PyTuple_GET_ITEM(args,i));
-    }
-    return new_args;
-}
-
-static PyObject* mdsopen(PyObject *self, PyObject *args)
-{
-    PyObject *arg = PyString_FromString("TreeOpen($,$)");
-    PyObject *new_args = insert_arg(args, 1, arg);
-    return mdsvalue(self, new_args);
-}
-
-static PyObject* mdsclose(PyObject *self, PyObject *args)
-{
-    PyObject *arg = PyString_FromString("TreeClose()");
-    PyObject *new_args = insert_arg(args, 1, arg);
-    return mdsvalue(self, new_args);
-}
-
-#define USAGE_MDSCONNECT    "sock = mdsclient.mdsconnect('hostname:port')"
-#define USAGE_MDSDISCONNECT "mdsclient.mdsdisconnect(sock)"
-#define USAGE_MDSVALUE      "x = mdsclient.mdsvalue(sock,'mdsexpr',arg1,arg2,...)"
-#define USAGE_MDSOPEN       "mdsclient.mdsopen(sock,'tree',shot)"
-#define USAGE_MDSCLOSE      "mdsclient.mdsclose(sock)"
+#define USAGE_MDSCONNECT    "sock = mdsconnect('hostname:port')"
+#define USAGE_MDSDISCONNECT "mdsdisconnect(sock)"
+#define USAGE_MDSVALUE      "x = mdsvalue(sock, 'mdsexpr', arg1, arg2, ...)"
 
 static PyMethodDef methods[] = {
     {"mdsconnect", mdsconnect, METH_VARARGS, USAGE_MDSCONNECT},
     {"mdsdisconnect", mdsdisconnect, METH_VARARGS, USAGE_MDSDISCONNECT},
     {"mdsvalue", mdsvalue, METH_VARARGS, USAGE_MDSVALUE},
-    {"mdsopen", mdsopen, METH_VARARGS, USAGE_MDSOPEN},
-    {"mdsclose", mdsclose, METH_VARARGS, USAGE_MDSCLOSE},
     {NULL, NULL, 0, NULL}
 };
  
 PyMODINIT_FUNC
-initmdsclient(void)
+init_mdsclient(void)
 {
-    Py_InitModule("mdsclient", methods);
+    Py_InitModule("_mdsclient", methods);
     import_array();
 }
 
