@@ -7,20 +7,19 @@ cmdclass = dict()
 
 try:
     import numpy as np
+except ImportError:
+    pass
+else:
     include_dirs.append(np.get_include())
 
-    module_accel = Extension('accel',
-                             sources = ['accelmodule.c'])
+module_accel = Extension('accel',
+                         sources = ['accelmodule.c'])
 
-    module_fitfun = Extension('fitfun', 
-                              sources = ['fitfunmodule.c'],
-                              libraries = ['fitfun'])
+module_fitfun = Extension('fitfun', 
+                          sources = ['fitfunmodule.c'],
+                          libraries = ['fitfun'])
 
-    ext_modules.extend([module_accel, module_fitfun])
-except ImportError:
-    # most likely pypy failing to import numpy, so install ctypes version
-    # under fitfun.py
-    py_modules.append('fitfun')
+ext_modules.extend([module_accel, module_fitfun])
 
 try:
     import fitfun_cffi

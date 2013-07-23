@@ -11,7 +11,27 @@
 #include <string.h>
 
 #include <Python.h>
-#include <numpy/arrayobject.h>
+//#include <numpy/arrayobject.h>
+
+#ifdef NPY_ARRAY_OWNDATA
+PyObject *PyArray_SimpleNewFromDataOwning(
+    int nd, npy_intp* dims, int typenum, void* data) 
+{
+    PyObject *arr = PyArray_SimpleNewFromData(nd, dims, typenum, data);
+    PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    return arr;
+}
+#else
+#ifdef NPY_OWNDATA
+PyObject *PyArray_SimpleNewFromDataOwning(
+    int nd, npy_intp* dims, int typenum, void* data) 
+{
+    PyObject *arr = PyArray_SimpleNewFromData(nd, dims, typenum, data);
+    ((PyArrayObject*)arr)->flags |= NPY_OWNDATA;
+    return arr;
+}
+#endif
+#endif
 
 #include <mdsclient.h>
 
@@ -22,14 +42,14 @@ void mds2py_type(w_dtype_t w_dtype, int *typenum)
     switch (w_dtype)
     {
         case w_dtype_CSTRING         :  *typenum = NPY_STRING;  break;
-        case w_dtype_UCHAR           :  *typenum = NPY_UINT8;   break;
-        case w_dtype_CHAR            :  *typenum = NPY_INT8;    break;
-        case w_dtype_USHORT          :  *typenum = NPY_UINT16;  break;
-        case w_dtype_SHORT           :  *typenum = NPY_INT16;   break;
-        case w_dtype_ULONG           :  *typenum = NPY_UINT32;  break;
-        case w_dtype_LONG            :  *typenum = NPY_INT32;   break;
-        case w_dtype_ULONGLONG       :  *typenum = NPY_UINT64;  break;
-        case w_dtype_LONGLONG        :  *typenum = NPY_INT64;   break;
+        case w_dtype_UCHAR           :  *typenum = NPY_UBYTE;   break;
+        case w_dtype_CHAR            :  *typenum = NPY_BYTE;    break;
+        case w_dtype_USHORT          :  *typenum = NPY_USHORT;  break;
+        case w_dtype_SHORT           :  *typenum = NPY_SHORT;   break;
+        case w_dtype_ULONG           :  *typenum = NPY_UINT;    break;
+        case w_dtype_LONG            :  *typenum = NPY_INT;     break;
+        case w_dtype_ULONGLONG       :  *typenum = NPY_ULONG;   break;
+        case w_dtype_LONGLONG        :  *typenum = NPY_LONG;    break;
         case w_dtype_FLOAT           :  *typenum = NPY_FLOAT;   break;
         case w_dtype_DOUBLE          :  *typenum = NPY_DOUBLE;  break;
         case w_dtype_COMPLEX         :  *typenum = NPY_CFLOAT;  break;
@@ -43,14 +63,14 @@ void py2mds_type(int typenum, w_dtype_t* w_dtype)
     switch (typenum)
     {
         case NPY_STRING   :  *w_dtype = w_dtype_CSTRING;        break;
-        case NPY_UINT8    :  *w_dtype = w_dtype_UCHAR;          break;
-        case NPY_INT8     :  *w_dtype = w_dtype_CHAR;           break;
-        case NPY_UINT16   :  *w_dtype = w_dtype_USHORT;         break;
-        case NPY_INT16    :  *w_dtype = w_dtype_SHORT;          break;
-        case NPY_UINT32   :  *w_dtype = w_dtype_ULONG;          break;
-        case NPY_INT32    :  *w_dtype = w_dtype_LONG;           break;
-        case NPY_UINT64   :  *w_dtype = w_dtype_ULONGLONG;      break;
-        case NPY_INT64    :  *w_dtype = w_dtype_LONGLONG;       break;
+        case NPY_UBYTE    :  *w_dtype = w_dtype_UCHAR;          break;
+        case NPY_BYTE     :  *w_dtype = w_dtype_CHAR;           break;
+        case NPY_USHORT   :  *w_dtype = w_dtype_USHORT;         break;
+        case NPY_SHORT    :  *w_dtype = w_dtype_SHORT;          break;
+        case NPY_UINT     :  *w_dtype = w_dtype_ULONG;          break;
+        case NPY_INT      :  *w_dtype = w_dtype_LONG;           break;
+        case NPY_ULONG    :  *w_dtype = w_dtype_ULONGLONG;      break;
+        case NPY_LONG     :  *w_dtype = w_dtype_LONGLONG;       break;
         case NPY_FLOAT    :  *w_dtype = w_dtype_FLOAT;          break;
         case NPY_DOUBLE   :  *w_dtype = w_dtype_DOUBLE;         break;
         case NPY_CFLOAT   :  *w_dtype = w_dtype_COMPLEX;        break;
@@ -59,14 +79,13 @@ void py2mds_type(int typenum, w_dtype_t* w_dtype)
     }
 }
 
-void py2mds_dims(Descrip *D, const PyObject *in)
+void py2mds_dims(Descrip *D, PyObject *in)
 {
     int i, num, siz;
     int ndims = PyArray_NDIM(in);
-    npy_intp *dv = PyArray_DIMS(in);
     
     int *dims = (ndims==0) ? NULL : (int*) malloc(ndims*sizeof(int));
-    for(i=0,num=1; i<ndims; i++) num *= dims[i] = dv[ndims-1-i];
+    for(i=0,num=1; i<ndims; i++) num *= dims[i] = PyArray_DIM(in, ndims-1-i);
     siz = (num==0) ? 0 : PyArray_ITEMSIZE(in);
 
     mkDescrip_dims(D, ndims, dims, num, siz);
@@ -115,7 +134,7 @@ void mds2py(PyObject **out, Descrip *D)
          * beginning of the data section is returned. The memory can thus be used
          * directly by Numpy.
          */
-        *out = PyArray_SimpleNewFromData(D->ndims, dims, typenum, D->ptr);
+        *out = PyArray_SimpleNewFromDataOwning(D->ndims, dims, typenum, D->ptr);
         D->ptr = NULL; // flag to avoid freeing
     }
     if (dims) free(dims);

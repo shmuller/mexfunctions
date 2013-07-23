@@ -6,7 +6,7 @@
  */
 
 #include <Python.h>
-#include <numpy/arrayobject.h>
+//#include <numpy/arrayobject.h>
 
 #include "../mediansmooth.h"
 
@@ -21,10 +21,9 @@ static PyObject* mediansmooth(PyObject *self, PyObject *args)
     PyObject *arr = PyArray_FromAny(in, NULL, 0, 0, 0, NULL);
     
     int ndims = PyArray_NDIM(arr);
-    npy_intp *dv = PyArray_DIMS(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
-    int N = dv[ndims-1];
 
     switch (typenum) {
         case NPY_DOUBLE:
@@ -33,10 +32,10 @@ static PyObject* mediansmooth(PyObject *self, PyObject *args)
         case NPY_FLOAT:
             median_filt_pqueue_float(x, N, w, bdry);
             break;
-        case NPY_INT64:
+        case NPY_LONG:
             median_filt_pqueue_int64(x, N, w, bdry);
             break;
-        case NPY_INT32:
+        case NPY_INT:
             median_filt_pqueue_int32(x, N, w, bdry);
             break;
     }
@@ -54,12 +53,11 @@ static PyObject* mediansmooth_old(PyObject *self, PyObject *args)
     PyObject *arr = PyArray_FromAny(in, NULL, 0, 0, 0, NULL);
     
     int ndims = PyArray_NDIM(arr);
-    npy_intp *dv = PyArray_DIMS(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
-    int N = dv[ndims-1];
 
-    PyObject *retval = PyArray_SimpleNew(1, &dv[ndims-1], NPY_INT32);
+    PyObject *retval = PyArray_SimpleNew(1, &N, NPY_INT);
     int *ind = PyArray_DATA(retval);
 
     switch (typenum) {

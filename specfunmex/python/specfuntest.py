@@ -1,11 +1,22 @@
-import numpy as np
-import specfun
-from matplotlib.pylab import plot, show
+try:
+    import numpypy as np
+except ImportError:
+    import numpy as np
 
-x = np.linspace(0.,3.,1000)
+import specfun
+
+N = 1000
+x = np.arange(N) * (3. / (N - 1))
 y = x.copy()
 
 specfun.specfun('besei0', y)
 
-plot(x, y)
-show()
+print y[:20]
+
+try:
+    from matplotlib.pylab import plot, show
+except ImportError:
+    pass
+else:
+    plot(x, y)
+    show()
