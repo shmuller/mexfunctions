@@ -6,7 +6,7 @@
  */
 
 #include <Python.h>
-//#include <numpy/arrayobject.h>
+#include <numpy/arrayobject.h>
 
 #include "../mediansmooth.h"
 

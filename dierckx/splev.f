@@ -48,6 +48,7 @@ c  ..scalar arguments..
       integer n,k,m,ier
 c  ..array arguments..
       real t(n),c(n),x(m),y(m)
+cf2py check(1) c
 c  ..local scalars..
       integer i,j,k1,l,ll,l1,nk1
       real arg,sp,tb,te

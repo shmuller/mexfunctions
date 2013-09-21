@@ -1578,7 +1578,7 @@ python module dierckx ! in
         subroutine splev(t,n,c,k,x,y,m,ier) ! in :dierckx:splev.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n),check(1) :: c
             integer :: k
             real*8 dimension(m) :: x
             real*8 dimension(m),depend(m) :: y

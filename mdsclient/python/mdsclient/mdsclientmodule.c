@@ -11,26 +11,21 @@
 #include <string.h>
 
 #include <Python.h>
-//#include <numpy/arrayobject.h>
+#include <numpy/arrayobject.h>
+
+#ifndef PyArray_SimpleNewFromDataOwning
+PyObject *PyArray_SimpleNewFromDataOwning(
+    int nd, npy_intp* dims, int typenum, void* data) 
+{
+    PyObject *arr = PyArray_SimpleNewFromData(nd, dims, typenum, data);
 
 #ifdef NPY_ARRAY_OWNDATA
-PyObject *PyArray_SimpleNewFromDataOwning(
-    int nd, npy_intp* dims, int typenum, void* data) 
-{
-    PyObject *arr = PyArray_SimpleNewFromData(nd, dims, typenum, data);
     PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
-    return arr;
-}
 #else
-#ifdef NPY_OWNDATA
-PyObject *PyArray_SimpleNewFromDataOwning(
-    int nd, npy_intp* dims, int typenum, void* data) 
-{
-    PyObject *arr = PyArray_SimpleNewFromData(nd, dims, typenum, data);
     ((PyArrayObject*)arr)->flags |= NPY_OWNDATA;
+#endif
     return arr;
 }
-#endif
 #endif
 
 #include <mdsclient.h>
