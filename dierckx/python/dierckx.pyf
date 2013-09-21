@@ -1566,7 +1566,7 @@ python module dierckx ! in
         subroutine splder(t,n,c,k,nu,x,y,m,wrk,ier) ! in :dierckx:splder.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n),check(1) :: c
             integer :: k
             integer :: nu
             real*8 dimension(m) :: x
@@ -1578,7 +1578,7 @@ python module dierckx ! in
         subroutine splev(t,n,c,k,x,y,m,ier) ! in :dierckx:splev.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),check(1) :: c
+            real*8 dimension(n-k-1),depend(n,k) :: c
             integer :: k
             real*8 dimension(m) :: x
             real*8 dimension(m),depend(m) :: y
@@ -1588,10 +1588,10 @@ python module dierckx ! in
         subroutine splevv(t,n,c,k,x,y,m,p,ier) ! in :dierckx:splevv.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension((n-k-1)*p),depend(n,k,p) :: c
+            real*8 dimension((n-k-1)*p),check(1) :: c
             integer :: k
             real*8 dimension(m) :: x
-            real*8 dimension(m*p),depend(m,p) :: y
+            real*8 dimension(p*m),depend(m,p) :: y
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             integer :: p
             integer :: ier
@@ -1609,10 +1609,10 @@ python module dierckx ! in
         subroutine sproot(t,n,c,zero,mest,m,ier) ! in :dierckx:sproot.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n),check(1) :: c
             real*8 dimension(mest) :: zero
             integer, optional,check(len(zero)>=mest),depend(zero) :: mest=len(zero)
-            integer :: m
+            integer intent(out) :: m
             integer :: ier
         end subroutine sproot
         subroutine surev(idim,tu,nu,tv,nv,c,u,mu,v,mv,f,mf,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:surev.f

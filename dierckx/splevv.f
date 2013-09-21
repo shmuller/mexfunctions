@@ -50,7 +50,7 @@ c  ..array arguments..
       real t(n),c((n-k-1)*p),x(m),y(p*m)
 cf2py check(1) c
 c  ..local scalars..
-      integer i,j,k1,l,ll,l1,nk1,q,s
+      integer i,j,k1,l,ll,l1,nk1,q,s,ss
       real arg,sp,tb,te
 c  ..local array..
       real h(6)
@@ -70,6 +70,7 @@ c  fetch tb and te, the boundaries of the approximation interval.
       te = t(nk1+1)
       l = k1
       l1 = l+1
+      s = 0
 c  main loop for the different points.
       do 80 i=1,m
 c  fetch a new x-value arg.
@@ -84,14 +85,17 @@ c  search for knot interval t(l) <= arg < t(l+1)
 c  evaluate the non-zero b-splines at arg.
   50    call fpbspl(t,n,k,arg,l,h)
 c  find the value of s(x) at x=arg.
+        ss = l-k1
         do 70 q=1,p
           sp = 0.
-          ll = l-k1
+          ll = ss
           do 60 j=1,k1
             ll = ll+1
-            sp = sp+c(nk1*(q-1)+ll)*h(j)
+            sp = sp+c(ll)*h(j)
   60      continue
-          y(p*(i-1)+q) = sp
+          ss = ss+nk1
+          s = s+1
+          y(s) = sp
   70    continue
   80  continue
  100  return

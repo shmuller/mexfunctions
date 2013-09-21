@@ -38,8 +38,10 @@ c
 c ..
 c ..scalar arguments..
       integer n,mest,m,ier
+cf2py intent(out) m
 c  ..array arguments..
       real t(n),c(n),zero(mest)
+cf2py check(1) c
 c  ..local scalars..
       integer i,j,j1,l,n4
       real ah,a0,a1,a2,a3,bh,b0,b1,c1,c2,c3,c4,c5,d4,d5,h1,h2,
