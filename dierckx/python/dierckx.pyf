@@ -1585,6 +1585,17 @@ python module dierckx ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             integer :: ier
         end subroutine splev
+        subroutine splevv(t,n,c,k,x,y,m,p,ier) ! in :dierckx:splevv.f
+            real*8 dimension(n) :: t
+            integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
+            real*8 dimension((n-k-1)*p),depend(n,k,p) :: c
+            integer :: k
+            real*8 dimension(m) :: x
+            real*8 dimension(m*p),depend(m,p) :: y
+            integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
+            integer :: p
+            integer :: ier
+        end subroutine splevv
         function splint(t,n,c,k,a,b,wrk) ! in :dierckx:splint.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
