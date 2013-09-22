@@ -209,6 +209,7 @@ c  ..
 c  ..scalar arguments..
       real xb,xe,s,fp
       integer iopt,m,k,nest,n,lwrk,ier
+cf2py intent(out) n,fp,ier
 c  ..array arguments..
       real x(m),y(m),w(m),t(nest),c(nest),wrk(lwrk)
       integer iwrk(nest)

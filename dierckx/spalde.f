@@ -51,7 +51,8 @@ c  ..scalar arguments..
       integer n,k1,ier
       real x
 c  ..array arguments..
-      real t(n),c(n),d(k1)
+      real t(n),c(n-k1),d(k1)
+cf2py check(len(c)>=n-k1),depend(n,k1) c
 c  ..local scalars..
       integer l,nk1
 c  ..

@@ -11,6 +11,22 @@ python module polar__user__routines
 end python module polar__user__routines
 python module dierckx ! in 
     interface  ! in :dierckx
+        subroutine bispeu(tx,nx,ty,ny,c,kx,ky,x,y,z,m,wrk,lwrk,ier) ! in :dierckx:bispeu.f
+            real*8 dimension(nx) :: tx
+            integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
+            real*8 dimension(ny) :: ty
+            integer, optional,check(len(ty)>=ny),depend(ty) :: ny=len(ty)
+            real*8 dimension((nx-kx-1)*(ny-ky-1)),depend(nx,ny,kx,ky) :: c
+            integer :: kx
+            integer :: ky
+            real*8 dimension(m) :: x
+            real*8 dimension(m),depend(m) :: y
+            real*8 dimension(m),depend(m) :: z
+            integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
+            real*8 dimension(lwrk) :: wrk
+            integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
+            integer :: ier
+        end subroutine bispeu
         subroutine bispev(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:bispev.f
             real*8 dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
@@ -161,14 +177,14 @@ python module dierckx ! in
             integer :: k
             real*8 :: s
             integer, optional,check(len(t)>=nest),depend(t) :: nest=len(t)
-            integer :: n
+            integer intent(out) :: n
             real*8 dimension(nest) :: t
             real*8 dimension(nest),depend(nest) :: c
-            real*8 :: fp
+            real*8 intent(out) :: fp
             real*8 dimension(lwrk) :: wrk
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer dimension(nest),depend(nest) :: iwrk
-            integer :: ier
+            integer intent(out) :: ier
         end subroutine curfit
         function dblint(tx,nx,ty,ny,c,kx,ky,xb,xe,yb,ye,wrk) ! in :dierckx:dblint.f
             real*8 dimension(nx) :: tx
@@ -211,7 +227,7 @@ python module dierckx ! in
         subroutine fpader(t,n,c,k1,x,l,d) ! in :dierckx:fpader.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n-k1),depend(n,k1) :: c
             integer, optional,check(len(d)>=k1),depend(d) :: k1=len(d)
             real*8 :: x
             integer :: l
@@ -1507,7 +1523,7 @@ python module dierckx ! in
         subroutine spalde(t,n,c,k1,x,d,ier) ! in :dierckx:spalde.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n-k1),depend(n,k1) :: c
             integer, optional,check(len(d)>=k1),depend(d) :: k1=len(d)
             real*8 :: x
             real*8 dimension(k1) :: d
@@ -1566,7 +1582,7 @@ python module dierckx ! in
         subroutine splder(t,n,c,k,nu,x,y,m,wrk,ier) ! in :dierckx:splder.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),check(1) :: c
+            real*8 dimension(n-k-1),depend(n,k) :: c
             integer :: k
             integer :: nu
             real*8 dimension(m) :: x
@@ -1588,7 +1604,7 @@ python module dierckx ! in
         subroutine splevv(t,n,c,k,x,y,m,p,ier) ! in :dierckx:splevv.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension((n-k-1)*p),check(1) :: c
+            real*8 dimension((n-k-1)*p),depend(n,k,p) :: c
             integer :: k
             real*8 dimension(m) :: x
             real*8 dimension(p*m),depend(m,p) :: y
@@ -1599,7 +1615,7 @@ python module dierckx ! in
         function splint(t,n,c,k,a,b,wrk) ! in :dierckx:splint.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),depend(n) :: c
+            real*8 dimension(n-k-1),depend(n,k) :: c
             integer :: k
             real*8 :: a
             real*8 :: b
@@ -1609,7 +1625,7 @@ python module dierckx ! in
         subroutine sproot(t,n,c,zero,mest,m,ier) ! in :dierckx:sproot.f
             real*8 dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
-            real*8 dimension(n),check(1) :: c
+            real*8 dimension(n - 4),depend(n) :: c
             real*8 dimension(mest) :: zero
             integer, optional,check(len(zero)>=mest),depend(zero) :: mest=len(zero)
             integer intent(out) :: m
