@@ -1,3 +1,5 @@
+FC = gfortran
+
 iiex_obj = iiex.o
 ivex_obj = ivex.o
 ixex_obj = ixex.o
@@ -31,7 +33,7 @@ xivex4_obj = l2main.o setdatx4.o titand.o l2knts.o l2appr.o bsplvb.o \
 			  interv.o newnot.o
 xvex_obj = xvex.o colloc.o colpnt.o difequ.o ppvalu.o interv.o knots.o \
 			  eqblok.o putit.o bsplvd.o bsplvb.o bsplpp.o newnot.o \
-			  slvblktx.o 
+			  slvblktext.o 
 xviex2_obj = xviex2.o titand.o tautsp.o ppvalu.o interv.o
 xviex3_obj = xviex3.o splint.o bsplvb.o banfac.o banslv.o \
 			  bsplpp.o ppvalu.o interv.o
@@ -40,74 +42,83 @@ xviiex2_obj = xviiex2.o spli2d.o bsplvb.o banfac.o banslv.o interv.o \
 xviiex3_obj = xviiex3.o spli2d.o bsplvb.o banfac.o banslv.o interv.o \
 			  bspp2d.o ppvalu.o
 
+targets = iiex ivex ixex xex1 xex2 xex3 xex4 xiiex2 xiiex3 xiiex4 \
+          xiiiex1 xiiiex2 xiiiex2m xiiiex3 xivex1 \
+	      xvex xviex2 xviex3 xviiex2 xviiex3
+
+all : $(targets)
+
+clean :
+	rm $(targets) *.o
+
 iiex : $(iiex_obj) 
-	f77 $(iiex_obj) -o iiex
+	$(FC) $(iiex_obj) -o iiex
 
 ivex : $(ivex_obj) 
-	f77 $(ivex_obj) -o ivex
+	$(FC) $(ivex_obj) -o ivex
 
 ixex : $(ixex_obj) 
-	f77 $(ixex_obj) -o ixex
+	$(FC) $(ixex_obj) -o ixex
 
 xex1 : $(xex1_obj) 
-	f77 $(xex1_obj) -o xex1
+	$(FC) $(xex1_obj) -o xex1
 
 xex2 : $(xex2_obj) 
-	f77 $(xex2_obj) -o xex2
+	$(FC) $(xex2_obj) -o xex2
 
 xex3 : $(xex3_obj)
-	f77 $(xex3_obj) -o xex3
+	$(FC) $(xex3_obj) -o xex3
 
 xex4 : $(xex4_obj)
-	f77 $(xex4_obj) -o xex4
+	$(FC) $(xex4_obj) -o xex4
 
 xiiex2 : $(xiiex2_obj)
-	f77 $(xiiex2_obj) -o xiiex2
+	$(FC) $(xiiex2_obj) -o xiiex2
 
 xiiex3 : $(xiiex3_obj)
-	f77 $(xiiex3_obj) -o xiiex3
+	$(FC) $(xiiex3_obj) -o xiiex3
 
 xiiex4 : $(xiiex4_obj)
-	f77 $(xiiex4_obj) -o xiiex4
+	$(FC) $(xiiex4_obj) -o xiiex4
 
 xiiiex1 : $(xiiiex1_obj) 
-	f77 $(xiiiex1_obj) -o xiiiex1
+	$(FC) $(xiiiex1_obj) -o xiiiex1
 
 xiiiex2 : $(xiiiex2_obj)
-	f77 $(xiiiex2_obj) -o xiiiex2
+	$(FC) $(xiiiex2_obj) -o xiiiex2
 
 xiiiex2m : $(xiiiex2m_obj)
-	f77 $(xiiiex2m_obj) -o xiiiex2m
+	$(FC) $(xiiiex2m_obj) -o xiiiex2m
 
 xiiiex3 : $(xiiiex3_obj) 
-	f77 $(xiiiex3_obj) -o xiiiex3
+	$(FC) $(xiiiex3_obj) -o xiiiex3
 
 xivex1 : $(xivex1_obj)
-	f77 $(xivex1_obj) -o xivex1
+	$(FC) $(xivex1_obj) -o xivex1
 
 reinsch : $(reinsch_obj)
-	f77 $(reinsch_obj) -o reinsch
+	$(FC) $(reinsch_obj) -o reinsch
 
 xivex2 : $(xivex2_obj)
-	f77 $(xivex2_obj) -o xivex2
+	$(FC) $(xivex2_obj) -o xivex2
 
 xivex3 : $(xivex3_obj)
-	f77 $(xivex3_obj) -o xivex3
+	$(FC) $(xivex3_obj) -o xivex3
 
 xivex4 : $(xivex4_obj)
-	f77 $(xivex4_obj) -o xivex4
+	$(FC) $(xivex4_obj) -o xivex4
 
 xvex : $(xvex_obj)
-	f77 $(xvex_obj) -o xvex
+	$(FC) $(xvex_obj) -o xvex
 
 xviex2 : $(xviex2_obj)
-	f77 $(xviex2_obj) -o xviex2
+	$(FC) $(xviex2_obj) -o xviex2
 
 xviex3 : $(xviex3_obj)
-	f77 $(xviex3_obj) -o xviex3
+	$(FC) $(xviex3_obj) -o xviex3
 
 xviiex2 : $(xviiex2_obj)
-	f77 $(xviiex2_obj) -o xviiex2
+	$(FC) $(xviiex2_obj) -o xviiex2
 
 xviiex3 : $(xviiex3_obj)
-	f77 $(xviiex3_obj) -o xviiex3
+	$(FC) $(xviiex3_obj) -o xviiex3
