@@ -565,7 +565,7 @@ subroutine bchslv ( w, nbands, nrow, b )
 
   return
 end
-subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
+subroutine bsplpp ( t, bcoef, n, k, scrtch, brk, coef, l )
 
 !*****************************************************************************80
 !
@@ -631,7 +631,7 @@ subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
 
   real ( kind = 8 ) bcoef(n)
   real ( kind = 8 ) biatx(k)
-  real ( kind = 8 ) break(*)
+  real ( kind = 8 ) brk(*)
   real ( kind = 8 ) coef(k,n)
   real ( kind = 8 ) diff
   integer ( kind = 4 ) i
@@ -644,7 +644,7 @@ subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
   real ( kind = 8 ) t(n+k)
 
   lsofar = 0
-  break(1) = t(k)
+  brk(1) = t(k)
   
   do left = k, n
 !
@@ -655,7 +655,7 @@ subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
     end if
 
     lsofar = lsofar + 1
-    break(lsofar+1) = t(left+1)
+    brk(lsofar+1) = t(left+1)
 
     if ( k <= 1 ) then
       coef(1,lsofar) = bcoef(left)
@@ -709,7 +709,7 @@ subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
 
   return
 end
-subroutine bsplvb ( t, jhigh, index, x, left, biatx )
+subroutine bsplvb ( t, jhigh, indx, x, left, biatx )
 
 !*****************************************************************************80
 !
@@ -808,7 +808,7 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   real ( kind = 8 ), save, dimension ( jmax ) :: deltal
   real ( kind = 8 ), save, dimension ( jmax ) :: deltar
   integer ( kind = 4 ) i
-  integer ( kind = 4 ) index
+  integer ( kind = 4 ) indx
   integer ( kind = 4 ), save :: j = 1
   integer ( kind = 4 ) left
   real ( kind = 8 ) saved
@@ -816,7 +816,7 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   real ( kind = 8 ) term
   real ( kind = 8 ) x
 
-  if ( index == 1 ) then 
+  if ( indx == 1 ) then 
     j = 1
     biatx(1) = 1.0D+00
     if ( jhigh <= j ) then
@@ -1026,7 +1026,7 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
  
   return
 end
-subroutine bspp2d ( t, bcoef, n, k, m, scrtch, break, coef, l )
+subroutine bspp2d ( t, bcoef, n, k, m, scrtch, brk, coef, l )
 
 !*****************************************************************************80
 !
@@ -1102,7 +1102,7 @@ subroutine bspp2d ( t, bcoef, n, k, m, scrtch, break, coef, l )
 
   real ( kind = 8 ) bcoef(n,m)
   real ( kind = 8 ) biatx(k)
-  real ( kind = 8 ) break(*)
+  real ( kind = 8 ) brk(*)
   real ( kind = 8 ) coef(m,k,*)
   real ( kind = 8 ) diff
   real ( kind = 8 ) fkmj
@@ -1119,7 +1119,7 @@ subroutine bspp2d ( t, bcoef, n, k, m, scrtch, break, coef, l )
   real ( kind = 8 ) t(n+k)
 
   lsofar = 0
-  break(1) = t(k)
+  brk(1) = t(k)
   
   do left = k, n
 !
@@ -1130,7 +1130,7 @@ subroutine bspp2d ( t, bcoef, n, k, m, scrtch, break, coef, l )
     end if
 
     lsofar = lsofar+1
-    break(lsofar+1) = t(left+1)
+    brk(lsofar+1) = t(left+1)
 
     if ( k <= 1 ) then
     
@@ -1634,7 +1634,7 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
   real ( kind = 8 ) asave(ndim)
   real ( kind = 8 ) b(ndim)
   real ( kind = 8 ) bloks(lenblk)
-  real ( kind = 8 ) break
+  real ( kind = 8 ) brk
   real ( kind = 8 ) coef
   real ( kind = 8 ) dx
   real ( kind = 8 ) err
@@ -1671,7 +1671,7 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
   save / other /
   save / side /
 
-  common / approx / break(npiece), coef(ncoef), l, kpm
+  common / approx / brk(npiece), coef(ncoef), l, kpm
   common / other / itermx, k, rho(19)
   common / side / m, iside, xside(10)
 
@@ -1731,7 +1731,7 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
 !
     do iter = 1, itermx
 
-      call bsplpp ( t, a, n, kpm, templ, break, coef, l )
+      call bsplpp ( t, a, n, kpm, templ, brk, coef, l )
  
       asave(1:n) = a(1:n)
  
@@ -1759,14 +1759,14 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) '  Breakpoints:'
     write ( *, '(a)' ) ' '
-    write ( *, '(5g14.6)' ) break(2:l)
+    write ( *, '(5g14.6)' ) brk(2:l)
 
     if ( 0 < itermx ) then
       write ( *, '(a)' ) ' '
       write ( *, '(a,i8)' ) '  Results on interation ', iter
     end if
 
-    call bsplpp ( t, a, n, kpm, templ, break, coef, l )
+    call bsplpp ( t, a, n, kpm, templ, brk, coef, l )
   
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) &
@@ -1775,7 +1775,7 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
    
     do i = 1, l
       ii = ( i - 1 ) * kpm
-      write ( *, '(f9.3,2x,e12.4,10e11.3)' ) break(i), coef(ii+1:ii+kpm)
+      write ( *, '(f9.3,2x,e12.4,10e11.3)' ) brk(i), coef(ii+1:ii+kpm)
     end do
 !
 !  The following call is provided here for possible further analysis
@@ -1801,7 +1801,7 @@ subroutine colloc ( aleft, aright, lbegin, iorder, ntimes, addbrk, relerr )
       stop
     end if
 
-    call newnot ( break, coef, l, kpm, temps, lnew, templ )
+    call newnot ( brk, coef, l, kpm, temps, lnew, templ )
 
     call knots ( temps, lnew, kpm, m, t, n )
     nt = nt + 1
@@ -2565,7 +2565,7 @@ subroutine difequ ( mode, xx, v )
   integer ( kind = 4 ), parameter :: npiece = 100
   integer ( kind = 4 ), parameter :: ncoef = 2000
 
-  real ( kind = 8 ) break
+  real ( kind = 8 ) brk
   real ( kind = 8 ) coef
   real ( kind = 8 ), save :: eps
   real ( kind = 8 ) ep1
@@ -2595,7 +2595,7 @@ subroutine difequ ( mode, xx, v )
   save / other /
   save / side /
 
-  common / approx / break(npiece), coef(ncoef), l, kpm
+  common / approx / brk(npiece), coef(ncoef), l, kpm
   common / other / itermx, k, rho(19)
   common / side / m, iside, xside(10)
 !
@@ -2626,7 +2626,7 @@ subroutine difequ ( mode, xx, v )
 !  Initial guess for Newton iteration: UN(X) = X*X-1.
 !
     l = 1
-    break(1) = 0.0D+00
+    brk(1) = 0.0D+00
     coef(1:kpm) = 0.0D+00
     coef(1) = -1.0D+00
     coef(3) = 2.0D+00
@@ -2644,7 +2644,7 @@ subroutine difequ ( mode, xx, v )
     v(3) = eps
     v(2) = 0.0D+00
 
-    un = ppvalu ( break, coef, l, kpm, xx, 0 )
+    un = ppvalu ( brk, coef, l, kpm, xx, 0 )
 
     v(1) = 2.0D+00 * un
     v(4) = un**2 + 1.0D+00
@@ -2690,7 +2690,7 @@ subroutine difequ ( mode, xx, v )
       solutn = 12.0D+00 / ( 1.0D+00 + ep1 )**2 * ep1 &
              + 12.0D+00 / ( 1.0D+00 + ep2 )**2 * ep2 - 1.0D+00
 
-      value = ppvalu ( break, coef, l, kpm, x, 0 )
+      value = ppvalu ( brk, coef, l, kpm, x, 0 )
 
       error = solutn - value
       write ( *, '(2x,3g14.6)' ) x, solutn, error
@@ -2772,8 +2772,8 @@ subroutine dtblok ( bloks, integs, nbloks, ipivot, iflag, detsgn, detlog )
   real ( kind = 8 ) detsgn
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) index
-  integer ( kind = 4 ) indexp
+  integer ( kind = 4 ) indx
+  integer ( kind = 4 ) indxp
   integer ( kind = 4 ) integs(3,nbloks)
   integer ( kind = 4 ) ip
   integer ( kind = 4 ) ipivot(1)
@@ -2788,8 +2788,8 @@ subroutine dtblok ( bloks, integs, nbloks, ipivot, iflag, detsgn, detlog )
     return
   end if
 
-  index = 0
-  indexp = 0
+  indx = 0
+  indxp = 0
   
   do i = 1, nbloks
   
@@ -2797,13 +2797,13 @@ subroutine dtblok ( bloks, integs, nbloks, ipivot, iflag, detsgn, detlog )
     last = integs(3,i)
     
     do k = 1, last
-      ip = index + nrow * ( k - 1 ) + ipivot(indexp+k)
+      ip = indx + nrow * ( k - 1 ) + ipivot(indxp+k)
       detlog = detlog + log ( abs ( bloks(ip) ) )
       detsgn = detsgn * sign ( 1.0D+00, bloks(ip) )
     end do
    
-    index = nrow * integs(2,i) + index
-    indexp = indexp + nrow
+    indx = nrow * integs(2,i) + indx
+    indxp = indxp + nrow
     
   end do
    
@@ -2892,8 +2892,8 @@ subroutine eqblok ( t, n, kpm, work1, work2, bloks, lenblk, integs, nbloks, b )
   real ( kind = 8 ) b(*)
   real ( kind = 8 ) bloks(*)
   integer ( kind = 4 ) i
-  integer ( kind = 4 ) index
-  integer ( kind = 4 ) indexb
+  integer ( kind = 4 ) indx
+  integer ( kind = 4 ) indxb
   integer ( kind = 4 ) integs(3,*)
   integer ( kind = 4 ) iside
   integer ( kind = 4 ) isidel
@@ -2916,8 +2916,8 @@ subroutine eqblok ( t, n, kpm, work1, work2, bloks, lenblk, integs, nbloks, b )
   common / other / itermx, k, rho(19)
   common / side / m, iside, xside(10)
 
-  index = 1
-  indexb = 1
+  indx = 1
+  indxb = 1
   i = 0
   iside = 1
   
@@ -2966,7 +2966,7 @@ subroutine eqblok ( t, n, kpm, work1, work2, bloks, lenblk, integs, nbloks, b )
 !  The detailed equations for this block are generated and put
 !  together in PUTIT.
 !
-    if ( lenblk < index + nrow * kpm - 1 ) then
+    if ( lenblk < indx + nrow * kpm - 1 ) then
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'EQBLOK - Fatal error!'
       write ( *, '(a)' ) '  The dimension of BLOKS is too small.'
@@ -2974,10 +2974,10 @@ subroutine eqblok ( t, n, kpm, work1, work2, bloks, lenblk, integs, nbloks, b )
       stop
     end if
 
-    call putit ( t, kpm, left, work1, work2, bloks(index), nrow, b(indexb) )
+    call putit ( t, kpm, left, work1, work2, bloks(indx), nrow, b(indxb) )
 
-    index = index + nrow * kpm
-    indexb = indexb + nrow
+    indx = indx + nrow * kpm
+    indxb = indxb + nrow
     
   end do
  
@@ -2985,7 +2985,7 @@ subroutine eqblok ( t, n, kpm, work1, work2, bloks, lenblk, integs, nbloks, b )
 
   return
 end
-subroutine evnnot ( break, coef, l, k, brknew, lnew, coefg )
+subroutine evnnot ( brk, coef, l, k, brknew, lnew, coefg )
 
 !*****************************************************************************80
 !
@@ -3036,7 +3036,7 @@ subroutine evnnot ( break, coef, l, k, brknew, lnew, coefg )
   integer ( kind = 4 ) l
   integer ( kind = 4 ) lnew
 
-  real ( kind = 8 ) break(l+1)
+  real ( kind = 8 ) brk(l+1)
   real ( kind = 8 ) brknew(lnew+1)
   real ( kind = 8 ) coef(k,l)
   real ( kind = 8 ) coefg(2,l)
@@ -3046,13 +3046,13 @@ subroutine evnnot ( break, coef, l, k, brknew, lnew, coefg )
 
   if ( lnew == 0 ) then
 
-    brknew(1) = 0.5D+00 * ( break(1) + break(l+1) )
+    brknew(1) = 0.5D+00 * ( brk(1) + brk(l+1) )
 
   else
 
     do i = 1, lnew + 1
-      brknew(i) = ( real ( lnew - i + 1, kind = 8 ) * break(1) &
-                  + real (        i - 1, kind = 8 ) * break(l+1) ) &
+      brknew(i) = ( real ( lnew - i + 1, kind = 8 ) * brk(1) &
+                  + real (        i - 1, kind = 8 ) * brk(l+1) ) &
                   / real ( lnew,         kind = 8 )
     end do
 
@@ -3290,9 +3290,9 @@ subroutine fcblok ( bloks, integs, nbloks, ipivot, scrtch, iflag )
   real ( kind = 8 ) bloks(*)
   integer ( kind = 4 ) i
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) index
-  integer ( kind = 4 ) indexb
-  integer ( kind = 4 ) indexn
+  integer ( kind = 4 ) indx
+  integer ( kind = 4 ) indxb
+  integer ( kind = 4 ) indxn
   integer ( kind = 4 ) integs(3,nbloks)
   integer ( kind = 4 ) ipivot(*)
   integer ( kind = 4 ) last
@@ -3301,15 +3301,15 @@ subroutine fcblok ( bloks, integs, nbloks, ipivot, scrtch, iflag )
   real ( kind = 8 ) scrtch(*)
 
   iflag = 1
-  indexb = 1
-  indexn = 1
+  indxb = 1
+  indxn = 1
   i = 1 
 !
 !  Loop over the blocks.  I is the loop index.
 !
   do
 
-    index = indexn
+    indx = indxn
     nrow = integs(1,i)
     ncol = integs(2,i)
     last = integs(3,i)
@@ -3317,7 +3317,7 @@ subroutine fcblok ( bloks, integs, nbloks, ipivot, scrtch, iflag )
 !  Carry out elimination on the I-th block until next block
 !  enters, for columns 1 through LAST of I-th block.
 !
-    call factrb ( bloks(index), ipivot(indexb), scrtch, nrow, ncol, &
+    call factrb ( bloks(indx), ipivot(indxb), scrtch, nrow, ncol, &
       last, iflag )
 !
 !  Check for having reached a singular block or the last block.
@@ -3327,14 +3327,14 @@ subroutine fcblok ( bloks, integs, nbloks, ipivot, scrtch, iflag )
     end if
 
     i = i + 1
-    indexn = nrow * ncol + index
+    indxn = nrow * ncol + indx
 !
 !  Put the rest of the I-th block onto the next block.
 !
-    call shiftb ( bloks(index), ipivot(indexb), nrow, ncol, last, &
-      bloks(indexn), integs(1,i), integs(2,i) )
+    call shiftb ( bloks(indx), ipivot(indxb), nrow, ncol, last, &
+      bloks(indxn), integs(1,i), integs(2,i) )
 
-    indexb = indexb + nrow
+    indxb = indxb + nrow
 
   end do
 
@@ -3550,7 +3550,7 @@ subroutine interv ( xt, lxt, x, left, mflag )
 
   return
 end
-subroutine knots ( break, l, kpm, m, t, n )
+subroutine knots ( brk, l, kpm, m, t, n )
 
 !*****************************************************************************80
 !
@@ -3609,7 +3609,7 @@ subroutine knots ( break, l, kpm, m, t, n )
   integer ( kind = 4 ) l
   integer ( kind = 4 ) n
 
-  real ( kind = 8 ) break(l+1)
+  real ( kind = 8 ) brk(l+1)
   integer ( kind = 4 ) iside
   integer ( kind = 4 ) j
   integer ( kind = 4 ) jj
@@ -3626,426 +3626,23 @@ subroutine knots ( break, l, kpm, m, t, n )
   jjj = l + 1
   
   do ll = 1, kpm
-    t(jj) = break(jjj)
+    t(jj) = brk(jjj)
     jj = jj - 1
   end do
   
   do j = 1, l
     jjj = jjj - 1
     do ll = 1, k
-      t(jj) = break(jjj)
+      t(jj) = brk(jjj)
       jj = jj - 1
     end do
   end do
    
-  t(1:kpm) = break(1)
+  t(1:kpm) = brk(1)
 
   return
 end
-subroutine l2appr ( t, n, k, q, diag, bcoef )
-
-!*****************************************************************************80
-!
-!! L2APPR constructs a weighted L2 spline approximation to given data.
-!
-!  Discussion:
-!
-!    The routine constructs the weighted discrete L2-approximation by 
-!    splines of order K with knot sequence T(1:N+K) to 
-!    given data points ( TAU(1:NTAU), GTAU(1:NTAU) ).  
-!
-!    The B-spline coefficients BCOEF of the approximating spline are 
-!    determined from the normal equations using Cholesky's method.
-!
-!  Method:
-!
-!    The B-spline coefficients of the L2-approximation are determined as the 
-!    solution of the normal equations, for 1 <= I <= N:
-!
-!      sum ( 1 <= J <= N ) ( B(I), B(J) ) * BCOEF(J) = ( B(I), G ).
-!
-!    Here, B(I) denotes the I-th B-spline, G denotes the function to
-!    be approximated, and the inner product of two functions F and G 
-!    is given by
-!
-!      ( F, G ) = sum ( 1 <= I <= NTAU ) WEIGHT(I) * F(TAU(I)) * G(TAU(I)).
-!
-!    The arrays TAU and WEIGHT are given in common block DATA, as is the 
-!    array GTAU(1:NTAU) = G(TAU(1:NTAU)).
-!
-!    The values of the B-splines B(1:N) are supplied by BSPLVB.
-!
-!    The coefficient matrix C, with
-!
-!       C(I,J) = ( B(I), B(J) )
-!
-!    of the normal equations is symmetric and (2*K-1)-banded, therefore
-!    can be specified by giving its K bands at or below the diagonal. 
-!
-!    For I = 1:N and J = I:min(I+K-1,N), we store
-!
-!      ( B(I), B(J) ) = C(I,J) 
-!
-!    in
-!
-!      Q(I-J+1,J), 
-!
-!    and the right hand side
-!
-!      ( B(I), G )  
-!
-!    in
-!
-!      BCOEF(I).
-!
-!    Since B-spline values are most efficiently generated by finding
-!    simultaneously the value of every nonzero B-spline at one point,
-!    the entries of C (that is, of Q), are generated by computing, for
-!    each LL, all the terms involving TAU(LL) simultaneously and adding
-!    them to all relevant entries.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663,
-!    LC: QA1.A647.v27.
-!
-!  Parameters:
-!
-!    Input, real ( kind = 8 ) T(N+K), the knot sequence.
-!
-!    Input, integer ( kind = 4 ) N, the dimension of the space of splines 
-!    of order K with knots T.
-!
-!    Input, integer ( kind = 4 ) K, the order of the splines.
-!
-!    Workspace, real ( kind = 8 ) Q(K,N), used to store the K lower 
-!    diagonals of the Gramian matrix C.
-!
-!    Workspace, real ( kind = 8 ) DIAG(N), used in BCHFAC.
-!
-!    Output, real ( kind = 8 ) BCOEF(N), the B-spline coefficients of
-!    the L2 approximation to the data.
-!
-  implicit none
-
-  integer ( kind = 4 ) k
-  integer ( kind = 4 ) n
-  integer ( kind = 4 ), parameter :: ntmax = 200
-
-  real ( kind = 8 ) bcoef(n)
-  real ( kind = 8 ) biatx(k)
-  real ( kind = 8 ) diag(n)
-  real ( kind = 8 ) dw
-  real ( kind = 8 ) gtau
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) j
-  integer ( kind = 4 ) jj
-  integer ( kind = 4 ) left
-  integer ( kind = 4 ) leftmk
-  integer ( kind = 4 ) ll
-  integer ( kind = 4 ) mm
-  integer ( kind = 4 ) ntau
-  real ( kind = 8 ) q(k,n)
-  real ( kind = 8 ) t(n+k)
-  real ( kind = 8 ) tau
-  real ( kind = 8 ) totalw
-  real ( kind = 8 ) weight
-
-  save / i4data /
-  save / r8data /
-
-  common / i4data / ntau
-  common / r8data / tau(ntmax), gtau(ntmax), weight(ntmax), totalw
-
-  bcoef(1:n) = 0.0D+00
-  q(1:k,1:n) = 0.0D+00
-
-  left = k
-  leftmk = 0
-  
-  do ll = 1, ntau
-!
-!  Locate LEFT such that TAU(LL) is in ( T(LEFT), T(LEFT+1) ).
-!
-    do
-
-      if ( left == n ) then
-        exit
-      end if
-
-      if ( tau(ll) < t(left+1) ) then
-        exit
-      end if
-
-      left = left + 1
-      leftmk = leftmk + 1
-
-    end do
-
-    call bsplvb ( t, k, 1, tau(ll), left, biatx )
-!
-!  BIATX(MM) contains the value of B(LEFT-K+MM) at TAU(LL).
-!
-!  Hence, with DW = BIATX(MM) * WEIGHT(LL), the number DW * GTAU(LL)
-!  is a summand in the inner product
-!
-!    ( B(LEFT-K+MM), G)
-!
-!  which goes into  BCOEF(LEFT-K+MM)
-!  and the number BIATX(JJ)*DW is a summand in the inner product
-!    (B(LEFT-K+JJ), B(LEFT-K+MM)), into  Q(JJ-MM+1,LEFT-K+MM)
-!  since  (LEFT-K+JJ)-(LEFT-K+MM)+1 = JJ - MM + 1.
-!
-    do mm = 1, k
-    
-      dw = biatx(mm) * weight(ll)
-      j = leftmk + mm
-      bcoef(j) = dw * gtau(ll) + bcoef(j)
-      i = 1
-      
-      do jj = mm, k
-        q(i,j) = biatx(jj) * dw + q(i,j)
-        i = i + 1
-      end do
-      
-    end do
-    
-  end do
-!
-!  Construct the Cholesky factorization for C in Q, then 
-!  use it to solve the normal equations
-!
-!    C * X = BCOEF
-!
-!  for X, and store X in BCOEF.
-!
-  call bchfac ( q, k, n, diag )
-  
-  call bchslv ( q, k, n, bcoef )
-  
-  return
-end
-subroutine l2err ( iprfun, ftau, error )
-
-!*****************************************************************************80
-!
-!! L2ERR computes the errors of an L2 approximation.
-!
-!  Discussion:
-!
-!    This routine computes various errors of the current L2 approximation, 
-!    whose piecewise polynomial representation is contained in common 
-!    block APPROX, to the given data contained in common block DATA.  
-!
-!    It prints out the average error ERRL1, the L2 error ERRL2, and the
-!    maximum error ERRMAX.
-!
-!  Modified:
-!
-!    16 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663,
-!    LC: QA1.A647.v27.
-!
-!  Parameters: 
-!
-!    Input, integer ( kind = 4 ) IPRFUN.  If IPRFUN = 1, the routine prints out
-!    the value of the approximation as well as its error at
-!    every data point.
-!
-!    Output, real ( kind = 8 ) FTAU(NTAU), contains the value of the computed
-!    approximation at each value TAU(1:NTAU).
-!
-!    Output, real ( kind = 8 ) ERROR(NTAU), with 
-!      ERROR(I) = SCALE * ( G - F )(TAU(I)).  Here, SCALE equals 1
-!    in case IPRFUN /= 1, or the absolute error is greater than 100 
-!    somewhere.  Otherwise, SCALE is such that the maximum of the
-!    absolute value of ERROR(1:NTAU) lies between 10 and 100.  This
-!    makes the printed output more illustrative.
-!
-  implicit none
-
-  integer ( kind = 4 ), parameter :: lpkmax = 100
-  integer ( kind = 4 ), parameter :: ntmax = 200
-  integer ( kind = 4 ), parameter :: ltkmax = 2000
-
-  integer ( kind = 4 ) ntau
-
-  real ( kind = 8 ) break
-  real ( kind = 8 ) coef
-  real ( kind = 8 ) err
-  real ( kind = 8 ) errl1
-  real ( kind = 8 ) errl2
-  real ( kind = 8 ) errmax
-  real ( kind = 8 ) error(ntau)
-  real ( kind = 8 ) ftau(ntau)
-  real ( kind = 8 ) gtau
-  integer ( kind = 4 ) ie
-  integer ( kind = 4 ) iprfun
-  integer ( kind = 4 ) k
-  integer ( kind = 4 ) l
-  integer ( kind = 4 ) ll
-  real ( kind = 8 ) ppvalu
-  real ( kind = 8 ) scale
-  real ( kind = 8 ) tau
-  real ( kind = 8 ) totalw
-  real ( kind = 8 ) weight
-
-  save / approx /
-  save / i4data /
-  save / r8data /
-
-  common / approx / break(lpkmax), coef(ltkmax), l, k
-  common / i4data / ntau
-  common / r8data / tau(ntmax), gtau(ntmax), weight(ntmax), totalw
-
-  errl1 = 0.0D+00
-  errl2 = 0.0D+00
-  errmax = 0.0D+00
-
-  do ll = 1, ntau
-
-    ftau(ll) = ppvalu ( break, coef, l, k, tau(ll), 0 )
-
-    error(ll) = gtau(ll) - ftau(ll)
-    err = abs(error(ll))
-
-    if ( errmax < err ) then
-      errmax = err
-    end if
-
-    errl1 = errl1 + err * weight(ll)
-    errl2 = errl2 + err**2 * weight(ll)
-
-  end do
-
-  errl1 = errl1 / totalw
-  errl2 = sqrt ( errl2 / totalw )
-
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  Least square error = ', errl2
-  write ( *, '(a,g14.6)' ) '  Average error      = ', errl1
-  write ( *, '(a,g14.6)' ) '  Maximum error      = ', errmax
-  write ( *, '(a)' ) ' '
-  
-  if ( iprfun /= 1 ) then
-    return
-  end if
-!
-!  Scale error curve and print.
-!
-  ie = 0
-  scale = 1.0D+00
-
-  if ( errmax < 10.0D+00 ) then
-  
-    do ie = 1, 9
-      scale = scale * 10.0D+00
-      if ( 10.0D+00 <= errmax * scale ) then
-        exit
-      end if
-    end do
-
-  end if  
-
-  error(1:ntau) = error(1:ntau) * scale
-  
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Approximation and scaled error curve'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i1)' ) &
-    '       Data point       Approximation   Deviation x 10**', ie
-  write ( *, '(a)' ) ' '
-  write ( *, '(i4,f16.8,f16.8,f17.6)' ) &
-    ( ll, tau(ll), ftau(ll), error(ll), ll = 1, ntau )
-
-  return
-end
-subroutine l2knts ( break, l, k, t, n )
-
-!*****************************************************************************80
-!
-!! L2KNTS converts breakpoints to knots.
-!
-!  Discussion:
-!
-!    The breakpoint sequence BREAK is converted into a corresponding 
-!    knot sequence T to allow the representation of a piecewise
-!    polynomial function of order K with K-2 continuous derivatives 
-!    as a spline of order K with knot sequence T. 
-!
-!    This means that T(1:N+K) = BREAK(1) K times, then BREAK(2:L), 
-!    then BREAK(L+1) K times.  
-!
-!    Therefore, N = K - 1 + L.
-!
-!  Modified:
-!
-!    14 February 2007
-!
-!  Author:
-!
-!    Carl DeBoor
-!
-!  Reference:
-!
-!    Carl DeBoor,
-!    A Practical Guide to Splines,
-!    Springer, 2001,
-!    ISBN: 0387953663,
-!    LC: QA1.A647.v27.
-!
-!  Parameters:
-!
-!    Input, integer ( kind = 4 ) K, the order.
-!
-!    Input, integer ( kind = 4 ) L, the number of polynomial pieces.
-!
-!    Input, real ( kind = 8 ) BREAK(L+1), the breakpoint sequence.
-!
-!    Output, real ( kind = 8 ) T(N+K), the knot sequence.
-!
-!    Output, integer ( kind = 4 ) N, the dimension of the corresponding spline 
-!    space of order K.
-!
-  implicit none
-
-  integer ( kind = 4 ) k
-  integer ( kind = 4 ) l
-  integer ( kind = 4 ) n
-
-  real ( kind = 8 ) break(l+1)
-  real ( kind = 8 ) t(k-1+l+k)
-
-  n = k - 1 + l
-
-  t(1:k-1) = break(1)
-  t(k:n) = break(1:l) 
-  t(n+1:n+k) = break(l+1)
- 
-  return
-end
-subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
+subroutine newnot ( brk, coef, l, k, brknew, lnew, coefg )
 
 !*****************************************************************************80
 !
@@ -4131,7 +3728,7 @@ subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
   integer ( kind = 4 ) l
   integer ( kind = 4 ) lnew
 
-  real ( kind = 8 ) break(l+1)
+  real ( kind = 8 ) brk(l+1)
   real ( kind = 8 ) brknew(lnew+1)
   real ( kind = 8 ) coef(k,l)
   real ( kind = 8 ) coefg(2,l)
@@ -4147,23 +3744,23 @@ subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
 !  If G is constant, BRKNEW is uniform.
 !
   if ( l <= 1 ) then
-    call evnnot ( break, coef, l, k, brknew, lnew, coefg )
+    call evnnot ( brk, coef, l, k, brknew, lnew, coefg )
     return
   end if
 
-  brknew(1) = break(1)
-  brknew(lnew+1) = break(l+1)
+  brknew(1) = brk(1)
+  brknew(lnew+1) = brk(l+1)
 !
 !  Construct the continuous piecewise linear function G.
 !
   oneovk = 1.0D+00 / real ( k, kind = 8 )
   coefg(1,1) = 0.0D+00
-  difprv = abs ( coef(k,2) - coef(k,1) ) / ( break(3) - break(1) )
+  difprv = abs ( coef(k,2) - coef(k,1) ) / ( brk(3) - brk(1) )
   
   do i = 2, l
-    dif = abs ( coef(k,i) - coef(k,i-1) ) / ( break(i+1) - break(i-1) )
+    dif = abs ( coef(k,i) - coef(k,i-1) ) / ( brk(i+1) - brk(i-1) )
     coefg(2,i-1) = ( dif + difprv )**oneovk
-    coefg(1,i) = coefg(1,i-1) + coefg(2,i-1) * ( break(i) - break(i-1) )
+    coefg(1,i) = coefg(1,i-1) + coefg(2,i-1) * ( brk(i) - brk(i-1) )
     difprv = dif
   end do
    
@@ -4171,7 +3768,7 @@ subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
 !
 !  STEP = G(B) / LNEW.
 !
-  step = ( coefg(1,l) + coefg(2,l) * ( break(l+1) - break(l) ) ) &
+  step = ( coefg(1,l) + coefg(2,l) * ( brk(l+1) - brk(l) ) ) &
     / real ( lnew, kind = 8 )
 
   if ( 0 < iprint ) then
@@ -4184,7 +3781,7 @@ subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
 !  If G is constant, BRKNEW is uniform.
 !
   if ( step <= 0.0D+00 ) then
-    call evnnot ( break, coef, l, k, brknew, lnew, coefg )
+    call evnnot ( brk, coef, l, k, brknew, lnew, coefg )
     return
   end if
 !
@@ -4224,16 +3821,16 @@ subroutine newnot ( break, coef, l, k, brknew, lnew, coefg )
     end do
        
     if ( coefg(2,j) /= 0.0D+00 ) then
-      brknew(i) = break(j) + ( stepi - coefg(1,j) ) / coefg(2,j)
+      brknew(i) = brk(j) + ( stepi - coefg(1,j) ) / coefg(2,j)
     else
-      brknew(i) = ( break(j) + break(j+1) ) / 2.0D+00
+      brknew(i) = ( brk(j) + brk(j+1) ) / 2.0D+00
     end if
     
   end do
   
   return
 end
-function ppvalu ( break, coef, l, k, x, jderiv )
+function ppvalu ( brk, coef, l, k, x, jderiv )
 
 !*****************************************************************************80
 !
@@ -4307,7 +3904,7 @@ function ppvalu ( break, coef, l, k, x, jderiv )
   integer ( kind = 4 ) k
   integer ( kind = 4 ) l
 
-  real ( kind = 8 ) break(l+1)
+  real ( kind = 8 ) brk(l+1)
   real ( kind = 8 ) coef(k,l)
   real ( kind = 8 ) fmmjdr
   real ( kind = 8 ) h
@@ -4331,11 +3928,11 @@ function ppvalu ( break, coef, l, k, x, jderiv )
 !
 !  Find the index I of the largest breakpoint to the left of X.
 !
-  call interv ( break, l+1, x, i, ndummy )
+  call interv ( brk, l+1, x, i, ndummy )
 !
 !  Evaluate the JDERIV-th derivative of the I-th polynomial piece at X.
 !
-  h = x - break(i)
+  h = x - brk(i)
   m = k
  
   do
@@ -4568,7 +4165,7 @@ subroutine r8vec_print ( n, a, title )
 
   return
 end
-function round ( x, size )
+function round ( x, siz )
 
 !*****************************************************************************80
 !
@@ -4607,11 +4204,11 @@ function round ( x, size )
 
   real ( kind = 8 ), save :: flip = -1.0D+00
   real ( kind = 8 ) round
-  real ( kind = 8 ) size
+  real ( kind = 8 ) siz
   real ( kind = 8 ) x
 
   flip = -flip
-  round = x + flip * size
+  round = x + flip * siz
 
   return
 end
@@ -4664,9 +4261,9 @@ subroutine sbblok ( bloks, integs, nbloks, ipivot, b, x )
   real ( kind = 8 ) b(*)
   real ( kind = 8 ) bloks(*)
   integer ( kind = 4 ) i
-  integer ( kind = 4 ) index
-  integer ( kind = 4 ) indexb
-  integer ( kind = 4 ) indexx
+  integer ( kind = 4 ) indx
+  integer ( kind = 4 ) indxb
+  integer ( kind = 4 ) indxx
   integer ( kind = 4 ) integs(3,nbloks)
   integer ( kind = 4 ) ipivot(*)
   integer ( kind = 4 ) j
@@ -4678,21 +4275,21 @@ subroutine sbblok ( bloks, integs, nbloks, ipivot, b, x )
 !
 !  Forward substitution:
 !
-  index = 1
-  indexb = 1
-  indexx = 1
+  indx = 1
+  indxb = 1
+  indxx = 1
 
   do i = 1, nbloks
 
     nrow = integs(1,i)
     last = integs(3,i)
 
-    call subfor ( bloks(index), ipivot(indexb), nrow, last, b(indexb), &
-      x(indexx) )
+    call subfor ( bloks(indx), ipivot(indxb), nrow, last, b(indxb), &
+      x(indxx) )
 
-    index = nrow * integs(2,i) + index
-    indexb = indexb + nrow
-    indexx = indexx + last
+    indx = nrow * integs(2,i) + indx
+    indxb = indxb + nrow
+    indxx = indxx + last
 
   end do
 !
@@ -4706,11 +4303,11 @@ subroutine sbblok ( bloks, integs, nbloks, ipivot, b, x )
     nrow = integs(1,i)
     ncol = integs(2,i)
     last = integs(3,i)
-    index = index - nrow * ncol
-    indexb = indexb - nrow
-    indexx = indexx - last
+    indx = indx - nrow * ncol
+    indxb = indxb - nrow
+    indxx = indxx - last
 
-    call subbak ( bloks(index), ipivot(indexb), nrow, ncol, last, x(indexx) )
+    call subbak ( bloks(indx), ipivot(indxb), nrow, ncol, last, x(indxx) )
 
   end do
    
@@ -5850,7 +5447,7 @@ subroutine splopt ( tau, n, k, scrtch, t, iflag )
   integer ( kind = 4 ) i
   integer ( kind = 4 ) id
   integer ( kind = 4 ) iflag
-  integer ( kind = 4 ) index
+  integer ( kind = 4 ) indx
   integer ( kind = 4 ) j
   integer ( kind = 4 ) kp1
   integer ( kind = 4 ) kpkm1
@@ -6012,11 +5609,11 @@ subroutine splopt ( tau, n, k, scrtch, t, iflag )
 !    LLMIN=2K-LEFT  <=  LL <= N-LEFT+K = LLMAX.
 !
       leftmk = left - k
-      index = leftmk - j + ( j - 1 ) * kpkm1 + nc
+      indx = leftmk - j + ( j - 1 ) * kpkm1 + nc
       llmin = max ( 1, k - leftmk )
       llmax = min ( k, n - leftmk )
       do ll = llmin, llmax
-        scrtch(ll+index) = scrtch(ll+nb)
+        scrtch(ll+indx) = scrtch(ll+nb)
       end do
     
       call bsplvb ( scrtch, kp1, 2, xij, left, scrtch(1+nb) )
@@ -6237,7 +5834,7 @@ subroutine subfor ( w, ipivot, nrow, last, b, x )
   
   return
 end
-subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
+subroutine tautsp ( tau, gtau, ntau, gamma, s, brk, coef, l, k, iflag )
 
 !*****************************************************************************80
 !
@@ -6380,7 +5977,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
 
   real ( kind = 8 ) alph
   real ( kind = 8 ) alpha
-  real ( kind = 8 ) break(*)
+  real ( kind = 8 ) brk(*)
   real ( kind = 8 ) c
   real ( kind = 8 ) coef(4,*)
   real ( kind = 8 ) d
@@ -6695,7 +6292,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
 !
 !  Construct polynomial pieces. 
 !
-  break(1) = tau(1)
+  brk(1) = tau(1)
   l = 1
 
   do i = 1, ntau - 1
@@ -6719,7 +6316,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
       d = s(i,4) * s(i,6)
       l = l + 1
       del = zeta * s(i,1)
-      break(l) = tau(i) + del
+      brk(l) = tau(i) + del
       zt2 = zeta**2
       alpha = alph(onemzt)
       factor = onemzt**2 * alpha
@@ -6758,7 +6355,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
         c = s(i+1,4) * s(i,6)
         d = s(i,4) / 6.0D+00
         del = zeta * s(i,1)
-        break(l+1) = tau(i) + del
+        brk(l+1) = tau(i) + del
         coef(2,l) = divdif - s(i,1) * ( 2.0D+00 * d + c )
         coef(4,l) = 6.0D+00 * ( c * alpha - d ) / s(i,1)
         l = l + 1
@@ -6776,7 +6373,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, break, coef, l, k, iflag )
     end if
 
     l = l + 1
-    break(l) = tau(i+1)
+    brk(l) = tau(i+1)
     
   end do
   
