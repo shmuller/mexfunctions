@@ -364,14 +364,14 @@ python module pppack ! in
             real(kind=8) dimension(ntau,6),depend(ntau) :: s
             real(kind=8) dimension(*) :: brk
             real(kind=8) dimension(4,*) :: coef
-            integer(kind=4) :: l
-            integer(kind=4) :: k
-            integer(kind=4) :: iflag
+            integer(kind=4) intent(out) :: l
+            integer(kind=4) intent(out) :: k
+            integer(kind=4) intent(out) :: iflag
         end subroutine tautsp
         subroutine titand(t,g,n) ! in :pppack:pppack.f90
             real(kind=8) dimension(*) :: t
             real(kind=8) dimension(*) :: g
-            integer(kind=4) :: n
+            integer(kind=4) intent(out) :: n
         end subroutine titand
     end interface 
 end python module pppack

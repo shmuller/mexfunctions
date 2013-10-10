@@ -5835,7 +5835,7 @@ subroutine subfor ( w, ipivot, nrow, last, b, x )
   return
 end
 subroutine tautsp ( tau, gtau, ntau, gamma, s, brk, coef, l, k, iflag )
-
+!f2py intent(out) l, k, iflag
 !*****************************************************************************80
 !
 !! TAUTSP constructs a cubic spline interpolant to given data.
@@ -6384,7 +6384,7 @@ subroutine tautsp ( tau, gtau, ntau, gamma, s, brk, coef, l, k, iflag )
   return
 end
 subroutine titand ( t, g, n )
-
+!f2py intent(out) n
 !*****************************************************************************80
 !
 !! TITAND represents a temperature dependent property of titanium.
