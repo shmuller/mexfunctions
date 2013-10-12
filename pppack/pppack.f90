@@ -3341,7 +3341,7 @@ subroutine fcblok ( bloks, integs, nbloks, ipivot, scrtch, iflag )
   return
 end
 subroutine interv ( xt, lxt, x, left, mflag )
-
+!f2py intent(out) left, mflag
 !*****************************************************************************80
 !
 !! INTERV brackets a real value in an ascending vector of values.
@@ -5140,7 +5140,7 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
   return
 end
 subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
-
+!f2py intent(out) iflag
 !*****************************************************************************80
 !
 !! SPLINT produces the B-spline coefficients BCOEF of an interpolating spline.
@@ -5348,7 +5348,7 @@ subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
   return
 end
 subroutine splopt ( tau, n, k, scrtch, t, iflag )
-
+!f2py intent(out) iflag
 !*****************************************************************************80
 !
 !! SPLOPT computes the knots for an optimal recovery scheme. 

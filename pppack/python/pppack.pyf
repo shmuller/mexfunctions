@@ -208,8 +208,8 @@ python module pppack ! in
             real(kind=8) dimension(lxt) :: xt
             integer(kind=4), optional,check(len(xt)>=lxt),depend(xt) :: lxt=len(xt)
             real(kind=8) :: x
-            integer(kind=4) :: left
-            integer(kind=4) :: mflag
+            integer(kind=4) intent(out) :: left
+            integer(kind=4) intent(out) :: mflag
         end subroutine interv
         subroutine knots(brk,l,kpm,m,t,n) ! in :pppack:pppack.f90
             real(kind=8) dimension(l + 1) :: brk
@@ -330,7 +330,7 @@ python module pppack ! in
             integer(kind=4) :: k
             real(kind=8) dimension((2*k-1)*n),depend(n,k) :: q
             real(kind=8) dimension(n),depend(n) :: bcoef
-            integer(kind=4) :: iflag
+            integer(kind=4) intent(out) :: iflag
         end subroutine splint
         subroutine splopt(tau,n,k,scrtch,t,iflag) ! in :pppack:pppack.f90
             real(kind=8) dimension(n) :: tau
@@ -338,7 +338,7 @@ python module pppack ! in
             integer(kind=4) :: k
             real(kind=8) dimension((n-k)*(2*k+3)+5*k+3),depend(n,k) :: scrtch
             real(kind=8) dimension(n+k),depend(n,k) :: t
-            integer(kind=4) :: iflag
+            integer(kind=4) intent(out) :: iflag
         end subroutine splopt
         subroutine subbak(w,ipivot,nrow,ncol,last,x) ! in :pppack:pppack.f90
             real(kind=8) dimension(nrow,ncol) :: w
