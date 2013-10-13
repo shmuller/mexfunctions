@@ -39,7 +39,7 @@ python module pppack ! in
             real(kind=8) dimension(k,k) :: scrtch
             real(kind=8) dimension(*) :: brk
             real(kind=8) dimension(k,n),depend(k,n) :: coef
-            integer(kind=4) :: l
+            integer(kind=4) intent(out) :: l
         end subroutine bsplpp
         subroutine bsplvb(t,jhigh,indx,x,left,biatx) ! in :pppack:pppack.f90
             real(kind=8) dimension(left+jhigh),depend(jhigh,left) :: t

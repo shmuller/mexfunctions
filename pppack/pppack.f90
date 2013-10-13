@@ -566,7 +566,7 @@ subroutine bchslv ( w, nbands, nrow, b )
   return
 end
 subroutine bsplpp ( t, bcoef, n, k, scrtch, brk, coef, l )
-
+!f2py intent(out) l
 !*****************************************************************************80
 !
 !! BSPLPP converts from B-spline to piecewise polynomial form.
