@@ -1,4 +1,5 @@
       subroutine titand ( tau, gtau, n )
+cf2py intent(out) n
 c  from  * a practical guide to splines *  by c. de boor    
 c  these data represent a property of titanium as a function of
 c  temperature. they have been used extensively as an example in spline

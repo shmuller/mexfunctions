@@ -49,8 +49,8 @@ c     In the event that  pc = d**(k-1)(f) is constant in  (a,b)  and
 c  therefore  h = 0 identically,  brknew  is chosen uniformly spaced.
 c
       integer k,l,lnew,   i,iprint,j
-      real break(1),brknew(1),coef(k,l),coefg(2,l),   dif,difprv,oneovk
-     *                                               ,step,stepi
+      real break(l+1),brknew(lnew+1),coef(k,l),coefg(2,l),
+     *     dif,difprv,oneovk,step,stepi
 c     dimension break(l+1), brknew(lnew+1)
 current fortran standard makes it impossible to specify the dimension
 c  of  break   and  brknew  without the introduction of additional

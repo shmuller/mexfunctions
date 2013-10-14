@@ -13,6 +13,7 @@ class Bsplines:
         #original data for test05 and test06
         self.k = 4
         self.t = np.array((0., 0., 0., 0., 1., 3., 4., 6., 6., 6., 6.))
+        figure()
 
     def test04(self):
         t, k = self.t, self.k
@@ -76,15 +77,15 @@ class Bsplines:
 
 
 bsplines = Bsplines()
-#bsplines.test04()
-#bsplines.test05()
-#bsplines.test06()
-#bsplines.test07()
+bsplines.test04()
+bsplines.test05()
+bsplines.test06()
+bsplines.test07()
 
 class Knots:
     def __init__(self):
-        #self.itermx = 0
-        self.itermx = 3
+        self.itermx = 0
+        #self.itermx = 3
         self.nlow = 4
         self.nhigh = 20
 
@@ -211,9 +212,10 @@ class Titan:
 
         self.tau = self.x[ipick - 1]
         self.gtau = self.gtitan[ipick - 1]
+        figure()
 
     def test14(self):
-        n = 12
+        n = self.tau.size
         k = 5
         lenscr = (n-k)*(2*k+3)+5*k+3
         scrtch = np.zeros(lenscr)
@@ -235,6 +237,7 @@ class Titan:
         plot(x, self.gtitan, self.tau, self.gtau, 'r*', x, gtitan2)
 
     def test17(self):
+        n = self.tau.size
         k = 4
         npoint = 201
         brk = np.zeros(122)
@@ -255,18 +258,18 @@ class Titan:
 
         gamma = 2.5
 
-        l, k, iflag = pppack.tautsp(tau, gtau, gamma, scrtch, brk, coef)
+        l, k, iflag = pppack.tautsp(self.tau, self.gtau, gamma, scrtch, brk, coef)
 
         plotts = np.zeros(npoint)
         for i in xrange(npoint):
             plotts[i] = pppack.ppvalu(brk[:l+1], coef[:,:l], plott[i], 0)
 
-        plot(x, gtitan, tau, gtau, 'r*', plott, np.c_[plotf, plotts])
+        plot(self.x, self.gtitan, self.tau, self.gtau, 'r*', plott, np.c_[plotf, plotts])
 
 
 titan = Titan()
 
-#titan.test14()
-#titan.test17()
+titan.test14()
+titan.test17()
 show()
 

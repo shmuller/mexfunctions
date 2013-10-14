@@ -3,375 +3,364 @@
 
 python module pppack ! in 
     interface  ! in :pppack
-        subroutine banfac(w,nroww,nrow,nbandl,nbandu,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nroww,nrow) :: w
-            integer(kind=4), optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
-            integer(kind=4) :: nbandl
-            integer(kind=4) :: nbandu
-            integer(kind=4) :: iflag
+        subroutine banfac(w,nroww,nrow,nbandl,nbandu,iflag) ! in :pppack:netlib/banfac.f
+            real*8 dimension(nroww,nrow) :: w
+            integer, optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
+            integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
+            integer :: nbandl
+            integer :: nbandu
+            integer :: iflag
         end subroutine banfac
-        subroutine banslv(w,nroww,nrow,nbandl,nbandu,b) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nroww,nrow) :: w
-            integer(kind=4), optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
-            integer(kind=4) :: nbandl
-            integer(kind=4) :: nbandu
-            real(kind=8) dimension(nrow),depend(nrow) :: b
+        subroutine banslv(w,nroww,nrow,nbandl,nbandu,b) ! in :pppack:netlib/banslv.f
+            real*8 dimension(nroww,nrow) :: w
+            integer, optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
+            integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
+            integer :: nbandl
+            integer :: nbandu
+            real*8 dimension(nrow),depend(nrow) :: b
         end subroutine banslv
-        subroutine bchfac(w,nbands,nrow,diag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nbands,nrow) :: w
-            integer(kind=4), optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
-            real(kind=8) dimension(nrow),depend(nrow) :: diag
+        subroutine bchfac(w,nbands,nrow,diag) ! in :pppack:netlib/bchfac.f
+            real*8 dimension(nbands,nrow) :: w
+            integer, optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
+            integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
+            real*8 dimension(nrow),depend(nrow) :: diag
         end subroutine bchfac
-        subroutine bchslv(w,nbands,nrow,b) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nbands,nrow) :: w
-            integer(kind=4), optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
-            real(kind=8) dimension(nrow),depend(nrow) :: b
+        subroutine bchslv(w,nbands,nrow,b) ! in :pppack:netlib/bchslv.f
+            real*8 dimension(nbands,nrow) :: w
+            integer, optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
+            integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
+            real*8 dimension(nrow),depend(nrow) :: b
         end subroutine bchslv
-        subroutine bsplpp(t,bcoef,n,k,scrtch,brk,coef,l) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            real(kind=8) dimension(n) :: bcoef
-            integer(kind=4), optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
-            integer(kind=4), optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
-            real(kind=8) dimension(k,k) :: scrtch
-            real(kind=8) dimension(*) :: brk
-            real(kind=8) dimension(k,n),depend(k,n) :: coef
-            integer(kind=4) intent(out) :: l
+        subroutine bsplpp(t,bcoef,n,k,scrtch,break_bn,coef,l) ! in :pppack:netlib/bsplpp.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(n) :: bcoef
+            integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
+            integer, optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
+            real*8 dimension(k,k) :: scrtch
+            real*8 dimension(l + 1) :: break_bn
+            real*8 dimension(k,l),depend(k,l) :: coef
+            integer, optional,intent(out),check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
         end subroutine bsplpp
-        subroutine bsplvb(t,jhigh,indx,x,left,biatx) ! in :pppack:pppack.f90
-            real(kind=8) dimension(left+jhigh),depend(jhigh,left) :: t
-            integer(kind=4), optional,check(len(biatx)>=jhigh),depend(biatx) :: jhigh=len(biatx)
-            integer(kind=4) :: indx
-            real(kind=8) :: x
-            integer(kind=4) :: left
-            real(kind=8) dimension(jhigh) :: biatx
+        subroutine bsplvb(t,jhigh,index_bn,x,left,biatx) ! in :pppack:netlib/bsplvb.f
+            real*8 dimension(left+jhigh),depend(jhigh,left) :: t
+            integer, optional,check(len(biatx)>=jhigh),depend(biatx) :: jhigh=len(biatx)
+            integer :: index_bn
+            real*8 :: x
+            integer :: left
+            real*8 dimension(jhigh) :: biatx
         end subroutine bsplvb
-        subroutine bsplvd(t,k,x,left,a,dbiatx,nderiv) ! in :pppack:pppack.f90
-            real(kind=8) dimension(left+k),depend(k,left) :: t
-            integer(kind=4), optional,check(shape(a,0)==k),depend(a) :: k=shape(a,0)
-            real(kind=8) :: x
-            integer(kind=4) :: left
-            real(kind=8) dimension(k,k) :: a
-            real(kind=8) dimension(k,nderiv),depend(k) :: dbiatx
-            integer(kind=4), optional,check(shape(dbiatx,1)==nderiv),depend(dbiatx) :: nderiv=shape(dbiatx,1)
+        subroutine bsplvd(t,k,x,left,a,dbiatx,nderiv) ! in :pppack:netlib/bsplvd.f
+            real*8 dimension(1) :: t
+            integer, optional,check(shape(a,0)==k),depend(a) :: k=shape(a,0)
+            real*8 :: x
+            integer :: left
+            real*8 dimension(k,k) :: a
+            real*8 dimension(k,nderiv),depend(k) :: dbiatx
+            integer, optional,check(shape(dbiatx,1)==nderiv),depend(dbiatx) :: nderiv=shape(dbiatx,1)
         end subroutine bsplvd
-        subroutine bspp2d(t,bcoef,n,k,m,scrtch,brk,coef,l) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            real(kind=8) dimension(n,m) :: bcoef
-            integer(kind=4), optional,check(shape(bcoef,0)==n),depend(bcoef) :: n=shape(bcoef,0)
-            integer(kind=4), optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
-            integer(kind=4), optional,check(shape(bcoef,1)==m),depend(bcoef) :: m=shape(bcoef,1)
-            real(kind=8) dimension(k,k,m),depend(m) :: scrtch
-            real(kind=8) dimension(*) :: brk
-            real(kind=8) dimension(m,k,*),depend(m,k) :: coef
-            integer(kind=4) :: l
+        subroutine bspp2d(t,bcoef,n,k,m,scrtch,break_bn,coef) ! in :pppack:netlib/bspp2d.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(n,m) :: bcoef
+            integer, optional,check(shape(bcoef,0)==n),depend(bcoef) :: n=shape(bcoef,0)
+            integer, optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
+            integer, optional,check(shape(bcoef,1)==m),depend(bcoef) :: m=shape(bcoef,1)
+            real*8 dimension(k,k,m),depend(m) :: scrtch
+            real*8 dimension(n+2-k),depend(n,k) :: break_bn
+            real*8 dimension(m,k,n+1-k),depend(m,k,n,k) :: coef
         end subroutine bspp2d
-        function bvalue(t,bcoef,n,k,x,jderiv) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            real(kind=8) dimension(n) :: bcoef
-            integer(kind=4), optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
-            integer(kind=4) :: k
-            real(kind=8) :: x
-            integer(kind=4) :: jderiv
-            real(kind=8) :: bvalue
+        function bvalue(t,bcoef,n,k,x,jderiv) ! in :pppack:netlib/bvalue.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(n) :: bcoef
+            integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
+            integer :: k
+            real*8 :: x
+            integer :: jderiv
+            real*8 :: bvalue
         end function bvalue
-        subroutine chol1d(p,v,qty,npoint,ncol,u,qu) ! in :pppack:pppack.f90
-            real(kind=8) :: p
-            real(kind=8) dimension(npoint,7) :: v
-            real(kind=8) dimension(npoint),depend(npoint) :: qty
-            integer(kind=4), optional,check(shape(v,0)==npoint),depend(v) :: npoint=shape(v,0)
-            integer(kind=4) :: ncol
-            real(kind=8) dimension(npoint),depend(npoint) :: u
-            real(kind=8) dimension(npoint),depend(npoint) :: qu
+        subroutine chol1d(p,v,qty,npoint,ncol,u,qu) ! in :pppack:netlib/chol1d.f
+            real*8 :: p
+            real*8 dimension(npoint,7) :: v
+            real*8 dimension(npoint),depend(npoint) :: qty
+            integer, optional,check(shape(v,0)==npoint),depend(v) :: npoint=shape(v,0)
+            integer :: ncol
+            real*8 dimension(npoint),depend(npoint) :: u
+            real*8 dimension(npoint),depend(npoint) :: qu
         end subroutine chol1d
-        subroutine colloc(aleft,aright,lbegin,iorder,ntimes,addbrk,relerr) ! in :pppack:pppack.f90
-            real(kind=8) :: aleft
-            real(kind=8) :: aright
-            integer(kind=4) :: lbegin
-            integer(kind=4) :: iorder
-            integer(kind=4) :: ntimes
-            real(kind=8) :: addbrk
-            real(kind=8) :: relerr
-            real(kind=8) dimension(100) :: brk
-            real(kind=8) dimension(2000) :: coef
-            integer(kind=4) :: l
-            integer(kind=4) :: kpm
-            integer(kind=4) :: itermx
-            integer(kind=4) :: k
-            real(kind=8) dimension(19) :: rho
-            integer(kind=4) :: m
-            integer(kind=4) :: iside
-            real(kind=8) dimension(10) :: xside
-            common /approx/ brk,coef,l,kpm
+        subroutine colloc(aleft,aright,lbegin,iorder,ntimes,addbrk,relerr) ! in :pppack:netlib/colloc.f
+            real*8 :: aleft
+            real*8 :: aright
+            integer :: lbegin
+            integer :: iorder
+            integer :: ntimes
+            real*8 :: addbrk
+            real*8 :: relerr
+            real*8 dimension(100) :: break
+            real*8 dimension(2000) :: coef
+            integer :: l
+            integer :: kpm
+            integer :: itermx
+            integer :: k
+            real*8 dimension(19) :: rho
+            integer :: m
+            integer :: iside
+            real*8 dimension(10) :: xside
+            common /approx/ break,coef,l,kpm
             common /other/ itermx,k,rho
             common /side/ m,iside,xside
         end subroutine colloc
-        subroutine colpnt(k,rho) ! in :pppack:pppack.f90
-            integer(kind=4), optional,check(len(rho)>=k),depend(rho) :: k=len(rho)
-            real(kind=8) dimension(k) :: rho
+        subroutine colpnt(k,rho) ! in :pppack:netlib/colpnt.f
+            integer, optional,check(len(rho)>=k),depend(rho) :: k=len(rho)
+            real*8 dimension(k) :: rho
         end subroutine colpnt
-        subroutine cubspl(tau,c,n,ibcbeg,ibcend) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n) :: tau
-            real(kind=8) dimension(4,n),depend(n) :: c
-            integer(kind=4), optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
-            integer(kind=4) :: ibcbeg
-            integer(kind=4) :: ibcend
+        subroutine cubspl(tau,c,n,ibcbeg,ibcend) ! in :pppack:netlib/cubspl.f
+            real*8 dimension(n) :: tau
+            real*8 dimension(4,n),depend(n) :: c
+            integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
+            integer :: ibcbeg
+            integer :: ibcend
         end subroutine cubspl
-        subroutine cwidth(w,b,nequ,ncols,integs,nbloks,d,x,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nequ,ncols) :: w
-            real(kind=8) dimension(nequ),depend(nequ) :: b
-            integer(kind=4), optional,check(shape(w,0)==nequ),depend(w) :: nequ=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==ncols),depend(w) :: ncols=shape(w,1)
-            integer(kind=4) dimension(2,nbloks) :: integs
-            integer(kind=4), optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
-            real(kind=8) dimension(nequ),depend(nequ) :: d
-            real(kind=8) dimension(nequ),depend(nequ) :: x
-            integer(kind=4) :: iflag
+        subroutine cwidth(w,b,nequ,ncols,integs,nbloks,d,x,iflag) ! in :pppack:netlib/cwidth.f
+            real*8 dimension(nequ,ncols) :: w
+            real*8 dimension(nequ),depend(nequ) :: b
+            integer, optional,check(shape(w,0)==nequ),depend(w) :: nequ=shape(w,0)
+            integer, optional,check(shape(w,1)==ncols),depend(w) :: ncols=shape(w,1)
+            integer dimension(2,nbloks) :: integs
+            integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
+            real*8 dimension(nequ),depend(nequ) :: d
+            real*8 dimension(nequ),depend(nequ) :: x
+            integer :: iflag
         end subroutine cwidth
-        subroutine difequ(mode,xx,v) ! in :pppack:pppack.f90
-            integer(kind=4) :: mode
-            real(kind=8) :: xx
-            real(kind=8) dimension(20) :: v
-            real(kind=8) dimension(100) :: brk
-            real(kind=8) dimension(2000) :: coef
-            integer(kind=4) :: l
-            integer(kind=4) :: kpm
-            integer(kind=4) :: itermx
-            integer(kind=4) :: k
-            real(kind=8) dimension(19) :: rho
-            integer(kind=4) :: m
-            integer(kind=4) :: iside
-            real(kind=8) dimension(10) :: xside
-            common /approx/ brk,coef,l,kpm
+        subroutine difequ(mode,xx,v) ! in :pppack:netlib/difequ.f
+            integer :: mode
+            real*8 :: xx
+            real*8 dimension(20) :: v
+            real*8 dimension(100) :: break
+            real*8 dimension(2000) :: coef
+            integer :: l
+            integer :: kpm
+            integer :: itermx
+            integer :: k
+            real*8 dimension(19) :: rho
+            integer :: m
+            integer :: iside
+            real*8 dimension(10) :: xside
+            common /approx/ break,coef,l,kpm
             common /other/ itermx,k,rho
             common /side/ m,iside,xside
         end subroutine difequ
-        subroutine dtblok(bloks,integs,nbloks,ipivot,iflag,detsgn,detlog) ! in :pppack:pppack.f90
-            real(kind=8) dimension(*) :: bloks
-            integer(kind=4) dimension(3,nbloks) :: integs
-            integer(kind=4), optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
-            integer(kind=4) dimension(1) :: ipivot
-            integer(kind=4) :: iflag
-            real(kind=8) :: detsgn
-            real(kind=8) :: detlog
-        end subroutine dtblok
-        subroutine eqblok(t,n,kpm,work1,work2,bloks,lenblk,integs,nbloks,b) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n+kpm),depend(n,kpm) :: t
-            integer(kind=4) :: n
-            integer(kind=4), optional,check(shape(work1,0)==kpm),depend(work1) :: kpm=shape(work1,0)
-            real(kind=8) dimension(kpm,kpm) :: work1
-            real(kind=8) dimension(kpm,*),depend(kpm) :: work2
-            real(kind=8) dimension(*) :: bloks
-            integer(kind=4) :: lenblk
-            integer(kind=4) dimension(3,*) :: integs
-            integer(kind=4) :: nbloks
-            real(kind=8) dimension(*) :: b
-            integer(kind=4) :: itermx
-            integer(kind=4) :: k
-            real(kind=8) dimension(19) :: rho
-            integer(kind=4) :: m
-            integer(kind=4) :: iside
-            real(kind=8) dimension(10) :: xside
+        subroutine eqblok(t,n,kpm,work1,work2,bloks,lenblk,integs,nbloks,b) ! in :pppack:netlib/eqblok.f
+            real*8 dimension(1) :: t
+            integer :: n
+            integer :: kpm
+            real*8 dimension(1) :: work1
+            real*8 dimension(1) :: work2
+            real*8 dimension(1) :: bloks
+            integer :: lenblk
+            integer dimension(3,1) :: integs
+            integer :: nbloks
+            real*8 dimension(1) :: b
+            integer :: itermx
+            integer :: k
+            real*8 dimension(19) :: rho
+            integer :: m
+            integer :: iside
+            real*8 dimension(10) :: xside
             common /other/ itermx,k,rho
             common /side/ m,iside,xside
         end subroutine eqblok
-        subroutine evnnot(brk,coef,l,k,brknew,lnew,coefg) ! in :pppack:pppack.f90
-            real(kind=8) dimension(l + 1) :: brk
-            real(kind=8) dimension(k,l),depend(l) :: coef
-            integer(kind=4), optional,check((len(brk)-1)>=l),depend(brk) :: l=(len(brk)-1)
-            integer(kind=4), optional,check(shape(coef,0)==k),depend(coef) :: k=shape(coef,0)
-            real(kind=8) dimension(lnew + 1) :: brknew
-            integer(kind=4), optional,check((len(brknew)-1)>=lnew),depend(brknew) :: lnew=(len(brknew)-1)
-            real(kind=8) dimension(2,l),depend(l) :: coefg
-        end subroutine evnnot
-        subroutine factrb(w,ipivot,d,nrow,ncol,last,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nrow,ncol) :: w
-            integer(kind=4) dimension(nrow),depend(nrow) :: ipivot
-            real(kind=8) dimension(nrow),depend(nrow) :: d
-            integer(kind=4), optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==ncol),depend(w) :: ncol=shape(w,1)
-            integer(kind=4) :: last
-            integer(kind=4) :: iflag
-        end subroutine factrb
-        subroutine fcblok(bloks,integs,nbloks,ipivot,scrtch,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(*) :: bloks
-            integer(kind=4) dimension(3,nbloks) :: integs
-            integer(kind=4), optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
-            integer(kind=4) dimension(*) :: ipivot
-            real(kind=8) dimension(*) :: scrtch
-            integer(kind=4) :: iflag
-        end subroutine fcblok
-        subroutine interv(xt,lxt,x,left,mflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(lxt) :: xt
-            integer(kind=4), optional,check(len(xt)>=lxt),depend(xt) :: lxt=len(xt)
-            real(kind=8) :: x
-            integer(kind=4) intent(out) :: left
-            integer(kind=4) intent(out) :: mflag
+        subroutine interv(xt,lxt,x,left,mflag) ! in :pppack:netlib/interv.f
+            real*8 dimension(lxt) :: xt
+            integer, optional,check(len(xt)>=lxt),depend(xt) :: lxt=len(xt)
+            real*8 :: x
+            integer intent(out) :: left
+            integer intent(out) :: mflag
         end subroutine interv
-        subroutine knots(brk,l,kpm,m,t,n) ! in :pppack:pppack.f90
-            real(kind=8) dimension(l + 1) :: brk
-            integer(kind=4), optional,check((len(brk)-1)>=l),depend(brk) :: l=(len(brk)-1)
-            integer(kind=4) :: kpm
-            integer(kind=4) :: m
-            real(kind=8) dimension(n+kpm),depend(kpm,n) :: t
-            integer(kind=4) :: n
+        subroutine knots(break_bn,l,kpm,t,n) ! in :pppack:netlib/knots.f
+            real*8 dimension(1) :: break_bn
+            integer :: l
+            integer :: kpm
+            real*8 dimension(1) :: t
+            integer :: n
+            integer :: m
+            integer :: iside
+            real*8 dimension(10) :: xside
+            common /side/ m,iside,xside
         end subroutine knots
-        subroutine newnot(brk,coef,l,k,brknew,lnew,coefg) ! in :pppack:pppack.f90
-            real(kind=8) dimension(l + 1) :: brk
-            real(kind=8) dimension(k,l),depend(l) :: coef
-            integer(kind=4), optional,check((len(brk)-1)>=l),depend(brk) :: l=(len(brk)-1)
-            integer(kind=4), optional,check(shape(coef,0)==k),depend(coef) :: k=shape(coef,0)
-            real(kind=8) dimension(lnew + 1) :: brknew
-            integer(kind=4), optional,check((len(brknew)-1)>=lnew),depend(brknew) :: lnew=(len(brknew)-1)
-            real(kind=8) dimension(2,l),depend(l) :: coefg
+        subroutine newnot(break_bn,coef,l,k,brknew,lnew,coefg) ! in :pppack:netlib/newnot.f
+            real*8 dimension(l + 1) :: break_bn
+            real*8 dimension(k,l),depend(l) :: coef
+            integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
+            integer, optional,check(shape(coef,0)==k),depend(coef) :: k=shape(coef,0)
+            real*8 dimension(lnew + 1) :: brknew
+            integer, optional,check((len(brknew)-1)>=lnew),depend(brknew) :: lnew=(len(brknew)-1)
+            real*8 dimension(2,l),depend(l) :: coefg
         end subroutine newnot
-        function ppvalu(brk,coef,l,k,x,jderiv) ! in :pppack:pppack.f90
-            real(kind=8) dimension(l + 1) :: brk
-            real(kind=8) dimension(k,l),depend(l) :: coef
-            integer(kind=4), optional,check((len(brk)-1)>=l),depend(brk) :: l=(len(brk)-1)
-            integer(kind=4), optional,check(shape(coef,0)==k),depend(coef) :: k=shape(coef,0)
-            real(kind=8) :: x
-            integer(kind=4) :: jderiv
-            real(kind=8) :: ppvalu
+        function ppvalu(break_bn,coef,l,k,x,jderiv) ! in :pppack:netlib/ppvalu.f
+            real*8 dimension(l + 1) :: break_bn
+            real*8 dimension(k,l),depend(l) :: coef
+            integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
+            integer, optional,check(shape(coef,0)==k),depend(coef) :: k=shape(coef,0)
+            real*8 :: x
+            integer :: jderiv
+            real*8 :: ppvalu
         end function ppvalu
-        subroutine putit(t,kpm,left,scrtch,dbiatx,q,nrow,b) ! in :pppack:pppack.f90
-            real(kind=8) dimension(left+kpm),depend(kpm,left) :: t
-            integer(kind=4), optional,check(shape(scrtch,0)==kpm),depend(scrtch) :: kpm=shape(scrtch,0)
-            integer(kind=4) :: left
-            real(kind=8) dimension(kpm,kpm) :: scrtch
-            real(kind=8) dimension(kpm,*),depend(kpm) :: dbiatx
-            real(kind=8) dimension(nrow,kpm),depend(kpm) :: q
-            integer(kind=4), optional,check(shape(q,0)==nrow),depend(q) :: nrow=shape(q,0)
-            real(kind=8) dimension(nrow),depend(nrow) :: b
-            integer(kind=4) :: itermx
-            integer(kind=4) :: k
-            real(kind=8) dimension(19) :: rho
-            integer(kind=4) :: m
-            integer(kind=4) :: iside
-            real(kind=8) dimension(10) :: xside
+        subroutine putit(t,kpm,left,scrtch,dbiatx,q,nrow,b) ! in :pppack:netlib/putit.f
+            real*8 dimension(1) :: t
+            integer, optional,check(shape(dbiatx,0)==kpm),depend(dbiatx) :: kpm=shape(dbiatx,0)
+            integer :: left
+            real*8 dimension(1) :: scrtch
+            real*8 dimension(kpm,1) :: dbiatx
+            real*8 dimension(nrow,kpm),depend(kpm) :: q
+            integer, optional,check(shape(q,0)==nrow),depend(q) :: nrow=shape(q,0)
+            real*8 dimension(1) :: b
+            integer :: itermx
+            integer :: k
+            real*8 dimension(19) :: rho
+            integer :: m
+            integer :: iside
+            real*8 dimension(10) :: xside
             common /other/ itermx,k,rho
             common /side/ m,iside,xside
         end subroutine putit
-        subroutine r8vec_print(n,a,title) ! in :pppack:pppack.f90
-            integer(kind=4), optional,check(len(a)>=n),depend(a) :: n=len(a)
-            real(kind=8) dimension(n) :: a
-            character*(*) :: title
-        end subroutine r8vec_print
-        function round(x,siz) ! in :pppack:pppack.f90
-            real(kind=8) :: x
-            real(kind=8) :: siz
-            real(kind=8) :: round
+        function round(x) ! in :pppack:netlib/round.f
+            real*8 :: x
+            real*8 :: size
+            real*8 :: round
+            common /rount/ size
         end function round
-        subroutine sbblok(bloks,integs,nbloks,ipivot,b,x) ! in :pppack:pppack.f90
-            real(kind=8) dimension(*) :: bloks
-            integer(kind=4) dimension(3,nbloks) :: integs
-            integer(kind=4), optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
-            integer(kind=4) dimension(*) :: ipivot
-            real(kind=8) dimension(*) :: b
-            real(kind=8) dimension(*) :: x
-        end subroutine sbblok
-        subroutine setupq(x,dx,y,npoint,v,qty) ! in :pppack:pppack.f90
-            real(kind=8) dimension(npoint) :: x
-            real(kind=8) dimension(npoint),depend(npoint) :: dx
-            real(kind=8) dimension(npoint),depend(npoint) :: y
-            integer(kind=4), optional,check(len(x)>=npoint),depend(x) :: npoint=len(x)
-            real(kind=8) dimension(npoint,7),depend(npoint) :: v
-            real(kind=8) dimension(npoint),depend(npoint) :: qty
+        subroutine setupq(x,dx,y,npoint,v,qty) ! in :pppack:netlib/setupq.f
+            real*8 dimension(npoint) :: x
+            real*8 dimension(npoint),depend(npoint) :: dx
+            real*8 dimension(npoint),depend(npoint) :: y
+            integer, optional,check(len(x)>=npoint),depend(x) :: npoint=len(x)
+            real*8 dimension(npoint,7),depend(npoint) :: v
+            real*8 dimension(npoint),depend(npoint) :: qty
         end subroutine setupq
-        subroutine shiftb(ai,ipivot,nrowi,ncoli,last,ai1,nrowi1,ncoli1) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nrowi,ncoli) :: ai
-            integer(kind=4) dimension(nrowi),depend(nrowi) :: ipivot
-            integer(kind=4), optional,check(shape(ai,0)==nrowi),depend(ai) :: nrowi=shape(ai,0)
-            integer(kind=4), optional,check(shape(ai,1)==ncoli),depend(ai) :: ncoli=shape(ai,1)
-            integer(kind=4) :: last
-            real(kind=8) dimension(nrowi1,ncoli1) :: ai1
-            integer(kind=4), optional,check(shape(ai1,0)==nrowi1),depend(ai1) :: nrowi1=shape(ai1,0)
-            integer(kind=4), optional,check(shape(ai1,1)==ncoli1),depend(ai1) :: ncoli1=shape(ai1,1)
-        end subroutine shiftb
-        subroutine slvblk(bloks,integs,nbloks,b,ipivot,x,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(*) :: bloks
-            integer(kind=4) dimension(3,nbloks) :: integs
-            integer(kind=4), optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
-            real(kind=8) dimension(*) :: b
-            integer(kind=4) dimension(*) :: ipivot
-            real(kind=8) dimension(*) :: x
-            integer(kind=4) :: iflag
+        subroutine slvblk(bloks,integs,nbloks,b,ipivot,x,iflag) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(1) :: bloks
+            integer dimension(3,nbloks) :: integs
+            integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
+            real*8 dimension(1) :: b
+            integer dimension(1) :: ipivot
+            real*8 dimension(1) :: x
+            integer :: iflag
         end subroutine slvblk
-        function smooth(x,y,dy,npoint,s,v,a) ! in :pppack:pppack.f90
-            real(kind=8) dimension(npoint) :: x
-            real(kind=8) dimension(npoint),depend(npoint) :: y
-            real(kind=8) dimension(npoint),depend(npoint) :: dy
-            integer(kind=4), optional,check(len(x)>=npoint),depend(x) :: npoint=len(x)
-            real(kind=8) :: s
-            real(kind=8) dimension(npoint,7),depend(npoint) :: v
-            real(kind=8) dimension(npoint,4),depend(npoint) :: a
-            real(kind=8) :: smooth
-        end function smooth
-        subroutine spli2d(tau,gtau,t,n,k,m,work,q,bcoef,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n) :: tau
-            real(kind=8) dimension(n,m),depend(n) :: gtau
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            integer(kind=4), optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
-            integer(kind=4) :: k
-            integer(kind=4), optional,check(shape(gtau,1)==m),depend(gtau) :: m=shape(gtau,1)
-            real(kind=8) dimension(n),depend(n) :: work
-            real(kind=8) dimension((2*k-1)*n),depend(n,k) :: q
-            real(kind=8) dimension(m,n),depend(m,n) :: bcoef
-            integer(kind=4) :: iflag
-        end subroutine spli2d
-        subroutine splint(tau,gtau,t,n,k,q,bcoef,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n) :: tau
-            real(kind=8) dimension(n),depend(n) :: gtau
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            integer(kind=4), optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
-            integer(kind=4) :: k
-            real(kind=8) dimension((2*k-1)*n),depend(n,k) :: q
-            real(kind=8) dimension(n),depend(n) :: bcoef
-            integer(kind=4) intent(out) :: iflag
-        end subroutine splint
-        subroutine splopt(tau,n,k,scrtch,t,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(n) :: tau
-            integer(kind=4), optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
-            integer(kind=4) :: k
-            real(kind=8) dimension((n-k)*(2*k+3)+5*k+3),depend(n,k) :: scrtch
-            real(kind=8) dimension(n+k),depend(n,k) :: t
-            integer(kind=4) intent(out) :: iflag
-        end subroutine splopt
-        subroutine subbak(w,ipivot,nrow,ncol,last,x) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nrow,ncol) :: w
-            integer(kind=4) dimension(nrow),depend(nrow) :: ipivot
-            integer(kind=4), optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==ncol),depend(w) :: ncol=shape(w,1)
-            integer(kind=4) :: last
-            real(kind=8) dimension(ncol),depend(ncol) :: x
-        end subroutine subbak
-        subroutine subfor(w,ipivot,nrow,last,b,x) ! in :pppack:pppack.f90
-            real(kind=8) dimension(nrow,last) :: w
-            integer(kind=4) dimension(nrow),depend(nrow) :: ipivot
-            integer(kind=4), optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
-            integer(kind=4), optional,check(shape(w,1)==last),depend(w) :: last=shape(w,1)
-            real(kind=8) dimension(nrow+nrow-last),depend(nrow,last) :: b
-            real(kind=8) dimension(nrow),depend(nrow) :: x
+        subroutine fcblok(bloks,integs,nbloks,ipivot,scrtch,iflag) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(1) :: bloks
+            integer dimension(3,nbloks) :: integs
+            integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
+            integer dimension(1) :: ipivot
+            real*8 dimension(1) :: scrtch
+            integer :: iflag
+        end subroutine fcblok
+        subroutine factrb(w,ipivot,d,nrow,ncol,last,iflag) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(nrow,ncol) :: w
+            integer dimension(nrow),depend(nrow) :: ipivot
+            real*8 dimension(nrow),depend(nrow) :: d
+            integer, optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
+            integer, optional,check(shape(w,1)==ncol),depend(w) :: ncol=shape(w,1)
+            integer :: last
+            integer :: iflag
+        end subroutine factrb
+        subroutine shiftb(ai,ipivot,nrowi,ncoli,last,ai1,nrowi1,ncoli1) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(nrowi,ncoli) :: ai
+            integer dimension(nrowi),depend(nrowi) :: ipivot
+            integer, optional,check(shape(ai,0)==nrowi),depend(ai) :: nrowi=shape(ai,0)
+            integer, optional,check(shape(ai,1)==ncoli),depend(ai) :: ncoli=shape(ai,1)
+            integer :: last
+            real*8 dimension(nrowi1,ncoli1) :: ai1
+            integer, optional,check(shape(ai1,0)==nrowi1),depend(ai1) :: nrowi1=shape(ai1,0)
+            integer, optional,check(shape(ai1,1)==ncoli1),depend(ai1) :: ncoli1=shape(ai1,1)
+        end subroutine shiftb
+        subroutine sbblok(bloks,integs,nbloks,ipivot,b,x) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(1) :: bloks
+            integer dimension(3,nbloks) :: integs
+            integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
+            integer dimension(1) :: ipivot
+            real*8 dimension(1) :: b
+            real*8 dimension(1) :: x
+        end subroutine sbblok
+        subroutine subfor(w,ipivot,nrow,last,b,x) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(nrow,last) :: w
+            integer dimension(nrow),depend(nrow) :: ipivot
+            integer, optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
+            integer, optional,check(shape(w,1)==last),depend(w) :: last=shape(w,1)
+            real*8 dimension(1) :: b
+            real*8 dimension(nrow),depend(nrow) :: x
         end subroutine subfor
-        subroutine tautsp(tau,gtau,ntau,gamma,s,brk,coef,l,k,iflag) ! in :pppack:pppack.f90
-            real(kind=8) dimension(ntau) :: tau
-            real(kind=8) dimension(ntau),depend(ntau) :: gtau
-            integer(kind=4), optional,check(len(tau)>=ntau),depend(tau) :: ntau=len(tau)
-            real(kind=8) :: gamma
-            real(kind=8) dimension(ntau,6),depend(ntau) :: s
-            real(kind=8) dimension(*) :: brk
-            real(kind=8) dimension(4,*) :: coef
-            integer(kind=4) intent(out) :: l
-            integer(kind=4) intent(out) :: k
-            integer(kind=4) intent(out) :: iflag
+        subroutine subbak(w,ipivot,nrow,ncol,last,x) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(nrow,ncol) :: w
+            integer dimension(nrow),depend(nrow) :: ipivot
+            integer, optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
+            integer, optional,check(shape(w,1)==ncol),depend(w) :: ncol=shape(w,1)
+            integer :: last
+            real*8 dimension(ncol),depend(ncol) :: x
+        end subroutine subbak
+        subroutine dtblok(bloks,integs,nbloks,ipivot,iflag,detsgn,detlog) ! in :pppack:netlib/slvblktext.f
+            real*8 dimension(1) :: bloks
+            integer dimension(3,nbloks) :: integs
+            integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
+            integer dimension(1) :: ipivot
+            integer :: iflag
+            real*8 :: detsgn
+            real*8 :: detlog
+        end subroutine dtblok
+        function smooth(x,y,dy,npoint,s,v,a) ! in :pppack:netlib/smooth.f
+            real*8 dimension(npoint) :: x
+            real*8 dimension(npoint),depend(npoint) :: y
+            real*8 dimension(npoint),depend(npoint) :: dy
+            integer, optional,check(len(x)>=npoint),depend(x) :: npoint=len(x)
+            real*8 :: s
+            real*8 dimension(npoint,7),depend(npoint) :: v
+            real*8 dimension(npoint,4),depend(npoint) :: a
+            real*8 :: smooth
+        end function smooth
+        subroutine spli2d(tau,gtau,t,n,k,m,work,q,bcoef,iflag) ! in :pppack:netlib/spli2d.f
+            real*8 dimension(n) :: tau
+            real*8 dimension(n,m),depend(n) :: gtau
+            real*8 dimension(n+k),depend(n,k) :: t
+            integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
+            integer :: k
+            integer, optional,check(shape(gtau,1)==m),depend(gtau) :: m=shape(gtau,1)
+            real*8 dimension(n),depend(n) :: work
+            real*8 dimension((2*k-1)*n),depend(n,k) :: q
+            real*8 dimension(m,n),depend(m,n) :: bcoef
+            integer :: iflag
+        end subroutine spli2d
+        subroutine splint(tau,gtau,t,n,k,q,bcoef,iflag) ! in :pppack:netlib/splint.f
+            real*8 dimension(n) :: tau
+            real*8 dimension(n),depend(n) :: gtau
+            real*8 dimension(n+k),depend(n,k) :: t
+            integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
+            integer :: k
+            real*8 dimension((2*k-1)*n),depend(n,k) :: q
+            real*8 dimension(n),depend(n) :: bcoef
+            integer intent(out) :: iflag
+        end subroutine splint
+        subroutine splopt(tau,n,k,scrtch,t,iflag) ! in :pppack:netlib/splopt.f
+            real*8 dimension(n) :: tau
+            integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
+            integer :: k
+            real*8 dimension((n-k)*(2*k+3)+5*k+3),depend(n,k) :: scrtch
+            real*8 dimension(n+k),depend(n,k) :: t
+            integer intent(out) :: iflag
+        end subroutine splopt
+        subroutine tautsp(tau,gtau,ntau,gamma,s,break_bn,coef,l,k,iflag) ! in :pppack:netlib/tautsp.f
+            real*8 dimension(ntau) :: tau
+            real*8 dimension(ntau),depend(ntau) :: gtau
+            integer, optional,check(len(tau)>=ntau),depend(tau) :: ntau=len(tau)
+            real*8 :: gamma
+            real*8 dimension(ntau,6),depend(ntau) :: s
+            real*8 dimension(*) :: break_bn
+            real*8 dimension(4,*) :: coef
+            integer intent(out) :: l
+            integer intent(out) :: k
+            integer intent(out) :: iflag
         end subroutine tautsp
-        subroutine titand(t,g,n) ! in :pppack:pppack.f90
-            real(kind=8) dimension(*) :: t
-            real(kind=8) dimension(*) :: g
-            integer(kind=4) intent(out) :: n
+        subroutine titand(tau,gtau,n) ! in :pppack:netlib/titand.f
+            real*8 dimension(49) :: tau
+            real*8 dimension(49) :: gtau
+            integer intent(out) :: n
         end subroutine titand
     end interface 
 end python module pppack

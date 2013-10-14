@@ -1,4 +1,5 @@
       subroutine splint ( tau, gtau, t, n, k, q, bcoef, iflag )
+cf2py intent(out) iflag
 c  from  * a practical guide to splines *  by c. de boor    
 calls bsplvb, banfac/slv
 c
@@ -47,7 +48,7 @@ c     banfac  does no pivoting, since the total positivity of the matrix
 c  a  makes this unnecessary.
 c
       integer iflag,k,n,   i,ilp1mx,j,jj,km1,kpkm2,left,lenq,np1
-      real bcoef(n),gtau(n),q(1),t(1),tau(n),   taui
+      real bcoef(n),gtau(n),q((2*k-1)*n),t(n+k),tau(n),   taui
 c     dimension q(2*k-1,n), t(n+k)
 current fortran standard makes it impossible to specify precisely the
 c  dimension of  q  and  t  without the introduction of otherwise super-

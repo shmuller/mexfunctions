@@ -1,5 +1,6 @@
       subroutine tautsp ( tau, gtau, ntau, gamma, s,
      *                    break, coef, l, k, iflag )
+cf2py intent(out) l, k, iflag
 c  from  * a practical guide to splines *  by c. de boor    
 constructs cubic spline interpolant to given data
 c         tau(i), gtau(i), i=1,...,ntau.
@@ -81,7 +82,7 @@ c  diagonally dominant tridiagonal linear system for the fsecnd(i)
 c  which we solve by gauss elimination without pivoting.
 c
       integer iflag,k,l,ntau,   i,method,ntaum1
-      real break(1),coef(4,1),gamma,gtau(ntau),s(ntau,6),tau(ntau)
+      real break(*),coef(4,*),gamma,gtau(ntau),s(ntau,6),tau(ntau)
      *    ,alpha,c,d,del,denom,divdif,entry,entry3,factor,factr2,gam
      *    ,onemg3,onemzt,ratio,sixth,temp,x,z,zeta,zt2
       alph(x) = amin1(1.,onemg3/x)

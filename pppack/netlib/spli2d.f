@@ -53,7 +53,8 @@ c     banfac  does no pivoting, since the total positivity of the matrix
 c  a  makes this unnecessary. 
 c     
       integer iflag,k,m,n,   i,ilp1mx,j,jj,km1,kpkm2,left,lenq,np1      ********    
-      real bcoef(m,n),gtau(n,m),q(1),t(1),tau(n),work(n),   taui        ********    
+      real bcoef(m,n),gtau(n,m),q((2*k-1)*n),t(n+k),tau(n),work(n),     ********    
+     *     taui
 c     dimension q(2*k-1,n), t(n+k)  
 current fortran standard makes it impossible to specify precisely the   
 c  dimension of  q  and  t  without the introduction of otherwise super-

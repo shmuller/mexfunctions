@@ -1,4 +1,5 @@
       subroutine splopt ( tau, n, k, scrtch, t, iflag )
+cf2py intent(out) iflag
 c  from  * a practical guide to splines *  by c. de boor    
 calls bsplvb, banfac/slv
 computes the knots  t  for the optimal recovery scheme of order  k
@@ -54,8 +55,8 @@ c                 newtmx, tolrte / 10, .000001
 c
       integer iflag,k,n,   i,id,index,j,km1,kpk,kpkm1,kpn,kp1,l,left
      *,leftmk,lenw,ll,llmax,llmin,na,nb,nc,nd,newtmx,newton,nmk,nmkm1,nx
-      real scrtch(1),t(1),tau(n),   del,delmax,floatk,sign,signst,sum
-     *                             ,tol,tolrte,xij
+      real scrtch((n-k)*(2*k+3)+5*k+3),t(n+k),tau(n),
+     *     del,delmax,floatk,sign,signst,sum,tol,tolrte,xij
 c     dimension scrtch((n-k)*(2*k+3)+5*k+3), t(n+k)
 current fortran standard makes it impossible to specify the precise dim-
 c  ensions of  scrtch  and  t  without the introduction of otherwise

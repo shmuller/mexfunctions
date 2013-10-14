@@ -1,4 +1,5 @@
       subroutine interv ( xt, lxt, x, left, mflag )
+cf2py intent(out) left, mflag
 c  from  * a practical guide to splines *  by C. de Boor    
 computes  left = max( i :  xt(i) .lt. xt(lxt) .and.  xt(i) .le. x )  .
 c

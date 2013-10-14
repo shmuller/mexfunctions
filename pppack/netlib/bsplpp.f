@@ -1,4 +1,5 @@
       subroutine bsplpp ( t, bcoef, n, k, scrtch, break, coef, l )
+cf2py intent(out) l
 c  from  * a practical guide to splines *  by c. de Boor (7 may 92)
 calls  bsplvb
 c
