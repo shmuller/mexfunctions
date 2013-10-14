@@ -87,63 +87,117 @@ class Knots:
         self.itermx = 3
         self.nlow = 4
         self.nhigh = 20
-        #self.nhigh = 4
 
-    def test08(self):
-        nmax = 20
-        c = np.zeros((4, nmax), order='F')
-        scrtch = np.zeros((2, nmax), order='F')
-        step = 20.
-        istep = 20
+        self.irate09 = 1
+        self.irate10 = 8
 
         def g(x):
             return np.sqrt(x + 1.)
 
-        X = np.linspace(-1., 1., 101)
+        def dg(x):
+            return 0.5 / g(x)
 
-        def eval(tau, c, X):
-            npoint = X.size
-            Y = np.zeros(npoint)
-            for i in xrange(npoint):
-                Y[i] = pppack.ppvalu(tau, c, X[i], 0)
-            return Y
+        def ddg(x):
+            return -0.5 * dg(x) / (x + 1.)
+
+        self.g, self.dg, self.ddg = g, dg, ddg
+
+    def eval(self, tau, c, x):
+        n = tau.size
+        npoint = x.size
+        y = np.zeros(npoint)
+        for i in xrange(npoint):
+            y[i] = pppack.ppvalu(tau, c[:,:n-1], x[i], 0)
+        return y
+
+    def errmax_decay(self, tau, c):
+        step = 20
+        n = tau.size
+
+        errmax = 0.
+        for i in xrange(n-1):
+            dx = (tau[i+1] - tau[i]) / step
+            for j in xrange(step):
+                h = (j + 1) * dx
+                x = tau[i] + h
+                pnatx = c[0,i] + h * (c[1,i] + h * (c[2,i] + h * c[3,i] / 3.) / 2.)
+                
+                errmax = max(errmax, np.abs(self.g(x) - pnatx))
+
+        decay = 0.
+        aloger = np.log(errmax)
+        if (n > self.nlow):
+            decay = (aloger - self.algerp) / np.log(float(n) / float(n-2))
+        self.algerp = aloger
+
+        print n, errmax, decay
+
+    def test09(self):
+        nmax = 20
+        c = np.zeros((4, nmax), order='F')
+        scrtch = np.zeros((2, nmax), order='F')
+
+        X = np.linspace(-1., 1., 1001)
 
         for n in xrange(self.nlow, self.nhigh + 1, 2):
-            #figure()
-            h = 2. / (n - 1)
-            tau = np.arange(n) * h - 1.
-            c[0,:n] = g(tau)
+            figure()
+            h = 1. / (n - 1)
+            tau = 2. * (h * np.arange(n))**self.irate09 - 1.
+
+            c[0,:n] = self.g(tau)
             pppack.cubspl(tau, c[:,:n], 0, 0)            
-            #plot(X, g(X), X, eval(tau, c[:,:n-1], X))
+            plot(X, self.g(X), X, self.eval(tau, c, X))
 
             for iter in xrange(self.itermx):
                 pppack.newnot(tau.copy(), c[:,:n-1], tau, scrtch[:,:n-1])
-                c[0,:n] = g(tau)
+                c[0,:n] = self.g(tau)
                 pppack.cubspl(tau, c[:,:n], 0, 0)
-                #plot(X, eval(tau, c[:,:n-1], X))
+                plot(X, self.eval(tau, c, X))
 
-            errmax = 0.
-            for i in xrange(n-1):
-                dx = (tau[i+1] - tau[i]) / step
-                for j in xrange(istep):
-                    h = (j + 1) * dx
-                    x = tau[i] + h
-                    pnatx = c[0,i] + h * (c[1,i] + h * (c[2,i] + h * c[3,i] / 3.) / 2.)
-                
-                    errmax = max(errmax, np.abs(g(x) - pnatx))
+            self.errmax_decay(tau, c)
+            
+    def test10(self):
+        bcoef = np.zeros(22)
 
-            decay = 0.
-            aloger = math.log(errmax)
-            if (n > self.nlow):
-                decay = (aloger - algerp) / math.log(float(n) / float(n-2))
-            algerp = aloger
+        X = np.linspace(-1., 1., 1001)
+        figure()
+        plot(X, self.g(X))
 
-            print n, errmax, decay
+        for n in xrange(self.nlow, self.nhigh + 1, 2):
+            k = 4
+            m = n + 2
+            h = 1. / (n - 1)
+            t = 2. * (h * np.arange(1, n - 1))**self.irate10 - 1.
+            t = np.r_[[-1.] * k, t, [1.] * k]
+        
+            bcoef[0] = 0.
+            dtip2 = t[4] - t[0]
+            taui = t[4]
+            bcoef[1] = self.g(taui) - 2. * dtip2 * self.dg(taui) / 3. \
+                     + dtip2**2 * self.ddg(taui) / 6.
+            
+            for i in xrange(2, m):
+                taui = t[i+2]
+                dtip1 = dtip2
+                dtip2 = t[i+3] - t[i+2]
+
+                bcoef[i] = self.g(taui) + (dtip2 - dtip1) * self.dg(taui) / 3. \
+                         - dtip1 * dtip2 * self.ddg(taui) / 6.
+
+            brk = np.zeros(m+1)
+            c = np.zeros((k, m), order='F')
+            scrtch = np.zeros((k, k), order='F')
+
+            l = pppack.bsplpp(t, bcoef[:m], scrtch, brk, c)
+
+            plot(X, self.eval(brk[:l+1], c[:,:l], X))
+
+            self.errmax_decay(brk[:l+1], c[:,:l])
 
 
 knots = Knots()
-knots.test08()
-
+knots.test09()
+knots.test10()
 
 class Titan:
     def __init__(self):
