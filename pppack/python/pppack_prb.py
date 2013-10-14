@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import numpy.ma as ma
 import pppack
@@ -60,14 +61,88 @@ class Bsplines:
         values = np.zeros(npoint)
         for i in xrange(npoint):
             values[i] = pppack.ppvalu(brk[:l+1], coef[:,:l], x[i], 0)
-
         plot(x, values, 'k', linewidth=2)
+
+    def test07(self):
+        k = self.k
+        t = self.t[k-1:1-k]
+        npoint = 40
+        x = (np.arange(npoint) + 1) * 0.2 - 1
+        bcoef = np.ones(1)
+        values = np.zeros(npoint)
+        for i in xrange(npoint):
+            values[i] = pppack.bvalue(t, bcoef, k, x[i], 0)
+        plot(x, values, 'c--', linewidth=2)
 
 
 bsplines = Bsplines()
-bsplines.test04()
-bsplines.test05()
-bsplines.test06()
+#bsplines.test04()
+#bsplines.test05()
+#bsplines.test06()
+#bsplines.test07()
+
+class Knots:
+    def __init__(self):
+        #self.itermx = 0
+        self.itermx = 3
+        self.nlow = 4
+        self.nhigh = 20
+        #self.nhigh = 4
+
+    def test08(self):
+        nmax = 20
+        c = np.zeros((4, nmax), order='F')
+        scrtch = np.zeros((2, nmax), order='F')
+        step = 20.
+        istep = 20
+
+        def g(x):
+            return np.sqrt(x + 1.)
+
+        X = np.linspace(-1., 1., 101)
+
+        def eval(tau, c, X):
+            npoint = X.size
+            Y = np.zeros(npoint)
+            for i in xrange(npoint):
+                Y[i] = pppack.ppvalu(tau, c, X[i], 0)
+            return Y
+
+        for n in xrange(self.nlow, self.nhigh + 1, 2):
+            #figure()
+            h = 2. / (n - 1)
+            tau = np.arange(n) * h - 1.
+            c[0,:n] = g(tau)
+            pppack.cubspl(tau, c[:,:n], 0, 0)            
+            #plot(X, g(X), X, eval(tau, c[:,:n-1], X))
+
+            for iter in xrange(self.itermx):
+                pppack.newnot(tau.copy(), c[:,:n-1], tau, scrtch[:,:n-1])
+                c[0,:n] = g(tau)
+                pppack.cubspl(tau, c[:,:n], 0, 0)
+                #plot(X, eval(tau, c[:,:n-1], X))
+
+            errmax = 0.
+            for i in xrange(n-1):
+                dx = (tau[i+1] - tau[i]) / step
+                for j in xrange(istep):
+                    h = (j + 1) * dx
+                    x = tau[i] + h
+                    pnatx = c[0,i] + h * (c[1,i] + h * (c[2,i] + h * c[3,i] / 3.) / 2.)
+                
+                    errmax = max(errmax, np.abs(g(x) - pnatx))
+
+            decay = 0.
+            aloger = math.log(errmax)
+            if (n > self.nlow):
+                decay = (aloger - algerp) / math.log(float(n) / float(n-2))
+            algerp = aloger
+
+            print n, errmax, decay
+
+
+knots = Knots()
+knots.test08()
 
 
 class Titan:
