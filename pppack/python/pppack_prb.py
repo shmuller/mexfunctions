@@ -4,6 +4,15 @@ import numpy.ma as ma
 import pppack
 from matplotlib.pyplot import figure, plot, show
 
+def ev(tau, c, x):
+    n = tau.size
+    npoint = x.size
+    y = np.zeros(npoint)
+    for i in xrange(npoint):
+        y[i] = pppack.ppvalu(tau, c[:,:n-1], x[i], 0)
+    return y
+
+
 class Bsplines:
     def __init__(self):
         #original data for test04
@@ -103,14 +112,6 @@ class Knots:
 
         self.g, self.dg, self.ddg = g, dg, ddg
 
-    def eval(self, tau, c, x):
-        n = tau.size
-        npoint = x.size
-        y = np.zeros(npoint)
-        for i in xrange(npoint):
-            y[i] = pppack.ppvalu(tau, c[:,:n-1], x[i], 0)
-        return y
-
     def errmax_decay(self, tau, c, n):
         step = 20
         l = tau.size - 1
@@ -155,7 +156,7 @@ class Knots:
                 pppack.newnot(tau.copy(), c[:,:n-1], tau, scrtch[:,:n-1])
                 interp()    
                 
-            plot(X, self.eval(tau, c, X))
+            plot(X, ev(tau, c, X))
 
             self.errmax_decay(tau, c, n)
             
@@ -193,7 +194,7 @@ class Knots:
 
             l = pppack.bsplpp(t, bcoef[:m], scrtch, brk, c)
 
-            plot(X, self.eval(brk[:l+1], c[:,:l], X))
+            plot(X, ev(brk[:l+1], c[:,:l], X))
 
             self.errmax_decay(brk[:l+1], c[:,:l], n)
 
@@ -243,12 +244,12 @@ class Knots:
                 t[4:3+l] = tnew[1:l]
                 l = interp(t, n)
 
-            plot(X, self.eval(brk[:l+1], c[:,:l], X))
+            plot(X, ev(brk[:l+1], c[:,:l], X))
 
             self.errmax_decay(brk[:l+1], c[:,:l], n)
 
 
-knots = Knots()
+#knots = Knots()
 #knots.test09()
 #knots.test10()
 #knots.test12()
@@ -321,8 +322,57 @@ class Titan:
         plot(self.x, self.gtitan, self.tau, self.gtau, 'r*', plott, np.c_[plotf, plotts])
 
 
-titan = Titan()
-titan.test14()
+#titan = Titan()
+#titan.test14()
 #titan.test17()
+
+class L2Main:
+    def __init__(self):
+        self.tau = np.zeros(200)
+        self.gtau = np.zeros(200)
+        self.weight = np.zeros(200)
+        self.brk = np.zeros(100)
+        self.coef = np.zeros(2000)
+
+        self.setdat = pppack.setdatex2
+
+    def ex2(self):
+        icount = 0
+        ntau, totalw, l, k = self.setdat(icount, self.tau, self.gtau, self.weight,
+                                         self.brk, self.coef)
+
+        t = np.zeros(2*k-1+l)
+        n = pppack.l2knts(self.brk[:l+1], k, t)
+       
+        q = np.zeros((k, n), order='F')
+        scrtch = np.zeros(n)
+        bcoef = np.zeros(n)
+        pppack.l2appr(t, q, scrtch, bcoef, 
+                      ntau, self.tau, self.gtau, self.weight)
+
+        #print bcoef
+
+        scrtch2 = q[:,:k]
+        coef = self.coef[:k*n].reshape((k, n), order='F')
+        l = pppack.bsplpp(t, bcoef, scrtch2, self.brk, coef)
+
+        print self.brk[:l+1]
+        print coef[:,:l]
+        
+        #x = np.linspace(self.tau[0], self.tau[ntau-1], 1001)
+        x = self.tau[:ntau]
+        y = ev(self.brk[:l+1], coef[:,:l], x)
+
+        print x
+        print y
+
+        figure()
+        plot(self.tau[:ntau], self.gtau[:ntau], '-+')
+        plot(x, y)
+
+
+l2main = L2Main()
+l2main.ex2()
+
 show()
 

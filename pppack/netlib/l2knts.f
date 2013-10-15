@@ -1,4 +1,5 @@
       subroutine l2knts ( break, l, k, t, n )
+cf2py intent(out) n
 c  from  * a practical guide to splines *  by c. de boor    
 c  to be called in main program  l 2 m a i n .
 converts the breakpoint sequence  b r e a k   into a corresponding knot
@@ -19,7 +20,7 @@ c  t(1),...,t(n+k)   the knot sequence
 c  n     the dimension of the corresp. spline space of order  k .
 c
       integer k,l,n,   i,km1
-      real break(1),t(1)
+      real break(l+1),t(2*k-1+l)
 c     dimension break(l+1),t(n+k)
       km1 = k - 1
       do 5 i=1,km1

@@ -212,6 +212,13 @@ python module pppack ! in
             integer :: l
             integer :: k
         end subroutine l2err
+        subroutine l2knts(break_bn,l,k,t,n) ! in :pppack:netlib/l2knts.f
+            real*8 dimension(l + 1) :: break_bn
+            integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
+            integer :: k
+            real*8 dimension(2*k-1+l),depend(l,k) :: t
+            integer intent(out) :: n
+        end subroutine l2knts
         subroutine newnot(break_bn,coef,l,k,brknew,lnew,coefg) ! in :pppack:netlib/newnot.f
             real*8 dimension(l + 1) :: break_bn
             real*8 dimension(k,l),depend(l) :: coef
@@ -256,8 +263,8 @@ python module pppack ! in
         end function round
         subroutine setdatex2(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex2.f
             integer :: icount
-            integer :: ntau
-            real*8 dimension(200),intent(out) :: tau
+            integer intent(out) :: ntau
+            real*8 dimension(200) :: tau
             real*8 dimension(200) :: gtau
             real*8 dimension(200) :: weight
             real*8 intent(out) :: totalw
@@ -268,8 +275,8 @@ python module pppack ! in
         end subroutine setdatex2
         subroutine setdatex3(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex3.f
             integer :: icount
-            integer :: ntau
-            real*8 dimension(200),intent(out) :: tau
+            integer intent(out) :: ntau
+            real*8 dimension(200) :: tau
             real*8 dimension(200) :: gtau
             real*8 dimension(200) :: weight
             real*8 intent(out) :: totalw
@@ -280,8 +287,8 @@ python module pppack ! in
         end subroutine setdatex3
         subroutine setdatex4(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex4.f
             integer :: icount
-            integer :: ntau
-            real*8 dimension(200),intent(out) :: tau
+            integer intent(out) :: ntau
+            real*8 dimension(200) :: tau
             real*8 dimension(200) :: gtau
             real*8 dimension(200) :: weight
             real*8 intent(out) :: totalw

@@ -18,7 +18,7 @@ netlib/interv.f
 netlib/knots.f
 netlib/l2appr.f
 netlib/l2err.f
-netlib/l2knt.f
+netlib/l2knts.f
 netlib/newnot.f
 netlib/ppvalu.f
 netlib/putit.f

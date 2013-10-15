@@ -1,7 +1,7 @@
       subroutine setdatex4 ( icount ,      
      *                       ntau, tau, gtau, weight, totalw,
      *                       break, coef, l, k )
-cf2py intent(out) tau, totalw, l, k
+cf2py intent(out) ntau, totalw, l, k
 c  from  * a practical guide to splines *  by c. de boor    
 c  to be called in main program  l 2 m a i n .
 c       calls titand
