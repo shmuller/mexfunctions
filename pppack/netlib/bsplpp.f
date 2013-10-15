@@ -38,7 +38,7 @@ c  all b-splines of the appropriate order at that point.
 c
       integer k,l,n,   i,j,jp1,kmax,kmj,left,lsofar
       parameter (kmax = 20)
-      real bcoef(n),break(l+1),coef(k,l),t(n+k),   scrtch(k,k)
+      real bcoef(n),break(*),coef(k,*),t(n+k),   scrtch(k,k)
      *                                      ,biatx(kmax),diff,factor,sum
 c
       lsofar = 0

@@ -37,9 +37,9 @@ python module pppack ! in
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
             integer, optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
             real*8 dimension(k,k) :: scrtch
-            real*8 dimension(l + 1) :: break_bn
-            real*8 dimension(k,l),depend(k,l) :: coef
-            integer, optional,intent(out),check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
+            real*8 dimension(*) :: break_bn
+            real*8 dimension(k,*),depend(k) :: coef
+            integer intent(out) :: l
         end subroutine bsplpp
         subroutine bsplvb(t,jhigh,index_bn,x,left,biatx) ! in :pppack:netlib/bsplvb.f
             real*8 dimension(left+jhigh),depend(jhigh,left) :: t
