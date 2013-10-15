@@ -85,7 +85,7 @@ class Bsplines:
 class Knots:
     def __init__(self):
         #self.itermx = 0
-        self.itermx = 3
+        self.itermx = 2
         self.nlow = 4
         self.nhigh = 20
 
@@ -206,33 +206,42 @@ class Knots:
         scrtch3 = scrtch[:2*nmax].reshape((2, nmax), order='F')
         brk = np.zeros(nmax)
         c = np.zeros((k, nmax), order='F')
+        t = np.zeros(nmax + 6)
         tnew = np.zeros(nmax)
+        tau = np.zeros(nmax)
+        gtau = np.zeros(nmax)
+
+        def interp(t, n):
+            for i in xrange(n):
+                tau[i] = t[i+1:i+4].sum() / 3.
+            gtau[:n] = self.g(tau[:n])
+
+            iflag = pppack.splint(tau[:n], gtau[:n], t[:n+k], k, scrtch[:(2*k-1)*n], bcoef[:n])
+            l = pppack.bsplpp(t[:n+k], bcoef[:n], scrtch2, brk, c)
+            return l
 
         figure()
         X = np.linspace(-1., 1., 1001)
         plot(X, self.g(X))
 
         for n in xrange(self.nlow, self.nhigh + 1, 2):
-            nmk = n - k
-            h = 2. / (nmk + 1)
-            t = np.arange(1, nmk + 1) * h - 1.
-            t = np.r_[[-1.] * k, t, [1.] * k]
-            
-            tau = np.zeros(n)
-            def interp():
-                for i in xrange(n):
-                    tau[i] = t[i+1:i+4].sum() / 3.
-                gtau = self.g(tau)
-
-                iflag = pppack.splint(tau, gtau, t, k, scrtch[:(2*k-1)*n], bcoef[:n])
-                l = pppack.bsplpp(t, bcoef[:n], scrtch2, brk, c)
-                return l
-            
-            l = interp()
+            if n == self.nlow:
+                nmk = n - k
+                h = 2. / (nmk + 1)
+                t[:k] = -1
+                t[k:n] = np.arange(1, nmk + 1) * h - 1.
+                t[n:n+k] = 1.
+            else:
+                pppack.newnot(brk[:l+1], c[:,:l], tnew[:l+3], scrtch3[:,:l])
+                l += 2
+                t[4+l] = t[5+l] = 1.
+                t[4:3+l] = tnew[1:l]
+                        
+            l = interp(t, n)
             for iter in xrange(self.itermx):
                 pppack.newnot(brk[:l+1], c[:,:l], tnew[:l+1], scrtch3[:,:l])
                 t[4:3+l] = tnew[1:l]
-                l = interp()
+                l = interp(t, n)
 
             plot(X, self.eval(brk[:l+1], c[:,:l], X))
 
@@ -242,7 +251,7 @@ class Knots:
 knots = Knots()
 #knots.test09()
 #knots.test10()
-knots.test12()
+#knots.test12()
 
 class Titan:
     def __init__(self):
@@ -266,6 +275,7 @@ class Titan:
         t = np.zeros(n+k)
 
         iflag = pppack.splopt(self.tau, k, scrtch, t)
+        print "Optimal knots:", t[k:n]
 
         a = np.zeros(n)
 
@@ -311,8 +321,8 @@ class Titan:
         plot(self.x, self.gtitan, self.tau, self.gtau, 'r*', plott, np.c_[plotf, plotts])
 
 
-#titan = Titan()
-#titan.test14()
+titan = Titan()
+titan.test14()
 #titan.test17()
 show()
 
