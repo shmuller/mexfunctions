@@ -16,10 +16,16 @@ netlib/difequ.f
 netlib/eqblok.f
 netlib/interv.f
 netlib/knots.f
+netlib/l2appr.f
+netlib/l2err.f
+netlib/l2knt.f
 netlib/newnot.f
 netlib/ppvalu.f
 netlib/putit.f
 netlib/round.f
+netlib/setdatex2.f
+netlib/setdatex3.f
+netlib/setdatex4.f
 netlib/setupq.f
 netlib/slvblktext.f
 netlib/smooth.f

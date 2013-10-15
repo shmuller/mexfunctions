@@ -37,17 +37,17 @@ c
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
       real addbrk,bcoef(lpkmax),break,coef,gtau,q(ltkmax),scrtch(ntmax)
      *    ,t(ntmax),tau,totalw,weight
-      common / data / ntau, tau(ntmax),gtau(ntmax),weight(ntmax),totalw
+      dimension tau(ntmax),gtau(ntmax),weight(ntmax)
 C     real addbrk,bcoef(100),break,coef,gtau,q(2000),scrtch(200)
 C    *    ,t(200),tau,totalw,weight
 C     common / data / ntau, tau(200),gtau(200),weight(200),totalw
 c     common /data/ also occurs in setdat, l2appr and l2err. it is ment-
 c     ioned here only because it might otherwise become undefined be-
 c     tween calls to those subroutines.
-      common /approx/ break(lpkmax),coef(ltkmax),l,k
+      dimension break(lpkmax),coef(ltkmax)
 C     common /approx/ break(100),coef(2000),l,k
 c     common /approx/ also occurs in setdat and l2err.
-      data on /'ON'/
+      data on /1/
 c
       icount = 0
 c        i c o u n t  provides communication with the data-input-and-
@@ -59,7 +59,9 @@ c
 c     information about the function to be approximated and order and
 c     breakpoint sequence of the approximating pp functions is gathered
 c     by a
-    1 call setdat(icount)
+    1 call setdatex2 ( icount, 
+     *                 ntau, tau, gtau, weight, totalw,
+     *                 break, coef, l, k )
 c
 c     breakpoints are translated into knots, and the number  n  of
 c     b-splines to be used is obtained by a
@@ -70,15 +72,16 @@ c     as well as the print controls  p r b c o ,  p r p c o  and
 c     p r f u n .  ntimes  passes  are made through the subroutine new-
 c     not, with an increase of  addbrk  knots for every pass .
       print 600
-  600 format(' ntimes,addbrk , prbco,prpco,prfun =? (i3,f10.5/3a2)')
+  600 format(' ntimes,addbrk , prbco,prpco,prfun =? (i3,f10.5/3i1)')
       read 500,ntimes,addbrk,prbco,prpco,prfun
-  500 format(i3,f10.5/3a2)
+  500 format(i3,f10.5/3i1)
 c
       lbegin = l
       nt = 0
 c        the b-spline coeffs.  b c o e f  of the l2-approx. are obtain-
 c        ed by a
-   10    call l2appr ( t, n, k, q, scrtch, bcoef )
+   10    call l2appr ( t, n, k, q, scrtch, bcoef ,
+     *                 ntau , tau , gtau , weight )
          if (prbco .eq. on)  print 609, (bcoef(i),i=1,n)
   609    format(//' b-spline coefficients'/(4e20.10))
 c
@@ -96,7 +99,9 @@ c        convert the b-repr. of the approximation to pp repr.
   613    format(f9.3,4e20.10/(11x,4e20.10))
 c
 c        compute and print out various error norms by a
-   15    call l2err ( prfun, scrtch, q )
+   15    call l2err ( prfun, scrtch, q, 
+     *                ntau, tau, gtau, weight, totalw,
+     *                break, coef, l, k )
 c
 c        if newnot has been applied less than  n t i m e s  times, try
 c        it again to obtain, from the current approx. a possibly improv-

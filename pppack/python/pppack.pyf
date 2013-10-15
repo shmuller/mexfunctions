@@ -186,6 +186,32 @@ python module pppack ! in
             real*8 dimension(10) :: xside
             common /side/ m,iside,xside
         end subroutine knots
+        subroutine l2appr(t,n,k,q,diag,bcoef,ntau,tau,gtau,weight) ! in :pppack:netlib/l2appr.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            integer, optional,check(shape(q,1)==n),depend(q) :: n=shape(q,1)
+            integer, optional,check(shape(q,0)==k),depend(q) :: k=shape(q,0)
+            real*8 dimension(k,n) :: q
+            real*8 dimension(n),depend(n) :: diag
+            real*8 dimension(n),depend(n) :: bcoef
+            integer :: ntau
+            real*8 dimension(200) :: tau
+            real*8 dimension(200) :: gtau
+            real*8 dimension(200) :: weight
+        end subroutine l2appr
+        subroutine l2err(prfun,ftau,error,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/l2err.f
+            integer :: prfun
+            real*8 dimension(ntau) :: ftau
+            real*8 dimension(ntau),depend(ntau) :: error
+            integer, optional,check(len(ftau)>=ntau),depend(ftau) :: ntau=len(ftau)
+            real*8 dimension(200) :: tau
+            real*8 dimension(200) :: gtau
+            real*8 dimension(200) :: weight
+            real*8 :: totalw
+            real*8 dimension(100) :: break_bn
+            real*8 dimension(2000) :: coef
+            integer :: l
+            integer :: k
+        end subroutine l2err
         subroutine newnot(break_bn,coef,l,k,brknew,lnew,coefg) ! in :pppack:netlib/newnot.f
             real*8 dimension(l + 1) :: break_bn
             real*8 dimension(k,l),depend(l) :: coef
@@ -228,6 +254,42 @@ python module pppack ! in
             real*8 :: round
             common /rount/ size
         end function round
+        subroutine setdatex2(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex2.f
+            integer :: icount
+            integer :: ntau
+            real*8 dimension(200),intent(out) :: tau
+            real*8 dimension(200) :: gtau
+            real*8 dimension(200) :: weight
+            real*8 intent(out) :: totalw
+            real*8 dimension(100) :: break_bn
+            real*8 dimension(2000) :: coef
+            integer intent(out) :: l
+            integer intent(out) :: k
+        end subroutine setdatex2
+        subroutine setdatex3(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex3.f
+            integer :: icount
+            integer :: ntau
+            real*8 dimension(200),intent(out) :: tau
+            real*8 dimension(200) :: gtau
+            real*8 dimension(200) :: weight
+            real*8 intent(out) :: totalw
+            real*8 dimension(100) :: break_bn
+            real*8 dimension(2000) :: coef
+            integer intent(out) :: l
+            integer intent(out) :: k
+        end subroutine setdatex3
+        subroutine setdatex4(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex4.f
+            integer :: icount
+            integer :: ntau
+            real*8 dimension(200),intent(out) :: tau
+            real*8 dimension(200) :: gtau
+            real*8 dimension(200) :: weight
+            real*8 intent(out) :: totalw
+            real*8 dimension(100) :: break_bn
+            real*8 dimension(2000) :: coef
+            integer intent(out) :: l
+            integer intent(out) :: k
+        end subroutine setdatex4
         subroutine setupq(x,dx,y,npoint,v,qty) ! in :pppack:netlib/setupq.f
             real*8 dimension(npoint) :: x
             real*8 dimension(npoint),depend(npoint) :: dx

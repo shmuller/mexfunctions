@@ -1,4 +1,5 @@
-      subroutine l2appr ( t, n, k, q, diag, bcoef )
+      subroutine l2appr ( t, n, k, q, diag, bcoef ,
+     *                    ntau , tau , gtau , weight )
 c  from  * a practical guide to splines *  by c. de boor    
 c  to be called in main program  l 2 m a i n .
 calls subprograms  bsplvb, bchfac/slv
@@ -63,7 +64,7 @@ c
       integer k,n,   i,j,jj,kmax,left,leftmk,ll,mm,ntau,ntmax
       parameter (kmax=20,ntmax=200)
       real bcoef(n),diag(n),q(k,n),t(n+k),  biatx(kmax),dw,gtau,tau,weight
-      common / data / ntau, tau(ntmax),gtau(ntmax),weight(ntmax)
+      dimension tau(ntmax),gtau(ntmax),weight(ntmax)
 c
       do 7 j=1,n
          bcoef(j) = 0.

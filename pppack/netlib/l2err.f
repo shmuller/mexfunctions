@@ -1,4 +1,6 @@
-      subroutine l2err ( prfun , ftau , error )
+      subroutine l2err ( prfun , ftau , error , 
+     *                   ntau , tau , gtau , weight , totalw ,
+     *                   break , coef , l , k )
 c  from  * a practical guide to splines *  by c. de boor    
 c  this routine is to be called in the main program  l 2 m a i n .
 calls subprogram  ppvalu(interv)
@@ -27,10 +29,10 @@ c
       real ftau(ntau),error(ntau),  break,coef,err,errmax,errl1,errl2
      *                             ,gtau,scale,tau,totalw,weight
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
-      common / data / ntau, tau(ntmax),gtau(ntmax),weight(ntmax),totalw
-      common /approx/ break(lpkmax),coef(ltkmax),l,k
+      dimension tau(ntmax),gtau(ntmax),weight(ntmax)
+      dimension break(lpkmax),coef(ltkmax)
 c
-      data on /'ON'/
+      data on /1/
       errl1 = 0.
       errl2 = 0.
       errmax = 0.

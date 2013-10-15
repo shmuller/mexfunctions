@@ -34,18 +34,18 @@ set(pppack_SRC
     #netlib/ivex.f
     #netlib/ixex.f
     netlib/knots.f
-    #netlib/l2appr.f
-    #netlib/l2err.f
-    #netlib/l2knts.f
+    netlib/l2appr.f
+    netlib/l2err.f
+    netlib/l2knts.f
     #netlib/l2main.f
     netlib/newnot.f
     #netlib/newnotfake.f
     netlib/ppvalu.f
     netlib/putit.f
     netlib/round.f
-    #netlib/setdatex2.f
-    #netlib/setdatex3.f
-    #netlib/setdatex4.f
+    netlib/setdatex2.f
+    netlib/setdatex3.f
+    netlib/setdatex4.f
     netlib/setupq.f
     netlib/slvblktext.f
     netlib/smooth.f
@@ -80,9 +80,13 @@ add_library(pppack_static STATIC ${pppack_SRC})
 set_target_properties(pppack_static PROPERTIES OUTPUT_NAME pppack)
 set_target_properties(pppack_static PROPERTIES COMPILE_FLAGS "${real8_flag} -fPIC")
 
+add_executable(l2main netlib/l2main.f)
+set_target_properties(l2main PROPERTIES COMPILE_FLAGS ${real8_flag})
+target_link_libraries(l2main pppack)
+
 add_subdirectory(python)
 
-install(TARGETS pppack pppack_static
+install(TARGETS pppack pppack_static l2main
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

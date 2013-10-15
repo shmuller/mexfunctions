@@ -1,4 +1,7 @@
-      subroutine setdat(icount)
+      subroutine setdatex3 ( icount ,      
+     *                       ntau, tau, gtau, weight, totalw,
+     *                       break, coef, l, k )
+cf2py intent(out) tau, totalw, l, k
 c  from  * a practical guide to splines *  by c. de Boor (7 may 92)
 c  to be called in main program  l 2 m a i n .
 c     this routine is set up to provide the specific data for example 3
@@ -6,9 +9,9 @@ c     in chapter xiv.
 c
       integer icount,  i,k,l,ntau
       real break,coef,gtau,step,tau,totalw,weight
-      parameter lpkmax=100,ntmax=200,ltkmax=2000
-      common / data / ntau, tau(ntmax),gtau(ntmax),weight(ntmax),totalw
-      common /approx/ break(lpkmax),coef(ltkmax),l,k
+      parameter (lpkmax=100,ntmax=200,ltkmax=2000)
+      dimension tau(ntmax),gtau(ntmax),weight(ntmax)
+      dimension break(lpkmax),coef(ltkmax)
 C     common / data / ntau, tau(200),gtau(200),weight(200),totalw
 C     common /approx/ break(100),coef(2000),l,k
       round(x) = float(ifix(x*100.))/100.
