@@ -411,19 +411,22 @@ class TensorProductSpline:
     def __init__(self):
         kx, nx = 3, 7
         taux = np.arange(1., nx + 1)
-        tx = self.get_t(taux, kx, nx, mid=True)
-
+        
         ky, ny = 4, 6
         tauy = np.arange(1., ny + 1)
-        ty = self.get_t(tauy, ky, ny, mid=False)
-
-        self.paramx = kx, nx, taux, tx
-        self.paramy = ky, ny, tauy, ty
+        
+        work1 = np.zeros((ny, nx), order='F')
+        work2 = np.zeros(max(nx, ny))
+        work3 = np.zeros(max((2*kx-1)*nx, (2*ky-1)*ny))
+        
+        self.param = taux, tauy, kx, ky
+        self.wrk = work1, work2, work3
 
     def g(self, x, y):
         return np.where(x < 3.5, 0., x-3.5)**2 + np.where(y < 3., 0., y-3.)**3
 
-    def get_t(self, tau, k, n, mid=True):
+    def get_t(self, tau, k, mid=True):
+        n = tau.size
         t = np.zeros(n+k)
         t[:k] = tau[0]
         t[n:] = tau[n-1]
@@ -435,11 +438,22 @@ class TensorProductSpline:
                 t[i] = tau[i-k+2]
         return t
 
-    def ev(self, tx, ty, bcoef, x, y, wrk):
+    def spline(self, taux, tauy, bcoef, kx, ky):
+        nx, ny = taux.size, tauy.size
+        tx = self.get_t(taux, kx, mid=True)
+        ty = self.get_t(tauy, ky, mid=False)
+        work1, work2, work3 = self.wrk
+
+        iflag = pppack.spli2d(taux, bcoef, tx, kx, work2[:nx], work3[:(2*kx-1)*nx], work1)
+        iflag = pppack.spli2d(tauy, work1, ty, ky, work2[:ny], work3[:(2*ky-1)*ny], bcoef)
+        return tx, ty, bcoef
+
+    def ev(self, tx, ty, bcoef, x, y):
         nx, ny = bcoef.shape
         kx, ky = tx.size - nx, ty.size - ny
         mx, my = x.size, y.size
         res = np.zeros((my, mx))
+        wrk = self.wrk[1]
 
         for j in xrange(my):
             lefty, mflag = pppack.interv(ty, y[j])
@@ -450,21 +464,15 @@ class TensorProductSpline:
         return res
 
     def test19(self):
-        kx, nx, taux, tx = self.paramx
-        ky, ny, tauy, ty = self.paramy
-
+        taux, tauy, kx, ky = self.param
+        
         bcoef = self.g(taux[None,:], tauy[:,None]).T
-
-        work2 = np.zeros(max(nx, ny))
-        work3 = np.zeros(max((2*kx-1)*nx, (2*ky-1)*ny))
-        work1 = np.zeros((ny, nx), order='F')
-
-        iflag = pppack.spli2d(taux, bcoef, tx, kx, work2[:nx], work3[:(2*kx-1)*nx], work1)
-        iflag = pppack.spli2d(tauy, work1, ty, ky, work2[:ny], work3[:(2*ky-1)*ny], bcoef)
+        
+        tx, ty, bcoef = self.spline(taux, tauy, bcoef, kx, ky)
 
         fun = self.g(taux[None,:], tauy[:,None])
 
-        res = self.ev(tx, ty, bcoef, taux, tauy, work2)
+        res = self.ev(tx, ty, bcoef, taux, tauy)
         err = res - fun
         return fun, res, err
 
