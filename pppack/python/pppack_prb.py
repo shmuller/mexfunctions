@@ -328,51 +328,94 @@ class Titan:
 
 class L2Main:
     def __init__(self):
-        self.tau = np.zeros(200)
-        self.gtau = np.zeros(200)
-        self.weight = np.zeros(200)
+        ntmax = 200
+        self.tau = np.zeros(ntmax)
+        self.gtau = np.zeros(ntmax)
+        self.weight = np.zeros(ntmax)
         self.brk = np.zeros(100)
         self.coef = np.zeros(2000)
+        
+        self.t = np.zeros(ntmax)
+        self.scrtch = np.zeros(ntmax)
 
-        self.setdat = pppack.setdatex2
+        self.setdat = pppack.setdatex4
 
     def ex2(self):
         icount = 0
+        ntimes = 5
+        addbrk = 2
+
         ntau, totalw, l, k = self.setdat(icount, self.tau, self.gtau, self.weight,
                                          self.brk, self.coef)
+        tau = self.tau[:ntau]
+        gtau = self.gtau[:ntau]
 
-        t = np.zeros(2*k-1+l)
+        t = self.t[:2*k-1+l]
         n = pppack.l2knts(self.brk[:l+1], k, t)
        
-        q = np.zeros((k, n), order='F')
-        scrtch = np.zeros(n)
-        bcoef = np.zeros(n)
-        pppack.l2appr(t, q, scrtch, bcoef, 
-                      ntau, self.tau, self.gtau, self.weight)
+        def l2appr(t, k, n):
+            q = np.zeros((k, n), order='F')
+            bcoef = np.zeros(n)
+            pppack.l2appr(t, q, self.scrtch[:n], bcoef, 
+                          ntau, self.tau, self.gtau, self.weight)
 
-        #print bcoef
+            scrtch = q[:,:k]
+            coef = self.coef[:k*n].reshape((k, n), order='F')
+            l = pppack.bsplpp(t, bcoef, scrtch, self.brk, coef)
+            return l, self.brk[:l+1], coef[:,:l]
 
-        scrtch2 = q[:,:k]
-        coef = self.coef[:k*n].reshape((k, n), order='F')
-        l = pppack.bsplpp(t, bcoef, scrtch2, self.brk, coef)
+        def l2err(l, k):
+            prfun = 0
+            ftau = np.zeros(ntau)
+            error = np.zeros(ntau)
+            pppack.l2err(prfun, ftau, error, 
+                         self.tau, self.gtau, self.weight, totalw,
+                         self.brk, self.coef, l, k)
+            return ftau, error
 
-        print self.brk[:l+1]
-        print coef[:,:l]
-        
-        #x = np.linspace(self.tau[0], self.tau[ntau-1], 1001)
-        x = self.tau[:ntau]
-        y = ev(self.brk[:l+1], coef[:,:l], x)
+        l, brk, coef = l2appr(t, k, n)
+        ftau, error = l2err(l, k)
 
-        print x
-        print y
+        lbegin = l
+        for nt in xrange(ntimes):
+            lnew = lbegin + nt * addbrk
+            tnew = self.scrtch[:lnew+1]
+            scrtch = self.t[:2*l].reshape((2, l), order='F')
+            pppack.newnot(brk, coef, tnew, scrtch)
+
+            t = self.t[:2*k-1+lnew]
+            n = pppack.l2knts(tnew, k, t)
+
+            l, brk, coef = l2appr(t, k, n)
+            ftau, error = l2err(l, k)
+
+        print brk
+
+        x = np.linspace(tau[0], tau[-1], 1001)
+        y = ev(brk, coef, x)
 
         figure()
-        plot(self.tau[:ntau], self.gtau[:ntau], '-+')
+        plot(tau, gtau, '-+')
+        plot(tau, ftau)
         plot(x, y)
+        plot(brk, np.zeros(brk.size), 'kd')
+
+        figure()
+        plot(tau, error, brk, np.zeros(brk.size), 'kd')
 
 
 l2main = L2Main()
 l2main.ex2()
+
+class TensorProductSpline:
+    def __init__(self):
+        pass
+
+    def test19(self):
+        pass
+
+#tps = TensorProductSpline()
+#tps.test19()
 
 show()
 
