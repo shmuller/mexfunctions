@@ -1,4 +1,5 @@
       subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )********    
+cf2py intent(out) iflag
 c  from  * a practical guide to splines *  by c. de boor    
 calls bsplvb, banfac/slv
 c  this is an extended version of  splint , for the use in tensor prod- --------    

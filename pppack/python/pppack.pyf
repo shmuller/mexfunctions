@@ -394,7 +394,7 @@ python module pppack ! in
             real*8 dimension(n),depend(n) :: work
             real*8 dimension((2*k-1)*n),depend(n,k) :: q
             real*8 dimension(m,n),depend(m,n) :: bcoef
-            integer :: iflag
+            integer intent(out) :: iflag
         end subroutine spli2d
         subroutine splint(tau,gtau,t,n,k,q,bcoef,iflag) ! in :pppack:netlib/splint.f
             real*8 dimension(n) :: tau
