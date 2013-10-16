@@ -409,33 +409,51 @@ class L2Main:
 
 class TensorProductSpline:
     def __init__(self):
-        pass
-
-    def test19(self):
-        def g(x, y):
-            return np.where(x < 3.5, 0., x-3.5)**2 + np.where(y < 3., 0., y-3.)**3
-
-        def get_t(tau, k, n, mid=True):
-            t = np.zeros(n+k)
-            t[:k] = tau[0]
-            t[n:] = tau[n-1]
-            if mid:
-                for i in xrange(k, n):
-                    t[i] = (tau[i-k+1] + tau[i-k+2]) / 2.
-            else:
-                for i in xrange(k, n):
-                    t[i] = tau[i-k+2]
-            return t
-
         kx, nx = 3, 7
         taux = np.arange(1., nx + 1)
-        tx = get_t(taux, kx, nx, mid=True)
+        tx = self.get_t(taux, kx, nx, mid=True)
 
         ky, ny = 4, 6
         tauy = np.arange(1., ny + 1)
-        ty = get_t(tauy, ky, ny, mid=False)        
+        ty = self.get_t(tauy, ky, ny, mid=False)
 
-        bcoef = g(taux[None,:], tauy[:,None]).T
+        self.paramx = kx, nx, taux, tx
+        self.paramy = ky, ny, tauy, ty
+
+    def g(self, x, y):
+        return np.where(x < 3.5, 0., x-3.5)**2 + np.where(y < 3., 0., y-3.)**3
+
+    def get_t(self, tau, k, n, mid=True):
+        t = np.zeros(n+k)
+        t[:k] = tau[0]
+        t[n:] = tau[n-1]
+        if mid:
+            for i in xrange(k, n):
+                t[i] = (tau[i-k+1] + tau[i-k+2]) / 2.
+        else:
+            for i in xrange(k, n):
+                t[i] = tau[i-k+2]
+        return t
+
+    def ev(self, tx, ty, bcoef, x, y, wrk):
+        nx, ny = bcoef.shape
+        kx, ky = tx.size - nx, ty.size - ny
+        mx, my = x.size, y.size
+        res = np.zeros((my, mx))
+
+        for j in xrange(my):
+            lefty, mflag = pppack.interv(ty, y[j])
+            for i in xrange(mx):
+                for jj in xrange(ky):
+                    wrk[jj] = pppack.bvalue(tx, bcoef[:,lefty-ky+jj], kx, x[i], 0)
+                res[j,i] = pppack.bvalue(ty[lefty-ky:lefty+ky], wrk[:ky], ky, y[j], 0)
+        return res
+
+    def test19(self):
+        kx, nx, taux, tx = self.paramx
+        ky, ny, tauy, ty = self.paramy
+
+        bcoef = self.g(taux[None,:], tauy[:,None]).T
 
         work2 = np.zeros(max(nx, ny))
         work3 = np.zeros(max((2*kx-1)*nx, (2*ky-1)*ny))
@@ -444,17 +462,15 @@ class TensorProductSpline:
         iflag = pppack.spli2d(taux, bcoef, tx, kx, work2[:nx], work3[:(2*kx-1)*nx], work1)
         iflag = pppack.spli2d(tauy, work1, ty, ky, work2[:ny], work3[:(2*ky-1)*ny], bcoef)
 
-        for j in xrange(ny):
-            lefty, mflag = pppack.interv(ty, tauy[j])
-            for i in xrange(nx):
-                for jj in xrange(ky):
-                    work2[jj] = pppack.bvalue(tx, bcoef[:,lefty-ky+jj], kx, taux[i], 0)
-                work1[j,i] = g(taux[i], tauy[j]) \
-                           - pppack.bvalue(ty[lefty-ky:lefty+ky], work2[:ky], ky, tauy[j], 0)
-        print work1
+        fun = self.g(taux[None,:], tauy[:,None])
+
+        res = self.ev(tx, ty, bcoef, taux, tauy, work2)
+        err = res - fun
+        return fun, res, err
+
 
 tps = TensorProductSpline()
-bcoef = tps.test19()
+fun, res, err = tps.test19()
 
 show()
 
