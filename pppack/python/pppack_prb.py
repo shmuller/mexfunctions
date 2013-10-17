@@ -453,17 +453,52 @@ class TensorProductSpline:
         kx, ky = tx.size - nx, ty.size - ny
         mx, my = x.size, y.size
         res = np.zeros((my, mx))
-        wrk = self.wrk[1]
+        wrk = self.wrk[1][:ky]
 
         for j in xrange(my):
             lefty, mflag = pppack.interv(ty, y[j])
             for i in xrange(mx):
                 for jj in xrange(ky):
                     wrk[jj] = pppack.bvalue(tx, bcoef[:,lefty-ky+jj], kx, x[i], 0)
-                res[j,i] = pppack.bvalue(ty[lefty-ky:lefty+ky], wrk[:ky], ky, y[j], 0)
+                res[j,i] = pppack.bvalue(ty[lefty-ky:lefty+ky], wrk, ky, y[j], 0)
         return res
 
-    def test19(self):
+    def as_pp(self, tx, ty, bcoef):
+        nx, ny = bcoef.shape
+        kx, ky = tx.size - nx, ty.size - ny
+        lx, ly = nx+1-kx, ny+1-ky
+        m = lx*kx
+
+        brkx = np.zeros(lx+1)
+        brky = np.zeros(ly+1)
+        coef = np.zeros((kx, lx, ky, ly), order='F')
+        work4 = np.zeros((kx, kx, ny), order='F')
+        work5 = np.zeros((ny, kx, lx), order='F')
+        work6 = np.zeros((ky, ky, m), order='F')
+        
+        coefa = coef.reshape((m, ky, ly), order='F')
+        work5a = work5.reshape((ny, m), order='F')
+
+        pppack.bspp2d(tx, bcoef, work4, brkx, work5)
+        pppack.bspp2d(ty, work5a, work6, brky, coefa)
+        return brkx, brky, coef
+
+    def ev_pp(self, brkx, brky, coef, x, y):
+        kx, lx, ky, ly = coef.shape
+        mx, my = x.size, y.size
+        res = np.zeros((my, mx))
+        wrk = self.wrk[1][:ky]
+        wrka = wrk.reshape((ky, 1), order='F')
+
+        for j in xrange(my):
+            lefty, mflag = pppack.interv(brky, y[j])
+            for i in xrange(mx):
+                for jj in xrange(ky):
+                    wrk[jj] = pppack.ppvalu(brkx, coef[:,:,jj,lefty-1], x[i], 0)
+                res[j,i] = pppack.ppvalu(brky[lefty-1:lefty+1], wrka, y[j], 0)
+        return res
+
+    def test19_20(self):
         taux, tauy, kx, ky = self.param
         
         bcoef = self.g(taux[None,:], tauy[:,None]).T
@@ -474,11 +509,19 @@ class TensorProductSpline:
 
         res = self.ev(tx, ty, bcoef, taux, tauy)
         err = res - fun
-        return fun, res, err
+        
+        brkx, brky, coef = self.as_pp(tx, ty, bcoef)
+        res2 = self.ev_pp(brkx, brky, coef, taux, tauy)
+        err2 = res2 - fun
+        return fun, res, err, res2, err2
 
 
 tps = TensorProductSpline()
-fun, res, err = tps.test19()
+fun, res, err, res2, err2 = tps.test19_20()
+
+print err
+print ""
+print err2
 
 show()
 
