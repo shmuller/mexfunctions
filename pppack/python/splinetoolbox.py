@@ -74,10 +74,16 @@ class PP:
         return ind
 
 
-class Spline:
+class Spline(object):
     def __init__(self, *args, **kw):
         self.spmak(*args, **kw)
-        
+    
+    @classmethod
+    def from_knots_coefs(cls, knots, coefs):
+        self = cls.__new__(cls)
+        self.spmak(knots, coefs)
+        return self
+
     def spmak(self, knots, coefs, sizec=None):
         if sizec is None:
             sizec = coefs.shape
@@ -110,7 +116,7 @@ class Spline:
     def spbrk(self):
         return self.knots, self.coefs, self.number, self.order, self.dim
     
-    def to_pp(self):
+    def to_pp(self, backwd=False):
         t, a, n, k, d = self.spbrk()
         d = prod(d)
         m = 1
@@ -125,24 +131,47 @@ class Spline:
 
         inter = find(diff(t) > 0); l = len(inter)
         if k == 1:
-            c = a[inter].ravel()
+            b = a[inter].ravel()
         else:
+            if backwd:
+                o = np.arange(k-1, 1-k, -1)
+                kd = np.arange(0, -k*d, -d)
+            else:
+                o = np.arange(2-k, k)
+                kd = np.arange(d*(1-k), d, d)
+
             i = inter[None,:]
-            o = np.arange(k-1, 1-k, -1)[:,None]
-            tx = t[i+o] - t[i]
+            tx = t[i+o[:,None]] - t[i]
 
             b = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
-              + (d*np.arange(0, -k, -1))[:,None,None]
+              + kd[:,None,None]
 
             tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
             b = b.reshape((k, -1))
 
             b = a.ravel()[b]
-            c = self.sprpp(tx, b)
+            if backwd:
+                b = self.sprpp_bw(tx, b)
+            else:
+                b = self.sprpp(tx, b)
 
-        return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), c, d)
+        return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), b, d)
 
     def sprpp(self, tx, b):
+        k = b.shape[0]
+        for r in xrange(1, k):
+            for i in xrange(k-r):
+                tx0 = tx[i+r-1]
+                tx1 = tx[i+k-1]
+                b[i] = (tx1 * b[i] - tx0 * b[i+1]) / (tx1 - tx0)
+
+        for r in xrange(1, k):
+            factor = float(k-r) / r
+            for i in xrange(k-1, r-1, -1):
+                b[i] = (b[i] - b[i-1])*factor / tx[i+k-1-r]
+        return b[::-1]
+
+    def sprpp_bw(self, tx, b):
         k = b.shape[0]
         for r in xrange(1, k):
             for j in xrange(k-1, r-1, -1):
@@ -155,7 +184,6 @@ class Spline:
             for j in xrange(k-r):
                 b[j] = (b[j] - b[j+1]) * factor / tx[j-1+r]
         return b
-    
 
 
 if __name__ == "__main__":
@@ -166,7 +194,7 @@ if __name__ == "__main__":
 
     k = 4
     knots = np.arange(n-k+2)
-    sp = Spline(augknt(knots, k), c)
+    sp = Spline.from_knots_coefs(augknt(knots, k), c)
 
     pp = sp.to_pp()
 
