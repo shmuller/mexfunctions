@@ -1,4 +1,9 @@
 import numpy as np
+diff, find, cat = np.diff, np.flatnonzero, np.concatenate
+
+def searchsorted(meshsites, sites):
+    index = np.argsort(cat((meshsites, sites)))
+    return find(index > len(meshsites)-1) - np.arange(1, len(sites)+1)
 
 def brk2knt(brks, mults):
     s = mults.sum()
@@ -26,6 +31,47 @@ def augknt(knots, k, mults=np.array(1), with_addl=False):
         return augknot
     else:
         return augknot, addl
+
+
+class PP:
+    def __init__(self, *args, **kw):
+        self.ppmak(*args, **kw)
+
+    def ppmak(self, brks, coefs, d):
+        self.form = 'pp'
+        self.brks = brks
+        self.coefs = coefs
+        self.pieces = len(brks) - 1
+        self.order = coefs.shape[0]
+        self.dim = d
+
+    def ppbrk(self):
+        return self.brks, self.coefs, self.pieces, self.order, self.dim
+
+    def ppual(self, x):
+        if any(diff(x) < 0):
+            tosort = True
+            ix = np.argsort(x)
+            xs = x[ix]
+        else:
+            xs = x.copy()
+
+        b, c, l, k, d = self.ppbrk()
+
+        index = self.get_index(x)
+        xs[:] -= b[index]
+
+        xs = xs[:,None]
+        c = c.reshape((k, l, d))
+        v = c[0,index]
+        for i in xrange(1, k):
+            v = xs * v + c[i,index]
+        return v
+
+    def get_index(self, sites):
+        ind = searchsorted(self.brks[:-1], sites)
+        ind[ind < 0] = 0
+        return ind
 
 
 class Spline:
@@ -65,7 +111,6 @@ class Spline:
         return self.knots, self.coefs, self.number, self.order, self.dim
     
     def to_pp(self):
-        diff, find = np.diff, np.flatnonzero
         t, a, n, k, d = self.spbrk()
         d = prod(d)
         m = 1
@@ -90,33 +135,42 @@ class Spline:
               + (d*np.arange(0, -k, -1))[:,None,None]
 
             tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
-            b = b.reshape((l, -1))
+            b = b.reshape((k, -1))
 
             b = a.ravel()[b]
             c = self.sprpp(tx, b)
 
+        return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), c, d)
+
     def sprpp(self, tx, b):
         k = b.shape[0]
         for r in xrange(1, k):
-            for i in xrange(k-r):
-                tx0 = tx[2*(k-1)-1-(i+r-1)]
-                tx1 = tx[2*(k-1)-1-(i+k-1)]
-                b[k-1-i] = (tx1 * b[k-1-i] - tx0 * b[k-1-(i+1)]) / (tx1 - tx0)
+            for j in xrange(k-1, r-1, -1):
+                tx0 = tx[j-1+k-r]
+                tx1 = tx[j-1]
+                b[j] = (tx1 * b[j] - tx0 * b[j-1]) / (tx1 - tx0)
         
-        for r in xrange(2, k+1):
-            factor = float(k-(r-1))/float(r-1)
-            for i in xrange(k-1, r-2, -1):
-                b[k-1-i] = (b[k-1-i] - b[k-1-(i-1)])*factor / tx[2*(k-1)-1-(i+k-r)]
-
-        print b.T
+        for r in xrange(1, k):
+            factor = float(k-r) / r
+            for j in xrange(k-r):
+                b[j] = (b[j] - b[j+1]) * factor / tx[j-1+r]
+        return b
     
 
 
 if __name__ == "__main__":
-    c = np.arange(14.).reshape(2, 7).T.copy()
+    #c = np.arange(2.*n).reshape(2, n).T.copy()
+    n = 10
+    c = np.zeros((n, n))
+    for i in xrange(n): c[i,i] = 1.
 
-    sp = Spline(augknt(np.arange(5.), 4), c)
+    k = 4
+    knots = np.arange(n-k+2)
+    sp = Spline(augknt(knots, k), c)
 
     pp = sp.to_pp()
 
+    x = np.linspace(knots[0], knots[-1], 100)
+
+    y = pp.ppual(x)
 
