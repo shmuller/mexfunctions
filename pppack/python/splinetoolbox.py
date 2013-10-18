@@ -83,11 +83,11 @@ class Spline:
             c = a[inter].ravel()
         else:
             i = inter[None,:]
-            o = np.arange(2-k, k)[:,None]
+            o = np.arange(k-1, 1-k, -1)[:,None]
             tx = t[i+o] - t[i]
 
             b = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
-              + (d*np.arange(1-k, 1))[:,None,None]
+              + (d*np.arange(0, -k, -1))[:,None,None]
 
             tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
             b = b.reshape((l, -1))
@@ -99,16 +99,15 @@ class Spline:
         k = b.shape[0]
         for r in xrange(1, k):
             for i in xrange(k-r):
-                tx0 = tx[i+r-1]
-                tx1 = tx[i+k-1]
-                b[i] = (tx1 * b[i] - tx0 * b[i+1]) / (tx1 - tx0)
+                tx0 = tx[2*(k-1)-1-(i+r-1)]
+                tx1 = tx[2*(k-1)-1-(i+k-1)]
+                b[k-1-i] = (tx1 * b[k-1-i] - tx0 * b[k-1-(i+1)]) / (tx1 - tx0)
         
         for r in xrange(2, k+1):
             factor = float(k-(r-1))/float(r-1)
             for i in xrange(k-1, r-2, -1):
-                b[i] = (b[i] - b[i-1])*factor / tx[i+k-r]
+                b[k-1-i] = (b[k-1-i] - b[k-1-(i-1)])*factor / tx[2*(k-1)-1-(i+k-r)]
 
-        b = b[::-1]
         print b.T
     
 
