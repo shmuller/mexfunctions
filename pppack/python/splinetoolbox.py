@@ -198,15 +198,70 @@ class Spline(object):
             return b[::-1]
 
 
+from pppack import bvalue, bspp2d, ppvalu, ppual
+
+class PPPGS(PP):
+    def ppual(self, x):
+        b, c, l, k, d = self.ppbrk()
+
+        m = x.size
+        y = np.zeros((m, d))
+        ppual(b, c, x, 0, y.T)
+        return y
+
+    def ppual2(self, x):
+        b, c, l, k, d = self.ppbrk()
+
+        m = x.size
+        y = np.zeros((m, d))
+        c = c.transpose((0,2,1)).copy().T
+        for i in xrange(m):
+            yi = y[i]
+            for j in xrange(d):
+                yi[j] = ppvalu(b, c[:,:,j], x[i], 0)
+        return y
+
+
+class SplinePGS(Spline):
+    def spval(self, x):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+
+        m = x.size
+        y = np.zeros((m, d))
+        c = a.T.copy()
+        for i in xrange(m):
+            yi = y[i]
+            for j in xrange(d):
+                yi[j] = bvalue(t, c[j], k, x[i], 0)
+        return y
+
+    def to_pp(self):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+        l = n+1-k
+
+        b = np.zeros(l+1)
+        work4 = np.zeros((k, k, d), order='F')
+        work5 = np.zeros((d, k, l), order='F')
+
+        c = a.T.copy().T
+        bspp2d(t, c, work4, b, work5)
+        return PPPGS(b, work5, d)
+
+
+
 if __name__ == "__main__":
     #c = np.arange(2.*n).reshape(2, n).T.copy()
     n = 10
-    c = np.zeros((n, n))
-    for i in xrange(n): c[i,i] = 1.
+    m = 6
+    c = np.zeros((n, m))
+    for i in xrange(m): c[i,i] = 1.
 
     k = 4
-    knots = np.arange(n-k+2)
-    sp = Spline.from_knots_coefs(augknt(knots, k), c)
+    knots = np.arange(n-k+2.)
+    t = augknt(knots, k)
+    sp = Spline.from_knots_coefs(t, c)
 
     x = np.linspace(knots[0], knots[-1], 100)
 
@@ -215,3 +270,8 @@ if __name__ == "__main__":
     pp = sp.to_pp()
     y2 = pp.ppual(x)
 
+    sp_pgs = SplinePGS.from_knots_coefs(t, c)
+    y3 = sp_pgs.spval(x)
+
+    pp_pgs = sp_pgs.to_pp()
+    y4 = pp_pgs.ppual(x)

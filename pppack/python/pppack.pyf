@@ -431,6 +431,17 @@ python module pppack ! in
             real*8 dimension(49) :: gtau
             integer intent(out) :: n
         end subroutine titand
+        subroutine ppual(break_bn,coef,l,k,d,x,m,jderiv,y) ! in :pppack:ppual.f
+            real*8 dimension(l + 1) :: break_bn
+            real*8 dimension(d,k,l),depend(l) :: coef
+            integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
+            integer, optional,check(shape(coef,1)==k),depend(coef) :: k=shape(coef,1)
+            integer, optional,check(shape(coef,0)==d),depend(coef) :: d=shape(coef,0)
+            real*8 dimension(m) :: x
+            integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
+            integer :: jderiv
+            real*8 dimension(d,m),depend(d,m) :: y
+        end subroutine ppual
     end interface 
 end python module pppack
 
