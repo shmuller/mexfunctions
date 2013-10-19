@@ -116,74 +116,86 @@ class Spline(object):
     def spbrk(self):
         return self.knots, self.coefs, self.number, self.order, self.dim
     
-    def to_pp(self, backwd=False):
-        t, a, n, k, d = self.spbrk()
-        d = prod(d)
-        m = 1
+    def setup_tx_b(self, t, x, k, d, inter, backwd=False):
+        if backwd:
+            o = np.arange(k-1, 1-k, -1)
+            kd = np.arange(0, -k*d, -d)
+        else:
+            o = np.arange(2-k, k)
+            kd = np.arange(d*(1-k), d, d)
 
-        index = find(diff(t) > 0); addl = k-index[0]-1; addr = index[-1]+1-n
-        if addl > 0 or addr > 0:
-            tt = np.zeros(addl + t.size + addr)
-            tt[:addl] = t[0]
-            tt[addl:-addr] = t
-            tt[-addr:] = t[-1]
-            t = tt
+        tx = t[inter[None,:]+o[:,None]] - x[None,:]
 
-        inter = find(diff(t) > 0); l = len(inter)
+        b = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
+          + kd[:,None,None]
+
+        tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
+        b = b.reshape((k, -1))
+        return tx, b
+
+    def spval(self, x):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+
+        index = searchsorted(t[:n], x)
+        index[index < k-1] = k-1
+        if k == 1:
+            b = a[index].ravel()
+        else:
+            tx, b = self.setup_tx_b(t, x, k, d, index, backwd=False)
+            b = a.ravel()[b]
+            self.sprval(tx, b, k)
+            b.resize((x.size,) + dim)
+        return b
+
+    def to_pp(self, backwd=True):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+
+        inter = find(diff(t) > 0)
         if k == 1:
             b = a[inter].ravel()
         else:
-            if backwd:
-                o = np.arange(k-1, 1-k, -1)
-                kd = np.arange(0, -k*d, -d)
-            else:
-                o = np.arange(2-k, k)
-                kd = np.arange(d*(1-k), d, d)
-
-            i = inter[None,:]
-            tx = t[i+o[:,None]] - t[i]
-
-            b = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
-              + kd[:,None,None]
-
-            tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
-            b = b.reshape((k, -1))
-
+            tx, b = self.setup_tx_b(t, t[inter], k, d, inter, backwd=backwd)
             b = a.ravel()[b]
-            if backwd:
-                b = self.sprpp_bw(tx, b)
-            else:
-                b = self.sprpp(tx, b)
-
+            b = self.sprpp(tx, b, k, backwd=backwd)
         return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), b, d)
 
-    def sprpp(self, tx, b):
-        k = b.shape[0]
+    def sprval(self, tx, b, k):
         for r in xrange(1, k):
             for i in xrange(k-r):
                 tx0 = tx[i+r-1]
                 tx1 = tx[i+k-1]
                 b[i] = (tx1 * b[i] - tx0 * b[i+1]) / (tx1 - tx0)
 
-        for r in xrange(1, k):
-            factor = float(k-r) / r
-            for i in xrange(k-1, r-1, -1):
-                b[i] = (b[i] - b[i-1])*factor / tx[i+k-1-r]
-        return b[::-1]
-
-    def sprpp_bw(self, tx, b):
-        k = b.shape[0]
+    def sprval_bw(self, tx, b, k):
         for r in xrange(1, k):
             for j in xrange(k-1, r-1, -1):
                 tx0 = tx[j-1+k-r]
                 tx1 = tx[j-1]
                 b[j] = (tx1 * b[j] - tx0 * b[j-1]) / (tx1 - tx0)
-        
+
+    def sprdif(self, tx, b, k):
+        for r in xrange(1, k):
+            factor = float(k-r) / r
+            for i in xrange(k-1, r-1, -1):
+                b[i] = (b[i] - b[i-1]) * factor / tx[i+k-1-r]
+
+    def sprdif_bw(self, tx, b, k):
         for r in xrange(1, k):
             factor = float(k-r) / r
             for j in xrange(k-r):
                 b[j] = (b[j] - b[j+1]) * factor / tx[j-1+r]
-        return b
+
+    def sprpp(self, tx, b, k, backwd=True):
+        if backwd:
+            self.sprval_bw(tx, b, k)
+            self.sprdif_bw(tx, b, k)
+            return b
+        else:
+            self.sprval(tx, b, k)
+            self.sprdif(tx, b, k)
+            return b[::-1]
 
 
 if __name__ == "__main__":
@@ -196,9 +208,10 @@ if __name__ == "__main__":
     knots = np.arange(n-k+2)
     sp = Spline.from_knots_coefs(augknt(knots, k), c)
 
-    pp = sp.to_pp()
-
     x = np.linspace(knots[0], knots[-1], 100)
 
-    y = pp.ppual(x)
+    y = sp.spval(x)
+    
+    pp = sp.to_pp()
+    y2 = pp.ppual(x)
 
