@@ -198,7 +198,7 @@ class Spline(object):
             return b[::-1]
 
 
-from pppack import bvalue, bspp2d, ppvalu, ppual
+from pppack import bvalue, bspp2d, ppvalu, bsplppd, ppual
 
 class PPPGS(PP):
     def ppual(self, x):
@@ -249,6 +249,18 @@ class SplinePGS(Spline):
         bspp2d(t, c, work4, b, work5)
         return PPPGS(b, work5, d)
 
+    def to_pp2(self):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+        l = n+1-k
+
+        b = np.zeros(l+1)
+        scrtch = np.zeros((k, k), order='F')
+        coef = np.zeros((d, k, l), order='F')
+
+        l = bsplppd(t, a.T, scrtch, b, coef)
+        assert l == n+1-k
+        return PPPGS(b, coef, d)
 
 
 if __name__ == "__main__":
@@ -273,5 +285,5 @@ if __name__ == "__main__":
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
     y3 = sp_pgs.spval(x)
 
-    pp_pgs = sp_pgs.to_pp()
+    pp_pgs = sp_pgs.to_pp2()
     y4 = pp_pgs.ppual(x)

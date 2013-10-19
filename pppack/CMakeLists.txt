@@ -71,6 +71,7 @@ set(pppack_SRC
     #netlib/xviex3.f
     #netlib/xviiex2.f
     #netlib/xviiex3.f
+    bsplppd.f
     ppual.f
 )
 

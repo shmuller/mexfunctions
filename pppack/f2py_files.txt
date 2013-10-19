@@ -34,4 +34,5 @@ netlib/splint.f
 netlib/splopt.f
 netlib/tautsp.f
 netlib/titand.f
+bsplppd.f
 ppual.f
