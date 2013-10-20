@@ -102,11 +102,11 @@ c
    30          coef(dd,kmj,lsofar) = sum
    50    continue
       l = lsofar
-	  if (k .eq. 1)                     return
-	  factor = 1.
-	  do 60 i=2,k
-		 factor = factor*float(k+1-i)
-		 do 60 j=1,lsofar
+      if (k .eq. 1)                     return
+      factor = 1.
+      do 60 i=2,k
+         factor = factor*float(k+1-i)/(i-1)
+         do 60 j=1,lsofar
             do 60 dd=1,d
    60          coef(dd,i,j) = coef(dd,i,j)*factor
                                         return
