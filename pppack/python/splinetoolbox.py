@@ -198,18 +198,24 @@ class Spline(object):
             return b[::-1]
 
 
-from pppack import bvalue, bspp2d, ppvalu, bsplppd, ppual
+import pppack
 
 class PPPGS(PP):
-    def ppual(self, x):
+    def ppual(self, x, der=0, fast=True):
         b, c, l, k, d = self.ppbrk()
 
         m = x.size
         y = np.zeros((m, d))
-        ppual(b, c, x, y.T)
+        if der == 0 and fast:
+            pppack.ppual(b, c, x, y.T)
+        else:
+            pppack.ppualder(b, c, x, der, y.T)
         return y
 
-    def ppual2(self, x):
+
+class PPPGS2(PP):
+    def ppual(self, x, der=0):
+        # this uses the PGS normalization
         b, c, l, k, d = self.ppbrk()
 
         m = x.size
@@ -218,12 +224,12 @@ class PPPGS(PP):
         for i in xrange(m):
             yi = y[i]
             for j in xrange(d):
-                yi[j] = ppvalu(b, c[:,:,j], x[i], 0)
+                yi[j] = pppack.ppvalu(b, c[:,:,j], x[i], der)
         return y
 
 
 class SplinePGS(Spline):
-    def spval(self, x):
+    def spval(self, x, der=0):
         t, a, n, k, dim = self.spbrk()
         d = prod(dim)
 
@@ -233,10 +239,24 @@ class SplinePGS(Spline):
         for i in xrange(m):
             yi = y[i]
             for j in xrange(d):
-                yi[j] = bvalue(t, c[j], k, x[i], 0)
+                yi[j] = pppack.bvalue(t, c[j], k, x[i], der)
         return y
 
     def to_pp(self):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+        l = n+1-k
+
+        b = np.zeros(l+1)
+        scrtch = np.zeros((d, k, k), order='F')
+        coef = np.zeros((d, k, l), order='F')
+
+        l = pppack.bsplppd(t, a.T, scrtch, b, coef)
+        assert l == n+1-k
+        return PPPGS(b, coef, d)
+
+    def to_pp2(self):
+        # this uses the PGS normalization
         t, a, n, k, dim = self.spbrk()
         d = prod(dim)
         l = n+1-k
@@ -246,21 +266,8 @@ class SplinePGS(Spline):
         work5 = np.zeros((d, k, l), order='F')
 
         c = a.T.copy().T
-        bspp2d(t, c, work4, b, work5)
-        return PPPGS(b, work5, d)
-
-    def to_pp2(self):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
-        l = n+1-k
-
-        b = np.zeros(l+1)
-        scrtch = np.zeros((d, k, k), order='F')
-        coef = np.zeros((d, k, l), order='F')
-
-        l = bsplppd(t, a.T, scrtch, b, coef)
-        assert l == n+1-k
-        return PPPGS(b, coef, d)
+        pppack.bspp2d(t, c, work4, b, work5)
+        return PPPGS2(b, work5, d)
 
 
 if __name__ == "__main__":
@@ -277,13 +284,23 @@ if __name__ == "__main__":
 
     x = np.linspace(knots[0], knots[-1], 100)
 
+    der = 1
+
     y = sp.spval(x)
     
     pp = sp.to_pp()
     y2 = pp.ppual(x)
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
-    y3 = sp_pgs.spval(x)
+    y3 = sp_pgs.spval(x, der=der)
 
-    pp_pgs = sp_pgs.to_pp2()
-    y4 = pp_pgs.ppual(x)
+    pp_pgs = sp_pgs.to_pp()
+    y4 = pp_pgs.ppual(x, der=der)
+
+    pp_pgs2 = sp_pgs.to_pp2()
+    y5 = pp_pgs2.ppual(x, der=der)
+
+    from matplotlib.pyplot import plot, show
+    plot(x, y3, x, y4, x, y5)
+    show()
+

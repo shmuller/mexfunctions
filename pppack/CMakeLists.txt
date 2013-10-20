@@ -73,6 +73,7 @@ set(pppack_SRC
     #netlib/xviiex3.f
     bsplppd.f
     ppual.f
+    ppualder.f
 )
 
 add_library(pppack SHARED ${pppack_SRC})
