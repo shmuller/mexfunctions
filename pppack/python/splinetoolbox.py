@@ -296,7 +296,7 @@ if __name__ == "__main__":
 
     x = np.linspace(knots[0], knots[-1], 100)
 
-    der = 2
+    der = 1
 
     y = sp.spval(x)
     
@@ -313,6 +313,6 @@ if __name__ == "__main__":
     y5 = pp_pgs2.ppual(x, der=der)
 
     from matplotlib.pyplot import plot, show
-    plot(x, y3, x, y4,'--')
+    plot(x, y3, x, y4, '--')
     show()
 
