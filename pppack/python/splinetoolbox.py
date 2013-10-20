@@ -48,6 +48,18 @@ class PP:
     def ppbrk(self):
         return self.brks, self.coefs, self.pieces, self.order, self.dim
 
+    def deriv(self, dorder=1):
+        b, c, l, k, d = self.ppbrk()
+        knew = k - dorder
+        if knew > 0:
+            cnew = c[:knew].copy()
+            expo = np.arange(k-1, 0, -1)[:,None]
+            for j in xrange(dorder):
+                cnew[:] *= expo[j:j+knew]
+        else:
+            cnew = np.zeros((1, d*l))
+        return self.__class__(b, cnew, d)
+
     def ppual(self, x):
         if any(diff(x) < 0):
             tosort = True
@@ -284,23 +296,23 @@ if __name__ == "__main__":
 
     x = np.linspace(knots[0], knots[-1], 100)
 
-    der = 1
+    der = 2
 
     y = sp.spval(x)
     
     pp = sp.to_pp()
-    y2 = pp.ppual(x)
+    y2 = pp.deriv(der).ppual(x)
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
     y3 = sp_pgs.spval(x, der=der)
 
     pp_pgs = sp_pgs.to_pp()
-    y4 = pp_pgs.ppual(x, der=der)
+    y4 = pp_pgs.ppual(x, der=der, fast=False)
 
     pp_pgs2 = sp_pgs.to_pp2()
     y5 = pp_pgs2.ppual(x, der=der)
 
     from matplotlib.pyplot import plot, show
-    plot(x, y3, x, y4, x, y5)
+    plot(x, y3, x, y4,'--')
     show()
 
