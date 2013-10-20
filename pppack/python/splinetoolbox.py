@@ -206,7 +206,7 @@ class PPPGS(PP):
 
         m = x.size
         y = np.zeros((m, d))
-        ppual(b, c, x, 0, y.T)
+        ppual(b, c, x, y.T)
         return y
 
     def ppual2(self, x):
@@ -264,8 +264,8 @@ class SplinePGS(Spline):
 
 
 if __name__ == "__main__":
-    #c = np.arange(2.*n).reshape(2, n).T.copy()
     n = 10
+    #c = np.arange(2.*n).reshape(2, n).T.copy()
     m = 6
     c = np.zeros((n, m))
     for i in xrange(m): c[i,i] = 1.
