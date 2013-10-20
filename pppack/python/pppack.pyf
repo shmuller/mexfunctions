@@ -435,9 +435,9 @@ python module pppack ! in
             real*8 dimension(n+k),depend(n,k) :: t
             real*8 dimension(d,n) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
-            integer, optional,check(shape(scrtch,0)==k),depend(scrtch) :: k=shape(scrtch,0)
+            integer, optional,check(shape(scrtch,1)==k),depend(scrtch) :: k=shape(scrtch,1)
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
-            real*8 dimension(k,k) :: scrtch
+            real*8 dimension(d,k,k),depend(d) :: scrtch
             real*8 dimension(n+2-k),depend(n,k) :: break_bn
             real*8 dimension(d,k,n+1-k),depend(d,k,n,k) :: coef
             integer intent(out) :: l

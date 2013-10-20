@@ -255,7 +255,7 @@ class SplinePGS(Spline):
         l = n+1-k
 
         b = np.zeros(l+1)
-        scrtch = np.zeros((k, k), order='F')
+        scrtch = np.zeros((d, k, k), order='F')
         coef = np.zeros((d, k, l), order='F')
 
         l = bsplppd(t, a.T, scrtch, b, coef)
