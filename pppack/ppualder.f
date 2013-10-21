@@ -29,3 +29,28 @@
            f = f - 1.
    50 continue
       end
+
+
+c   y = 0
+c   y = y/(k-0-j)*x + a*(k-1)*(k-2)*(k-3)
+c   y = y/(k-1-j)*x + b*(k-2)*(k-3) 
+c   y = y/(k-2-j)*x + c*(k-3)
+c   y = y/(k-3-j)*x + d
+
+c   y = ((a*(k-1)*(k-2)*(k-3)/(k-1-j)*x + b*(k-2)*(k-3))/(k-2-j)*x
+c     + c*(k-3))/(k-3-j)*x + d
+
+c   y = ((a*(k-1)*(k-2)*(k-3)/(k-1-j)/(k-2-j)/(k-3-j)*x +
+c         b*(k-2)*(k-3)/(k-2-j)/(k-3-j))*x +
+c         c*(k-3)/(k-3-j))*x +
+c         d
+
+c   y = ((a*r1*r2*r3*x + b*r2*r3)*x + c*r3)*x + d
+c
+c   ri := (k-i)/(k-i-j)
+
+c   y = ((a*r1*x + b)*r2*x +c)*r3*x + d
+c
+c
+c
+
