@@ -52,10 +52,11 @@ class PP:
         b, c, l, k, d = self.ppbrk()
         knew = k - dorder
         if knew > 0:
-            cnew = c[:knew].copy()
-            expo = np.arange(k-1, 0, -1)[:,None]
+            fact = np.ones(knew)
+            expo = np.arange(k-1, 0, -1)
             for j in xrange(dorder):
-                cnew[:] *= expo[j:j+knew]
+                fact[:] *= expo[j:j+knew]
+            cnew = c[:knew] * fact[:,None]
         else:
             cnew = np.zeros((1, d*l))
         return self.__class__(b, cnew, d)
@@ -213,30 +214,47 @@ class Spline(object):
 import pppack
 
 class PPPGS(PP):
+    def ppmak(self, *args, **kw):
+        PP.ppmak(self, *args, **kw)
+        self.order = self.coefs.shape[1]
+
+    def deriv(self, dorder=1):
+        b, c, l, k, d = self.ppbrk()
+        knew = k - dorder
+        if knew > 0:
+            fact = np.ones(knew)
+            expo = np.arange(k-1, 0, -1)
+            for j in xrange(dorder):
+                fact[:] *= expo[j:j+knew]
+            cnew = c[:,k-knew:] * fact[None,::-1,None]
+        else:
+            cnew = np.zeros((l, 1, d))
+        return self.__class__(b, cnew, d)
+
     def ppual(self, x, der=0, fast=True):
         b, c, l, k, d = self.ppbrk()
 
         m = x.size
         y = np.zeros((m, d))
         if der == 0 and fast:
-            pppack.ppual(b, c, x, y.T)
+            pppack.ppual(b, c.T, x, y.T)
         else:
-            pppack.ppualder(b, c, x, der, y.T)
+            pppack.ppualder(b, c.T, x, der, y.T)
         return y
 
 
-class PPPGS2(PP):
+class PPPGS2(PPPGS):
     def ppual(self, x, der=0):
         # this uses the PGS normalization
         b, c, l, k, d = self.ppbrk()
 
         m = x.size
         y = np.zeros((m, d))
-        c = c.transpose((0,2,1)).copy().T
+        c = c.transpose((2,0,1)).copy()
         for i in xrange(m):
             yi = y[i]
             for j in xrange(d):
-                yi[j] = pppack.ppvalu(b, c[:,:,j], x[i], der)
+                yi[j] = pppack.ppvalu(b, c[j].T, x[i], der)
         return y
 
 
@@ -260,10 +278,10 @@ class SplinePGS(Spline):
         l = n+1-k
 
         b = np.zeros(l+1)
-        scrtch = np.zeros((d, k, k), order='F')
-        coef = np.zeros((d, k, l), order='F')
+        scrtch = np.zeros((k, k, d))
+        coef = np.zeros((l, k, d))
 
-        l = pppack.bsplppd(t, a.T, scrtch, b, coef)
+        l = pppack.bsplppd(t, a.T, scrtch.T, b, coef.T)
         assert l == n+1-k
         return PPPGS(b, coef, d)
 
@@ -274,11 +292,11 @@ class SplinePGS(Spline):
         l = n+1-k
 
         b = np.zeros(l+1)
-        work4 = np.zeros((k, k, d), order='F')
-        work5 = np.zeros((d, k, l), order='F')
+        work4 = np.zeros((d, k, k))
+        work5 = np.zeros((l, k, d))
 
-        c = a.T.copy().T
-        pppack.bspp2d(t, c, work4, b, work5)
+        c = a.T.copy()
+        pppack.bspp2d(t, c.T, work4.T, b, work5.T)
         return PPPGS2(b, work5, d)
 
 
@@ -307,12 +325,16 @@ if __name__ == "__main__":
     y3 = sp_pgs.spval(x, der=der)
 
     pp_pgs = sp_pgs.to_pp()
-    y4 = pp_pgs.ppual(x, der=der, fast=False)
+    #y4 = pp_pgs.ppual(x, der=der, fast=False)
+
+    dpp_pgs = pp_pgs.deriv(der)
+    y4 = dpp_pgs.ppual(x, fast=False)
 
     pp_pgs2 = sp_pgs.to_pp2()
     y5 = pp_pgs2.ppual(x, der=der)
 
     from matplotlib.pyplot import plot, show
-    plot(x, y3, x, y4, '--')
+    #plot(x, y2, x, y4, '.')
+    plot(x, y2, x, y3, x, y4, '--', x, y5, '.')
     show()
 
