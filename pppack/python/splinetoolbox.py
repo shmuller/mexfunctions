@@ -1,5 +1,6 @@
 import numpy as np
-diff, find, cat = np.diff, np.flatnonzero, np.concatenate
+diff, find, cat, zeros, ones = \
+        np.diff, np.flatnonzero, np.concatenate, np.zeros, np.ones
 
 def searchsorted(meshsites, sites):
     index = np.argsort(cat((meshsites, sites)))
@@ -153,13 +154,32 @@ class Spline(object):
         index = searchsorted(t[:n], x)
         index[index < k-1] = k-1
         if k == 1:
-            b = a[index].ravel()
+            b = a[index]
         else:
             tx, b = self.setup_tx_b(t, x, k, d, index, backwd=False)
             b = a.ravel()[b]
             self.sprval(tx, b, k)
             b.resize((x.size,) + dim)
         return b
+
+    def deriv(self, dorder=1):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+
+        knew = k - dorder;
+        if knew <= 0:
+            t = t[k-1:n+1]
+            a = zeros((n-k,) + dim)
+        else:
+            z = zeros((1, d))
+            for j in xrange(k-1, knew-1, -1):
+                tt = t[j:j+n+2] - t[:n+1]
+                i = find(tt > 0)
+                temp = diff(cat((z, a, z)), axis=0)
+                a = temp[i] * (j / tt[i])[:,None]
+                t = cat((t[i], t[n+1:n+j+2]))
+                n = len(i)
+        return self.from_knots_coefs(t, a)
 
     def to_pp(self, backwd=True):
         t, a, n, k, dim = self.spbrk()
@@ -315,8 +335,9 @@ if __name__ == "__main__":
     x = np.linspace(knots[0], knots[-1], 100)
 
     der = 1
+    dsp = sp.deriv(der)
 
-    y = sp.spval(x)
+    y = dsp.spval(x)
     
     pp = sp.to_pp()
     y2 = pp.deriv(der).ppual(x)
@@ -335,6 +356,6 @@ if __name__ == "__main__":
 
     from matplotlib.pyplot import plot, show
     #plot(x, y2, x, y4, '.')
-    plot(x, y2, x, y3, x, y4, '--', x, y5, '.')
+    plot(x, y, x, y2, x, y3, x, y4, '--', x, y5, '.')
     show()
 
