@@ -173,11 +173,11 @@ class Spline(object):
         else:
             z = zeros((1, d))
             for j in xrange(k-1, knew-1, -1):
-                tt = t[j:j+n+2] - t[:n+1]
+                tt = t[j+1:j+n] - t[1:n]
                 i = find(tt > 0)
-                temp = diff(cat((z, a, z)), axis=0)
+                temp = diff(a, axis=0)
                 a = temp[i] * (j / tt[i])[:,None]
-                t = cat((t[i], t[n+1:n+j+2]))
+                t = cat((t[i+1], t[n+1:n+j+2]))
                 n = len(i)
         return self.from_knots_coefs(t, a)
 
@@ -292,6 +292,13 @@ class SplinePGS(Spline):
                 yi[j] = pppack.bvalue(t, c[j], k, x[i], der)
         return y
 
+    def deriv(self, dorder=1):
+        t, a, n, k, dim = self.spbrk()
+        d = prod(dim)
+        anew = np.zeros((n - 1, d))
+        pppack.spder(t, a.T, k, dorder, anew.T)
+        return self.from_knots_coefs(t[dorder:-dorder], anew)
+
     def to_pp(self):
         t, a, n, k, dim = self.spbrk()
         d = prod(dim)
@@ -343,7 +350,12 @@ if __name__ == "__main__":
     y2 = pp.deriv(der).ppual(x)
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
+
     y3 = sp_pgs.spval(x, der=der)
+
+    dsp_pgs = sp_pgs.deriv(der)
+
+    y3b = dsp_pgs.spval(x)
 
     pp_pgs = sp_pgs.to_pp()
     #y4 = pp_pgs.ppual(x, der=der, fast=False)
@@ -356,6 +368,6 @@ if __name__ == "__main__":
 
     from matplotlib.pyplot import plot, show
     #plot(x, y2, x, y4, '.')
-    plot(x, y, x, y2, x, y3, x, y4, '--', x, y5, '.')
+    plot(x, y, x, y2, x, y3, x, y3b, x, y4, '--', x, y5, '.')
     show()
 

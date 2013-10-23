@@ -37,3 +37,4 @@ netlib/titand.f
 bsplppd.f
 ppual.f
 ppualder.f
+spder.f
