@@ -295,9 +295,15 @@ class SplinePGS(Spline):
     def deriv(self, dorder=1):
         t, a, n, k, dim = self.spbrk()
         d = prod(dim)
-        anew = np.zeros((n - 1, d))
-        pppack.spder(t, a.T, k, dorder, anew.T)
-        return self.from_knots_coefs(t[dorder:-dorder], anew)
+        if k <= dorder:
+            t = t[k-1:n+1]
+            anew = zeros((n-k,) + dim)
+        else:
+            anew = a.copy()
+            pppack.spder(t, anew.T, k, dorder)
+            anew.resize((n-dorder,) + dim)
+            t = t[dorder:n+k-dorder]
+        return self.from_knots_coefs(t, anew)
 
     def to_pp(self):
         t, a, n, k, dim = self.spbrk()
