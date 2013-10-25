@@ -1,9 +1,11 @@
-      subroutine spualder( t, bcoef, n, k, d, x, m, y, jderiv )
-      integer n,k,d,m,   dd,mm
-      real t(n+k),bcoef(d,n),x(m),y(d,m)
+      subroutine spualder( t, bcoef, n, k, d, l, x, m, y, jderiv )
+      integer n,k,d,l,m,   dd,ll,mm
+      real t(n+k),bcoef(d,n,l),x(m),y(d,m,l),  xm
 
       do 50 mm=1,m
-        do 50 dd=1,d
-           y(dd,mm) = bvalue ( t, bcoef(dd,:), n, k, x(mm), jderiv )
+        xm = x(mm)
+        do 50 ll=1,l
+          do 50 dd=1,d
+             y(dd,mm,ll) = bvalue (t, bcoef(dd,:,ll), n, k, xm, jderiv)
    50 continue
       end

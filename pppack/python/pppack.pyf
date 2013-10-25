@@ -471,15 +471,16 @@ python module pppack ! in
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
             integer :: jderiv
         end subroutine spder
-        subroutine spualder(t,bcoef,n,k,d,x,m,y,jderiv) ! in :pppack:spualder.f
+        subroutine spualder(t,bcoef,n,k,d,l,x,m,y,jderiv) ! in :pppack:spualder.f
             real*8 dimension(n+k),depend(n,k) :: t
-            real*8 dimension(d,n) :: bcoef
+            real*8 dimension(d,n,l) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
             integer :: k
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
+            integer, optional,check(shape(bcoef,2)==l),depend(bcoef) :: l=shape(bcoef,2)
             real*8 dimension(m) :: x
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
-            real*8 dimension(d,m),depend(d,m) :: y
+            real*8 dimension(d,m,l),depend(d,m,l) :: y
             integer :: jderiv
         end subroutine spualder
     end interface 

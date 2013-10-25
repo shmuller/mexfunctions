@@ -285,12 +285,7 @@ class SplinePGS(Spline):
 
         m = x.size
         y = np.zeros((m, d))
-        pppack.spualder(t, a.T, k, x, y.T, der)
-        #c = a.T.copy()
-        #for i in xrange(m):
-        #    yi = y[i]
-        #    for j in xrange(d):
-        #        yi[j] = pppack.bvalue(t, c[j], k, x[i], der)
+        pppack.spualder(t, a.reshape((1, n, d)).T, k, x, y.reshape(1, m, d).T, der)
         return y
 
     def deriv(self, dorder=1):
@@ -336,9 +331,22 @@ class SplinePGS(Spline):
 
 class SplineND:
     def __init__(self, knots, coefs):
-        self.knots = knots
-        self.coefs = coefs
+        self.knots, self.coefs = knots, coefs
 
+    def spval(self, x, y, derx=0, dery=0):
+        t, c = self.knots, self.coefs
+        nx, ny = c.shape
+        tx, ty = t
+        kx, ky = tx.size - nx, ty.size - ny
+
+        mx, my = x.size, y.size
+        
+        C = np.zeros((mx, ny))
+        pppack.spualder(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T, derx)
+
+        Z = np.zeros((mx, my))
+        pppack.spualder(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T, dery)
+        return Z
 
 
 def test():
@@ -396,26 +404,23 @@ if __name__ == "__main__":
         (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
         (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
 
+    sp = SplineND((tx, ty), coefs)
+
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
 
-    spx = SplinePGS.from_knots_coefs(tx, coefs)
-
-    C = spx.spval(x)
-    spy = SplinePGS.from_knots_coefs(ty, C.T.copy())
-    Z = spy.spval(y)
+    Z = sp.spval(x, y)
 
     from matplotlib.pyplot import figure, show
     from mpl_toolkits.mplot3d import Axes3D
     fig = figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.plot_surface(x[None,:], y[:,None], Z, rstride=1, cstride=1, cmap='jet')
+    ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
 
     show()
-
   
 
 
