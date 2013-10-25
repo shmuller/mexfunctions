@@ -285,11 +285,12 @@ class SplinePGS(Spline):
 
         m = x.size
         y = np.zeros((m, d))
-        c = a.T.copy()
-        for i in xrange(m):
-            yi = y[i]
-            for j in xrange(d):
-                yi[j] = pppack.bvalue(t, c[j], k, x[i], der)
+        pppack.spualder(t, a.T, k, x, y.T, der)
+        #c = a.T.copy()
+        #for i in xrange(m):
+        #    yi = y[i]
+        #    for j in xrange(d):
+        #        yi[j] = pppack.bvalue(t, c[j], k, x[i], der)
         return y
 
     def deriv(self, dorder=1):
@@ -333,7 +334,14 @@ class SplinePGS(Spline):
         return PPPGS2(b, work5, d)
 
 
-if __name__ == "__main__":
+class SplineND:
+    def __init__(self, knots, coefs):
+        self.knots = knots
+        self.coefs = coefs
+
+
+
+def test():
     n = 10
     #c = np.arange(2.*n).reshape(2, n).T.copy()
     m = 6
@@ -376,4 +384,45 @@ if __name__ == "__main__":
     #plot(x, y2, x, y4, '.')
     plot(x, y, x, y2, x, y3, x, y3b, x, y4, '--', x, y5, '.')
     show()
+
+if __name__ == "__main__":
+    tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
+    ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
+
+    coefs = np.array(
+       (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
+        ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
+        (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
+        (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
+        (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
+
+    x = np.linspace(0., 4., 10)
+    y = np.linspace(0., 5., 12)
+
+    spx = SplinePGS.from_knots_coefs(tx, coefs)
+
+    C = spx.spval(x)
+    spy = SplinePGS.from_knots_coefs(ty, C.T.copy())
+    Z = spy.spval(y)
+
+    from matplotlib.pyplot import figure, show
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(x[None,:], y[:,None], Z, rstride=1, cstride=1, cmap='jet')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+
+    show()
+
+  
+
+
+
+
+
+
+
+
 

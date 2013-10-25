@@ -38,3 +38,4 @@ bsplppd.f
 ppual.f
 ppualder.f
 spder.f
+spualder.f
