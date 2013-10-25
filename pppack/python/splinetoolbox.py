@@ -296,7 +296,7 @@ class SplinePGS(Spline):
             anew = zeros((n-k,) + dim)
         else:
             anew = a.copy()
-            pppack.spder(t, anew.T, k, dorder)
+            pppack.spder(t, anew.reshape((1, n, d)).T, k, dorder)
             anew.resize((n-dorder,) + dim)
             t = t[dorder:n+k-dorder]
         return self.from_knots_coefs(t, anew)
