@@ -36,21 +36,21 @@ c  its first  k-1  derivatives are then evaluated at the left end point
 c  of that interval, using  bsplvb  repeatedly to obtain the values of
 c  all b-splines of the appropriate order at that point.
 c
-      integer k,l,n,d,   i,j,jp1,kmax,kmj,left,lsofar,dd
+      integer k,l,n,d,   i,jp1,kmax,kmj,left,dd
       parameter (kmax = 20)
-      real bcoef(d,n),break(n+2-k),coef(d,k,n+1-k),t(n+k),
-     *     scrtch(d,k,k),biatx(kmax),diff,factor,sum
+      real t(n+k),bcoef(d,n),break(n+2-k),coef(d,k,n+1-k),
+     *     scrtch(d,k,k),biatx(kmax),s
 c
-      lsofar = 0
+      l = 0
       break(1) = t(k)
       do 50 left=k,n
 c                                find the next nontrivial knot interval.
          if (t(left+1) .eq. t(left))    go to 50
-         lsofar = lsofar + 1
-         break(lsofar+1) = t(left+1)
+         l = l + 1
+         break(l+1) = t(left+1)
          if (k .gt. 1)                  go to 9
          do 5 dd=1,d
-    5       coef(dd,1,lsofar) = bcoef(dd,left)
+    5       coef(dd,1,l) = bcoef(dd,left)
                                         go to 50
 c        store the k b-spline coeff.s relevant to current knot interval
 c                             in  scrtch(.,1) .
@@ -83,39 +83,31 @@ c        appear in a dimension statement, of course.
 c
          call bsplvb ( t, 1, 1, t(left), left, biatx )
          do 25 dd=1,d
-   25       coef(dd,k,lsofar) = scrtch(dd,1,k)
+   25       coef(dd,k,l) = scrtch(dd,1,k)
          do 30 jp1=2,k
             call bsplvb ( t, jp1, 2, t(left), left, biatx )
             kmj = k+1 - jp1
             do 30 dd=1,d
-               sum = 0.
+               s = 0.
                do 28 i=1,jp1
-   28             sum = biatx(i)*scrtch(dd,i,kmj) + sum
-   30          coef(dd,kmj,lsofar) = sum
-   50    continue
-      l = lsofar
-      if (k .eq. 1)                     return
-      factor = 1.
-      do 60 i=2,k
-         factor = factor*float(k+1-i)/(i-1)
-         do 60 j=1,lsofar
-            do 60 dd=1,d
-   60          coef(dd,i,j) = coef(dd,i,j)*factor
-                                        return
+   28             s = biatx(i)*scrtch(dd,i,kmj) + s
+   30          coef(dd,kmj,l) = s
+   50 continue
       end
 
       subroutine calcbspl ( t, scr, k, d )
       integer k,d,   jp1,j,i,kmj,dd
-      real t(1),scr(d,k,k),   diff,fact
+      real t(1),scr(d,k,k),   diff,fact,h
 
       do 100 jp1=2,k
         j = jp1-1
         kmj = k-j
+        fact = float(kmj)/j
         do 100 i=1,kmj
           diff = t(i)-t(i-kmj)
           if (diff .le. 0.)             go to 100
-          fact = 1./diff
+          h = fact/diff
           do 90 dd=1,d
-   90       scr(dd,i,jp1) = (scr(dd,i+1,j)-scr(dd,i,j))*fact
+   90       scr(dd,i,jp1) = (scr(dd,i+1,j)-scr(dd,i,j))*h
   100 continue
       end

@@ -87,6 +87,11 @@ class PP:
         ind[ind < 0] = 0
         return ind
 
+    def to_pp_pgs(self):
+        b, c, l, k, d = self.ppbrk()
+        coef = c[::-1].reshape((k,l,d)).transpose((1,0,2))
+        return PPPGS(b, coef, d)
+
 
 class Spline(object):
     def __init__(self, *args, **kw):
@@ -355,7 +360,11 @@ class SplineND:
         return Z
 
 
-def test():
+test1 = test2 = False
+if __name__ == "__main__":
+    test1 = True
+
+if test1:
     n = 10
     #c = np.arange(2.*n).reshape(2, n).T.copy()
     m = 6
@@ -395,41 +404,16 @@ def test():
     pp_pgs2 = sp_pgs.to_pp2()
     y7 = pp_pgs2.ppual(x, der=der)
 
+    pp_pgsb = pp.to_pp_pgs()
+    y8 = pp_pgsb.ppual(x, der=der)
+
+    assert np.allclose(pp_pgs.coefs, pp_pgsb.coefs)
+
     from matplotlib.pyplot import plot, show
-    plot(x, np.c_[y, y2, y3, y4, y5, y6, y7], '.-')
+    plot(x, np.c_[y, y2, y3, y4, y5, y6, y7, y8], '.-')
     show()
 
-def test2():
-    tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
-    ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
-
-    coefs = np.array(
-       (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
-        ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
-        (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
-        (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
-        (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
-
-    sp = SplineND((tx, ty), coefs)
-
-    x = np.linspace(0., 4., 10)
-    y = np.linspace(0., 5., 12)
-
-    Z = sp.spval(x, y)
-
-    from matplotlib.pyplot import figure, show
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-
-    show()
-  
-
-if __name__ == "__main__":
+if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
     ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
 
