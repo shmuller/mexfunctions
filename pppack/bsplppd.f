@@ -61,15 +61,7 @@ c
 c        for j=1,...,k-1, compute the  k-j  b-spline coeff.s relevant to
 c        current knot interval for the j-th derivative by differencing
 c        those for the (j-1)st derivative, and store in scrtch(.,j+1) .
-         do 20 jp1=2,k
-            j = jp1 - 1
-            kmj = k - j
-            do 20 i=1,kmj
-               diff = t(left+i) - t(left+i - kmj)
-               do 20 dd=1,d
-                  if (diff .gt. 0.)  scrtch(dd,i,jp1) =
-     *                       (scrtch(dd,i+1,j)-scrtch(dd,i,j))/diff
-   20          continue
+         call calcbspl ( t(left+1), scrtch, k, d )
 c
 c        for  j = 0, ..., k-1, find the values at  t(left)  of the  j+1
 c        b-splines of order  j+1  whose support contains the current
@@ -110,4 +102,20 @@ c
             do 60 dd=1,d
    60          coef(dd,i,j) = coef(dd,i,j)*factor
                                         return
+      end
+
+      subroutine calcbspl ( t, scr, k, d )
+      integer k,d,   jp1,j,i,kmj,dd
+      real t(1),scr(d,k,k),   diff,fact
+
+      do 100 jp1=2,k
+        j = jp1-1
+        kmj = k-j
+        do 100 i=1,kmj
+          diff = t(i)-t(i-kmj)
+          if (diff .le. 0.)             go to 100
+          fact = 1./diff
+          do 90 dd=1,d
+   90       scr(dd,i,jp1) = (scr(dd,i+1,j)-scr(dd,i,j))*fact
+  100 continue
       end

@@ -311,7 +311,9 @@ class SplinePGS(Spline):
         coef = np.zeros((l, k, d))
 
         l = pppack.bsplppd(t, a.T, scrtch.T, b, coef.T)
-        assert l == n+1-k
+        if l < n+1-k:
+            b.resize(l+1)
+            coef.resize((l, k, d))
         return PPPGS(b, coef, d)
 
     def to_pp2(self):
@@ -321,12 +323,16 @@ class SplinePGS(Spline):
         l = n+1-k
 
         b = np.zeros(l+1)
-        work4 = np.zeros((d, k, k))
-        work5 = np.zeros((l, k, d))
+        scrtch = np.zeros((d, k, k))
+        coef = np.zeros((l, k, d))
 
         c = a.T.copy()
-        pppack.bspp2d(t, c.T, work4.T, b, work5.T)
-        return PPPGS2(b, work5, d)
+        pppack.bspp2d(t, c.T, scrtch.T, b, coef.T)
+        l = len(np.unique(t)) - 1
+        if l < n+1-k:
+            b.resize(l+1)
+            coef.resize((l, k, d))
+        return PPPGS2(b, coef, d)
 
 
 class SplineND:
@@ -357,7 +363,8 @@ def test():
     for i in xrange(m): c[i,i] = 1.
 
     k = 4
-    knots = np.arange(n-k+2.)
+    #knots = np.arange(n-k+2.)
+    knots = np.array((0., 1., 2., 2., 4., 5., 6., 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
@@ -377,23 +384,22 @@ def test():
 
     dsp_pgs = sp_pgs.deriv(der)
 
-    y3b = dsp_pgs.spval(x)
+    y4 = dsp_pgs.spval(x)
 
     pp_pgs = sp_pgs.to_pp()
-    #y4 = pp_pgs.ppual(x, der=der, fast=False)
+    y5 = pp_pgs.ppual(x, der=der, fast=False)
 
     dpp_pgs = pp_pgs.deriv(der)
-    y4 = dpp_pgs.ppual(x, fast=False)
+    y6 = dpp_pgs.ppual(x, fast=False)
 
     pp_pgs2 = sp_pgs.to_pp2()
-    y5 = pp_pgs2.ppual(x, der=der)
+    y7 = pp_pgs2.ppual(x, der=der)
 
     from matplotlib.pyplot import plot, show
-    #plot(x, y2, x, y4, '.')
-    plot(x, y, x, y2, x, y3, x, y3b, x, y4, '--', x, y5, '.')
+    plot(x, np.c_[y, y2, y3, y4, y5, y6, y7], '.-')
     show()
 
-if __name__ == "__main__":
+def test2():
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
     ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
 
@@ -423,9 +429,34 @@ if __name__ == "__main__":
     show()
   
 
+if __name__ == "__main__":
+    tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
+    ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
 
+    coefs = np.array(
+       (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
+        ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
+        (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
+        (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
+        (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
 
+    sp = SplineND((tx, ty), coefs)
 
+    x = np.linspace(0., 4., 10)
+    y = np.linspace(0., 5., 12)
+
+    Z = sp.spval(x, y)
+
+    from matplotlib.pyplot import figure, show
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+
+    show()
 
 
 
