@@ -192,7 +192,7 @@ class Spline(object):
 
         inter = find(diff(t) > 0)
         if k == 1:
-            b = a[inter].ravel()
+            b = a[inter].reshape((1,-1))
         else:
             tx, b = self.setup_tx_b(t, t[inter], k, d, inter, backwd=backwd)
             b = a.ravel()[b]
@@ -372,9 +372,9 @@ if test1:
     c = np.zeros((n, m))
     for i in xrange(m): c[i,i] = 1.
 
-    k = 4
-    #knots = np.arange(n-k+2.)
-    knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
+    k = 2
+    knots = np.arange(n-k+2.)
+    #knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
