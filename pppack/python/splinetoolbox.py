@@ -3,8 +3,12 @@ diff, find, cat, zeros, ones = \
         np.diff, np.flatnonzero, np.concatenate, np.zeros, np.ones
 
 def searchsorted(meshsites, sites):
-    index = np.argsort(cat((meshsites, sites)))
+    # need stable sorting algorithm to work properly
+    index = cat((meshsites, sites)).argsort(kind='mergesort')
     return find(index > len(meshsites)-1) - np.arange(1, len(sites)+1)
+
+#def searchsorted(meshsites, sites):
+#    return meshsites.searchsorted(sites, 'right') - 1
 
 def brk2knt(brks, mults):
     s = mults.sum()
@@ -38,29 +42,27 @@ class PP:
     def __init__(self, *args, **kw):
         self.ppmak(*args, **kw)
 
-    def ppmak(self, brks, coefs, d):
-        self.form = 'pp'
-        self.brks = brks
-        self.coefs = coefs
-        self.pieces = len(brks) - 1
-        self.order = coefs.shape[0]
-        self.dim = d
+    def ppmak(self, b, a):
+        self.b, self.a = b, a
+        self.l = len(b) - 1
+        self.k = a.shape[0]
+        self.d = a.shape[1] / self.l
 
     def ppbrk(self):
-        return self.brks, self.coefs, self.pieces, self.order, self.dim
+        return self.b, self.a, self.l, self.k, self.d
 
     def deriv(self, dorder=1):
-        b, c, l, k, d = self.ppbrk()
+        b, a, l, k, d = self.ppbrk()
         knew = k - dorder
         if knew > 0:
             fact = np.ones(knew)
             expo = np.arange(k-1, 0, -1)
             for j in xrange(dorder):
                 fact[:] *= expo[j:j+knew]
-            cnew = c[:knew] * fact[:,None]
+            anew = a[:knew] * fact[:,None]
         else:
-            cnew = np.zeros((1, d*l))
-        return self.__class__(b, cnew, d)
+            anew = np.zeros((1, d*l))
+        return self.__class__(b, anew)
 
     def ppual(self, x):
         if any(diff(x) < 0):
@@ -70,27 +72,27 @@ class PP:
         else:
             xs = x.copy()
 
-        b, c, l, k, d = self.ppbrk()
+        b, a, l, k, d = self.ppbrk()
 
         index = self.get_index(x)
         xs[:] -= b[index]
 
         xs = xs[:,None]
-        c = c.reshape((k, l, d))
-        v = c[0,index]
+        a = a.reshape((k, l, d))
+        v = a[0,index]
         for i in xrange(1, k):
-            v = xs * v + c[i,index]
+            v = xs * v + a[i,index]
         return v
 
     def get_index(self, sites):
-        ind = searchsorted(self.brks[:-1], sites)
+        ind = searchsorted(self.b[:-1], sites)
         ind[ind < 0] = 0
         return ind
 
     def to_pp_pgs(self):
-        b, c, l, k, d = self.ppbrk()
-        coef = c[::-1].reshape((k,l,d)).transpose((1,0,2))
-        return PPPGS(b, coef, d)
+        b, a, l, k, d = self.ppbrk()
+        anew = a[::-1].reshape((k,l,d)).transpose((1,0,2))
+        return PPPGS(b, anew)
 
 
 class Spline(object):
@@ -98,44 +100,20 @@ class Spline(object):
         self.spmak(*args, **kw)
     
     @classmethod
-    def from_knots_coefs(cls, knots, coefs):
+    def from_knots_coefs(cls, t, c):
         self = cls.__new__(cls)
-        self.spmak(knots, coefs)
+        self.spmak(t, c)
         return self
 
-    def spmak(self, knots, coefs, sizec=None):
-        if sizec is None:
-            sizec = coefs.shape
-        m = 1
-        if len(sizec) == m:
-            sizec = sizec + (1,)
-
-        sizeval = sizec[m:]
-        sizec = sizec[:m] + (np.prod(sizeval),)
-        coefs = coefs.reshape(sizec)
-
-        knots, coefs, k, sizec = self.chckknt(knots, coefs, sizec)
-
-        self.form = 'B-'
-        self.knots = knots
-        self.coefs = coefs
-        self.number = sizec[0]
-        self.order = k
-        self.dim = sizeval
-
-    def chckknt(self, knots, coefs, sizec):
-        n = sizec[0]
-        k = len(knots) - n
-        
-        # TODO some checks
-        # TODO throw out trivial B-splines
-
-        return knots, coefs, k, sizec
+    def spmak(self, t, c):
+        self.t, self.c = t, c
+        self.n, self.d = c.shape
+        self.k = t.size - self.n
 
     def spbrk(self):
-        return self.knots, self.coefs, self.number, self.order, self.dim
+        return self.t, self.c, self.n, self.k, self.d
     
-    def setup_tx_b(self, t, x, k, d, inter, backwd=False):
+    def setup_tx_i(self, t, x, k, d, inter, backwd=False):
         if backwd:
             o = np.arange(k-1, 1-k, -1)
             kd = np.arange(0, -k*d, -d)
@@ -145,59 +123,56 @@ class Spline(object):
 
         tx = t[inter[None,:]+o[:,None]] - x[None,:]
 
-        b = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
+        i = (d*(inter+1)-1)[None,:,None] + np.arange(1-d, 1)[None,None,:] \
           + kd[:,None,None]
 
         tx = tx[:,:,None].repeat(d, axis=2).reshape((2*(k-1),-1))
-        b = b.reshape((k, -1))
-        return tx, b
+        i = i.reshape((k, -1))
+        return tx, i
 
     def spval(self, x):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
 
         index = searchsorted(t[:n], x)
         index[index < k-1] = k-1
         if k == 1:
-            b = a[index]
+            c = c[index]
         else:
-            tx, b = self.setup_tx_b(t, x, k, d, index, backwd=False)
-            b = a.ravel()[b]
-            self.sprval(tx, b, k)
-            b.resize((x.size,) + dim)
-        return b
+            tx, i = self.setup_tx_i(t, x, k, d, index, backwd=False)
+            c = c.ravel()[i]
+            self.sprval(tx, c, k)
+            c.resize((x.size, d))
+        return c
 
     def deriv(self, dorder=1):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
 
         knew = k - dorder;
         if knew <= 0:
             t = t[k-1:n+1]
-            a = zeros((n-k,) + dim)
+            c = zeros((n-k, d))
         else:
             z = zeros((1, d))
             for j in xrange(k-1, knew-1, -1):
                 tt = t[j+1:j+n] - t[1:n]
                 i = find(tt > 0)
-                temp = diff(a, axis=0)
-                a = temp[i] * (j / tt[i])[:,None]
+                temp = diff(c, axis=0)
+                c = temp[i] * (j / tt[i])[:,None]
                 t = cat((t[i+1], t[n+1:n+j+2]))
                 n = len(i)
-        return self.from_knots_coefs(t, a)
+        return self.from_knots_coefs(t, c)
 
     def to_pp(self, backwd=True):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
 
         inter = find(diff(t) > 0)
         if k == 1:
-            b = a[inter].reshape((1,-1))
+            a = c[inter].reshape((1,-1))
         else:
-            tx, b = self.setup_tx_b(t, t[inter], k, d, inter, backwd=backwd)
-            b = a.ravel()[b]
-            b = self.sprpp(tx, b, k, backwd=backwd)
-        return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), b, d)
+            tx, i = self.setup_tx_i(t, t[inter], k, d, inter, backwd=backwd)
+            b = c.ravel()[i]
+            a = self.sprpp(tx, b, k, backwd=backwd)
+        return PP(cat((t[inter], t[inter[-1]+1:inter[-1]+2])), a)
 
     def sprval(self, tx, b, k):
         for r in xrange(1, k):
@@ -239,114 +214,109 @@ class Spline(object):
 import pppack
 
 class PPPGS(PP):
-    def ppmak(self, *args, **kw):
-        PP.ppmak(self, *args, **kw)
-        self.order = self.coefs.shape[1]
+    def ppmak(self, b, a):
+        self.b, self.a = b, a
+        self.l, self.k, self.d = a.shape
 
     def deriv(self, dorder=1):
-        b, c, l, k, d = self.ppbrk()
+        b, a, l, k, d = self.ppbrk()
         knew = k - dorder
         if knew > 0:
             fact = np.ones(knew)
             expo = np.arange(k-1, 0, -1)
             for j in xrange(dorder):
                 fact[:] *= expo[j:j+knew]
-            cnew = c[:,k-knew:] * fact[None,::-1,None]
+            anew = a[:,k-knew:] * fact[None,::-1,None]
         else:
-            cnew = np.zeros((l, 1, d))
-        return self.__class__(b, cnew, d)
+            anew = np.zeros((l, 1, d))
+        return self.__class__(b, anew)
 
     def ppual(self, x, der=0, fast=True):
-        b, c, l, k, d = self.ppbrk()
+        b, a, l, k, d = self.ppbrk()
 
         m = x.size
         y = np.zeros((m, d))
         if der == 0 and fast:
-            pppack.ppual(b, c.T, x, y.T)
+            pppack.ppual(b, a.T, x, y.T)
         else:
-            pppack.ppualder(b, c.T, x, der, y.T)
+            pppack.ppualder(b, a.T, x, der, y.T)
         return y
 
 
 class PPPGS2(PPPGS):
     def ppual(self, x, der=0):
         # this uses the PGS normalization
-        b, c, l, k, d = self.ppbrk()
+        b, a, l, k, d = self.ppbrk()
 
         m = x.size
         y = np.zeros((m, d))
-        c = c.transpose((2,0,1)).copy()
+        a = a.transpose((2,0,1)).copy()
         for i in xrange(m):
             yi = y[i]
             for j in xrange(d):
-                yi[j] = pppack.ppvalu(b, c[j].T, x[i], der)
+                yi[j] = pppack.ppvalu(b, a[j].T, x[i], der)
         return y
 
 
 class SplinePGS(Spline):
     def spval(self, x, der=0):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
-
+        t, c, n, k, d = self.spbrk()
         m = x.size
         y = np.zeros((m, d))
-        pppack.spualder(t, a.reshape((1, n, d)).T, k, x, y.reshape(1, m, d).T, der)
+        pppack.spualder(t, c.reshape((1, n, d)).T, k, x, y.reshape(1, m, d).T, der)
         return y
 
     def deriv(self, dorder=1):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
         if k <= dorder:
             t = t[k-1:n+1]
-            anew = zeros((n-k,) + dim)
+            cnew = zeros((n-k, d))
         else:
-            anew = a.copy()
-            pppack.spder(t, anew.reshape((1, n, d)).T, k, dorder)
-            anew.resize((n-dorder,) + dim)
+            cnew = c.copy()
+            pppack.spder(t, cnew.reshape((1, n, d)).T, k, dorder)
+            cnew.resize((n-dorder, d))
             t = t[dorder:n+k-dorder]
-        return self.from_knots_coefs(t, anew)
+        return self.from_knots_coefs(t, cnew)
 
     def to_pp(self):
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
         l = n+1-k
 
         b = np.zeros(l+1)
         scrtch = np.zeros((k, k, d))
-        coef = np.zeros((l, k, d))
+        a = np.zeros((l, k, d))
 
-        l = pppack.bsplppd(t, a.reshape((1, n, d)).T, scrtch.reshape((k, k, 1, d)).T, 
-                           b, coef.reshape((1, l, k, d)).T)
+        l = pppack.bsplppd(t, c.reshape((1, n, d)).T, scrtch.reshape((k, k, 1, d)).T, 
+                           b, a.reshape((1, l, k, d)).T)
         if l < n+1-k:
             b.resize(l+1)
-            coef.resize((l, k, d))
-        return PPPGS(b, coef, d)
+            a.resize((l, k, d))
+        return PPPGS(b, a)
 
     def to_pp2(self):
         # this uses the PGS normalization
-        t, a, n, k, dim = self.spbrk()
-        d = prod(dim)
+        t, c, n, k, d = self.spbrk()
         l = n+1-k
 
         b = np.zeros(l+1)
         scrtch = np.zeros((d, k, k))
-        coef = np.zeros((l, k, d))
+        a = np.zeros((l, k, d))
 
-        c = a.T.copy()
-        pppack.bspp2d(t, c.T, scrtch.T, b, coef.T)
+        c = c.T.copy()
+        pppack.bspp2d(t, c.T, scrtch.T, b, a.T)
         l = len(np.unique(t)) - 1
         if l < n+1-k:
             b.resize(l+1)
-            coef.resize((l, k, d))
-        return PPPGS2(b, coef, d)
+            a.resize((l, k, d))
+        return PPPGS2(b, a)
 
 
 class SplineND:
-    def __init__(self, knots, coefs):
-        self.knots, self.coefs = knots, coefs
+    def __init__(self, t, c):
+        self.t, self.c = t, c
 
     def spval(self, x, y, derx=0, dery=0):
-        t, c = self.knots, self.coefs
+        t, c = self.t, self.c
         nx, ny = c.shape
         tx, ty = t
         kx, ky = tx.size - nx, ty.size - ny
@@ -408,7 +378,7 @@ if test1:
     pp_pgsb = pp.to_pp_pgs()
     y8 = pp_pgsb.ppual(x, der=der)
 
-    assert np.allclose(pp_pgs.coefs, pp_pgsb.coefs)
+    assert np.allclose(pp_pgs.a, pp_pgsb.a)
 
     from matplotlib.pyplot import plot, show
     plot(x, np.c_[y, y2, y3, y4, y5, y6, y7, y8], '.-')

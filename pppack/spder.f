@@ -1,22 +1,22 @@
-      subroutine spder( t, bcoef, n, k, d, l, jderiv )
-      integer jderiv,n,k,d,l,   i,dd,ll
-      real t(n+k),bcoef(d,n,l),   h,fkmj
+      subroutine spder( t, bcoef, n, k, d, p, jderiv )
+      integer jderiv,n,k,d,p,   i,dd,pp
+      real t(n+k),bcoef(d,n,p),   h,fkmj
 
-      if (d .eq. 1 .and. l .eq. 1)         go to 99
+      if (d .eq. 1 .and. p .eq. 1)         go to 99
       if (d .eq. 1)                        go to 199
-      if (l .eq. 1)                        go to 299
+      if (p .eq. 1)                        go to 299
 
       do 50 j=1,jderiv
         fkmj = float(k-j)
         do 50 i=1,n-j
           h = fkmj/(t(i+k)-t(i+j))
-          do 50 ll=1,l
+          do 50 pp=1,p
             do 50 dd=1,d
-   50         bcoef(dd,i,ll) = h*(bcoef(dd,i+1,ll)-bcoef(dd,i,ll))
+   50         bcoef(dd,i,pp) = h*(bcoef(dd,i+1,pp)-bcoef(dd,i,pp))
       return
    99 call spder0 (t, bcoef(1,:,1), n, k, jderiv)
       return
-  199 call spderl (t, bcoef(1,:,:), n, k, l, jderiv)
+  199 call spderp (t, bcoef(1,:,:), n, k, p, jderiv)
       return
   299 call spderd (t, bcoef(:,:,1), n, k, d, jderiv)
       return
@@ -32,16 +32,16 @@
    60     bcoef(i) = fkmj*(bcoef(i+1)-bcoef(i))/(t(i+k)-t(i+j))
       end
 
-      subroutine spderl( t, bcoef, n, k, l, jderiv )
-      integer jderiv,n,k,l,   i,ll
-      real t(n+k),bcoef(n,l),   h,fkmj
+      subroutine spderp( t, bcoef, n, k, p, jderiv )
+      integer jderiv,n,k,p,   i,pp
+      real t(n+k),bcoef(n,p),   h,fkmj
 
       do 70 j=1,jderiv
         fkmj = float(k-j)
         do 70 i=1,n-j
           h = fkmj/(t(i+k)-t(i+j))
-          do 70 ll=1,l
-   70       bcoef(i,ll) = h*(bcoef(i+1,ll)-bcoef(i,ll))
+          do 70 pp=1,p
+   70       bcoef(i,pp) = h*(bcoef(i+1,pp)-bcoef(i,pp))
       end
 
       subroutine spderd( t, bcoef, n, k, d, jderiv )
