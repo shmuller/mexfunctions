@@ -1,4 +1,4 @@
-      subroutine bsplppd ( t, bcoef, n, k, d, scrtch, break, coef, l )
+      subroutine bsplppd (t, bcoef, n, k, d, p, scrtch, break, coef, l)
 cf2py intent(out) l
 c  from  * a practical guide to splines *  by c. de Boor (7 may 92)
 calls  bsplvb
@@ -36,11 +36,12 @@ c  its first  k-1  derivatives are then evaluated at the left end point
 c  of that interval, using  bsplvb  repeatedly to obtain the values of
 c  all b-splines of the appropriate order at that point.
 c
-      integer k,l,n,d,   i,jp1,kmax,kmj,left,dd
+      integer k,l,n,d,p,   i,jp1,kmax,kmj,left,dd,pp,dp
       parameter (kmax = 20)
-      real t(n+k),bcoef(d,n),break(n+2-k),coef(d,k,n+1-k),
-     *     scrtch(d,k,k),biatx(kmax),s
+      real t(n+k),bcoef(d,n,p),break(n+2-k),coef(d,k,n+1-k,p),
+     *     scrtch(d,p,k,k),biatx(kmax),s
 c
+      dp = d*p
       l = 0
       break(1) = t(k)
       do 50 left=k,n
@@ -49,19 +50,21 @@ c                                find the next nontrivial knot interval.
          l = l + 1
          break(l+1) = t(left+1)
          if (k .gt. 1)                  go to 9
-         do 5 dd=1,d
-    5       coef(dd,1,l) = bcoef(dd,left)
+         do 5 pp=1,p
+           do 5 dd=1,d
+    5        coef(dd,1,l,pp) = bcoef(dd,left,pp)
                                         go to 50
 c        store the k b-spline coeff.s relevant to current knot interval
 c                             in  scrtch(.,1) .
     9    do 10 i=1,k
-            do 10 dd=1,d
-   10          scrtch(dd,i,1) = bcoef(dd,left-k+i)
+           do 10 pp=1,p
+             do 10 dd=1,d
+   10          scrtch(dd,pp,i,1) = bcoef(dd,left-k+i,pp)
 c
 c        for j=1,...,k-1, compute the  k-j  b-spline coeff.s relevant to
 c        current knot interval for the j-th derivative by differencing
 c        those for the (j-1)st derivative, and store in scrtch(.,j+1) .
-         call calcbspl ( t(left+1), scrtch, k, d )
+         call calcbspl ( t(left+1), scrtch, k, dp )
 c
 c        for  j = 0, ..., k-1, find the values at  t(left)  of the  j+1
 c        b-splines of order  j+1  whose support contains the current
@@ -82,16 +85,18 @@ c        from  bsplvb . deltal(kmax)  and  deltar(kmax)  would have to
 c        appear in a dimension statement, of course.
 c
          call bsplvb ( t, 1, 1, t(left), left, biatx )
-         do 25 dd=1,d
-   25       coef(dd,k,l) = scrtch(dd,1,k)
+         do 25 pp=1,p
+           do 25 dd=1,d
+   25        coef(dd,k,l,pp) = scrtch(dd,pp,1,k)
          do 30 jp1=2,k
             call bsplvb ( t, jp1, 2, t(left), left, biatx )
             kmj = k+1 - jp1
-            do 30 dd=1,d
-               s = 0.
-               do 28 i=1,jp1
-   28             s = biatx(i)*scrtch(dd,i,kmj) + s
-   30          coef(dd,kmj,l) = s
+            do 30 pp=1,p
+              do 30 dd=1,d
+                s = 0.
+                do 28 i=1,jp1
+   28              s = s + biatx(i)*scrtch(dd,pp,i,kmj)
+   30           coef(dd,kmj,l,pp) = s
    50 continue
       end
 

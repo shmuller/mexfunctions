@@ -431,15 +431,16 @@ python module pppack ! in
             real*8 dimension(49) :: gtau
             integer intent(out) :: n
         end subroutine titand
-        subroutine bsplppd(t,bcoef,n,k,d,scrtch,break_bn,coef,l) ! in :pppack:bsplppd.f
+        subroutine bsplppd(t,bcoef,n,k,d,p,scrtch,break_bn,coef,l) ! in :pppack:bsplppd.f
             real*8 dimension(n+k),depend(n,k) :: t
-            real*8 dimension(d,n) :: bcoef
+            real*8 dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
-            integer, optional,check(shape(scrtch,1)==k),depend(scrtch) :: k=shape(scrtch,1)
+            integer, optional,check(shape(scrtch,2)==k),depend(scrtch) :: k=shape(scrtch,2)
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
-            real*8 dimension(d,k,k),depend(d) :: scrtch
+            integer, optional,check(shape(bcoef,2)==p),depend(bcoef) :: p=shape(bcoef,2)
+            real*8 dimension(d,p,k,k),depend(d,p) :: scrtch
             real*8 dimension(n+2-k),depend(n,k) :: break_bn
-            real*8 dimension(d,k,n+1-k),depend(d,k,n,k) :: coef
+            real*8 dimension(d,k,n+1-k,p),depend(d,k,n,k,p) :: coef
             integer intent(out) :: l
         end subroutine bsplppd
         subroutine calcbspl(t,scr,k,d) ! in :pppack:bsplppd.f

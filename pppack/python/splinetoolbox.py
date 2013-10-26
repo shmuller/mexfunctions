@@ -315,7 +315,8 @@ class SplinePGS(Spline):
         scrtch = np.zeros((k, k, d))
         coef = np.zeros((l, k, d))
 
-        l = pppack.bsplppd(t, a.T, scrtch.T, b, coef.T)
+        l = pppack.bsplppd(t, a.reshape((1, n, d)).T, scrtch.reshape((k, k, 1, d)).T, 
+                           b, coef.reshape((1, l, k, d)).T)
         if l < n+1-k:
             b.resize(l+1)
             coef.resize((l, k, d))
@@ -373,7 +374,7 @@ if test1:
 
     k = 4
     #knots = np.arange(n-k+2.)
-    knots = np.array((0., 1., 2., 2., 4., 5., 6., 7.))
+    knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
