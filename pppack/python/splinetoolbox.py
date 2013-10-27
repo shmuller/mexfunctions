@@ -365,7 +365,7 @@ class SplineND:
 
 test1 = test2 = False
 if __name__ == "__main__":
-    test1 = True
+    test2 = True
 
 if test1:
     p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
@@ -436,6 +436,12 @@ if test2:
     y = np.linspace(0., 5., 12)
 
     Z = sp.spval(x, y)
+
+    from pytokamak.utils import splines
+    sp2 = splines.Spline2D(data=dict(tck=(ty, tx, coefs.T.ravel()), degrees=(3, 3)))
+    Z2 = sp2(y, x).T
+
+    print (Z - Z2).ptp()
 
     from matplotlib.pyplot import figure, show
     from mpl_toolkits.mplot3d import Axes3D
