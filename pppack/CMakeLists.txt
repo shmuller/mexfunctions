@@ -75,8 +75,10 @@ set(pppack_SRC
     ppual.f
     ppualder.f
     spder.f
+    spual.f
     spualder.f
-    bvalued.f
+    bual.f
+    bualder.f
 )
 
 add_library(pppack SHARED ${pppack_SRC})

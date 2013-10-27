@@ -1,4 +1,4 @@
-      subroutine bvalued ( t, bcoef, n, k, d, p, x, y, jderiv )
+      subroutine bualder ( t, bcoef, n, k, d, p, x, y, jderiv )
 c  from  * a practical guide to splines *  by c. de boor    
 calls  interv
 c

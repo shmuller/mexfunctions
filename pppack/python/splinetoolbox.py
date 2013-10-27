@@ -284,11 +284,14 @@ class PPPGS2(PPPGS):
 
 
 class SplinePGS(Spline):
-    def spval(self, x, der=0):
+    def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
         y = np.zeros((p, m, d))
-        pppack.spualder(t, c.T, k, x, y.T, der)
+        if der == 0 and fast:
+            pppack.spual(t, c.T, k, x, y.T)
+        else:
+            pppack.spualder(t, c.T, k, x, y.T, der)
         return y
 
     def deriv(self, dorder=1):
@@ -365,23 +368,19 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p = 2
-    n = 10
-    #c = np.arange(2.*n).reshape(2, n).T.copy()
-    d = 6
+    p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
+    #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     c = np.zeros((p, n, d))
     for i in xrange(d): c[:,i,i] = 1.
     #c = np.random.rand(p, n, d)
 
-    k = 4
     #knots = np.arange(n-k+2.)
     knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
-    x = np.linspace(knots[0], knots[-1], 100)
+    x = np.linspace(knots[0], knots[-1], m)
 
-    der = 1
     dsp = sp.deriv(der)
 
     y = dsp.spval(x)
@@ -397,6 +396,7 @@ if test1:
     dsp_pgs = sp_pgs.deriv(der)
 
     y4 = dsp_pgs.spval(x)
+    y4b = dsp_pgs.spval(x, fast=False)
 
     pp_pgs = sp_pgs.to_pp()
     y5 = pp_pgs.ppual(x, der=der)

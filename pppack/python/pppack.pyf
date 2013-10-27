@@ -532,6 +532,26 @@ python module pppack ! in
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
             integer :: jderiv
         end subroutine spderd
+        subroutine spual(t,bcoef,n,k,d,p,x,m,y) ! in :pppack:spual.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(d,n,p) :: bcoef
+            integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
+            integer :: k
+            integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
+            integer, optional,check(shape(bcoef,2)==p),depend(bcoef) :: p=shape(bcoef,2)
+            real*8 dimension(m) :: x
+            integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
+            real*8 dimension(d,m,p),depend(d,m,p) :: y
+        end subroutine spual
+        subroutine eval0(t,bcoef,n,k,x,m,y) ! in :pppack:spual.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(n) :: bcoef
+            integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
+            integer :: k
+            real*8 dimension(m) :: x
+            integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
+            real*8 dimension(m),depend(m) :: y
+        end subroutine eval0
         subroutine spualder(t,bcoef,n,k,d,p,x,m,y,jderiv) ! in :pppack:spualder.f
             real*8 dimension(n+k),depend(n,k) :: t
             real*8 dimension(d,n,p) :: bcoef
@@ -544,7 +564,7 @@ python module pppack ! in
             real*8 dimension(d,m,p),depend(d,m,p) :: y
             integer :: jderiv
         end subroutine spualder
-        subroutine eval0(t,bcoef,n,k,x,m,y,jderiv) ! in :pppack:spualder.f
+        subroutine evalder0(t,bcoef,n,k,x,m,y,jderiv) ! in :pppack:spualder.f
             real*8 dimension(n+k),depend(n,k) :: t
             real*8 dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
@@ -553,8 +573,18 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real*8 dimension(m),depend(m) :: y
             integer :: jderiv
-        end subroutine eval0
-        subroutine bvalued(t,bcoef,n,k,d,p,x,y,jderiv) ! in :pppack:bvalued.f
+        end subroutine evalder0
+        subroutine bual(t,bcoef,n,k,d,p,x,y) ! in :pppack:bual.f
+            real*8 dimension(n+k),depend(n,k) :: t
+            real*8 dimension(d,n,p) :: bcoef
+            integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
+            integer :: k
+            integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
+            integer, optional,check(shape(bcoef,2)==p),depend(bcoef) :: p=shape(bcoef,2)
+            real*8 :: x
+            real*8 dimension(d,p),depend(d,p) :: y
+        end subroutine bual
+        subroutine bualder(t,bcoef,n,k,d,p,x,y,jderiv) ! in :pppack:bualder.f
             real*8 dimension(n+k),depend(n,k) :: t
             real*8 dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -564,7 +594,7 @@ python module pppack ! in
             real*8 :: x
             real*8 dimension(d,p),depend(d,p) :: y
             integer :: jderiv
-        end subroutine bvalued
+        end subroutine bualder
     end interface 
 end python module pppack
 

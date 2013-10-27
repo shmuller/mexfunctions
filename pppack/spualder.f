@@ -5,13 +5,13 @@
       if (d .eq. 1 .and. p .eq. 1)         go to 99
 
       do 50 mm=1,m
-   50   call bvalued (t, bcoef, n, k, d, p, x(mm), y(:,mm,:), jderiv)
+   50   call bualder (t, bcoef, n, k, d, p, x(mm), y(:,mm,:), jderiv)
       return
-   99 call eval0 (t, bcoef(1,:,1), n, k, x, m, y(1,:,1), jderiv)
+   99 call evalder0 (t, bcoef(1,:,1), n, k, x, m, y(1,:,1), jderiv)
       return
       end
 
-      subroutine eval0( t, bcoef, n, k, x, m, y, jderiv )
+      subroutine evalder0( t, bcoef, n, k, x, m, y, jderiv )
       integer n,k,m,jderiv,   mm
       real t(n+k),bcoef(n),x(m),y(m)
       do 60 mm=1,m
