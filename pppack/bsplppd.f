@@ -1,5 +1,4 @@
       subroutine bsplppd (t, bcoef, n, k, d, p, scrtch, break, coef, l)
-cf2py intent(out) l
 c  from  * a practical guide to splines *  by c. de Boor (7 may 92)
 calls  bsplvb
 c
@@ -38,7 +37,7 @@ c  all b-splines of the appropriate order at that point.
 c
       integer k,l,n,d,p,   i,jp1,kmax,kmj,left,dd,pp,dp
       parameter (kmax = 20)
-      real t(n+k),bcoef(d,n,p),break(n+2-k),coef(d,k,n+1-k,p),
+      real t(n+k),bcoef(d,n,p),break(l+1),coef(d,k,l,p),
      *     scrtch(d,p,k,k),biatx(kmax),s
 c
       dp = d*p

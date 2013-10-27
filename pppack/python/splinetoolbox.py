@@ -260,8 +260,7 @@ class PPPGS(PP):
         m = x.size
         y = np.zeros((p, m, d))
         if der == 0 and fast:
-            for j in xrange(p):
-                pppack.ppual(b, a[j].T, x, y[j].T)
+            pppack.ppual(b, a.T, x, y.T)
         else:
             for j in xrange(p):
                 pppack.ppualder(b, a[j].T, x, der, y[j].T)
@@ -309,20 +308,13 @@ class SplinePGS(Spline):
 
     def to_pp(self):
         t, c, k, p, n, d = self.spbrk()
-        l = n+1-k
+        l = len(np.unique(t)) - 1
 
         b = np.zeros(l+1)
         scrtch = np.zeros((k, k, p, d))
         a = np.zeros((p, l, k, d))
 
-        l = pppack.bsplppd(t, c.T, scrtch.T, b, a.T)
-
-        if l < n+1-k:
-            b.resize(l+1)
-            if p == 1:
-                a.resize((1, l, k, d))
-            else:
-                a = a[:,:l].copy()
+        pppack.bsplppd(t, c.T, scrtch.T, b, a.T)
         return PPPGS(b, a)
 
     def to_pp2(self):
@@ -372,21 +364,22 @@ test1 = test2 = False
 if __name__ == "__main__":
     test1 = True
 
-if test1:
-    p = 2
-    n = 10
+def test1():
+    p = 100
+    n = 500
     #c = np.arange(2.*n).reshape(2, n).T.copy()
-    d = 6
-    c = np.zeros((p, n, d))
-    for i in xrange(d): c[:,i,i] = 1.
+    d = 10
+    #c = np.zeros((p, n, d))
+    #for i in xrange(d): c[:,i,i] = 1.
+    c = np.random.rand(p, n, d)
 
     k = 4
-    #knots = np.arange(n-k+2.)
-    knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
+    knots = np.arange(n-k+2.)
+    #knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
-    x = np.linspace(knots[0], knots[-1], 100)
+    x = np.linspace(knots[0], knots[-1], 10000)
 
     der = 1
     dsp = sp.deriv(der)
@@ -394,34 +387,37 @@ if test1:
     y = dsp.spval(x)
     
     pp = sp.to_pp()
-    y2 = pp.deriv(der).ppual(x)
+    dpp = pp.deriv(der)
+    y2 = dpp.ppual(x)
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
 
-    y3 = sp_pgs.spval(x, der=der)
+    #y3 = sp_pgs.spval(x, der=der)
 
     dsp_pgs = sp_pgs.deriv(der)
 
-    y4 = dsp_pgs.spval(x)
+    #y4 = dsp_pgs.spval(x)
 
     pp_pgs = sp_pgs.to_pp()
-    y5 = pp_pgs.ppual(x, der=der, fast=False)
+    y5 = pp_pgs.ppual(x, der=der)
 
     dpp_pgs = pp_pgs.deriv(der)
-    y6 = dpp_pgs.ppual(x, fast=False)
+    y6 = dpp_pgs.ppual(x)
 
     pp_pgs2 = sp_pgs.to_pp2()
-    y7 = pp_pgs2.ppual(x, der=der)
+    #y7 = pp_pgs2.ppual(x, der=der)
 
     pp_pgsb = pp.to_pp_pgs()
     y8 = pp_pgsb.ppual(x, der=der)
 
     assert np.allclose(pp_pgs.a, pp_pgsb.a)
 
+    """
     s = 0
     from matplotlib.pyplot import plot, show
     plot(x, np.c_[y[s], y2[s], y3[s], y4[s], y5[s], y6[s], y7[s], y8[s]], '.-')
     show()
+    """
 
 if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
