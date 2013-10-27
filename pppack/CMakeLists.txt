@@ -76,6 +76,7 @@ set(pppack_SRC
     ppualder.f
     spder.f
     spualder.f
+    bvalued.f
 )
 
 add_library(pppack SHARED ${pppack_SRC})
