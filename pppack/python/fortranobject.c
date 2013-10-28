@@ -612,6 +612,12 @@ PyArrayObject* array_from_pyobj(const int type_num,
     char typechar;
     int elsize;
 
+    int i;
+    arr = (PyArrayObject *)obj;
+    for (i=0; i<arr->nd; ++i)
+        dims[i] = arr->dimensions[i];
+    return arr;
+
     if ((intent & F2PY_INTENT_HIDE)
         || ((intent & F2PY_INTENT_CACHE) && (obj==Py_None))
         || ((intent & F2PY_OPTIONAL) && (obj==Py_None))

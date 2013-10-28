@@ -92,7 +92,7 @@ class PP:
 
     def to_pp_pgs(self):
         b, a, p, l, k, d = self.ppbrk()
-        anew = a[:,::-1].reshape((p, k, l, d)).transpose((0, 2, 1, 3))
+        anew = np.ascontiguousarray(a[:,::-1].reshape((p, k, l, d)).transpose((0, 2, 1, 3)))
         return PPPGS(b, anew)
 
 
