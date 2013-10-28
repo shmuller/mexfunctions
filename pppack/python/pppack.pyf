@@ -86,28 +86,6 @@ python module pppack ! in
             real*8 dimension(npoint),depend(npoint) :: u
             real*8 dimension(npoint),depend(npoint) :: qu
         end subroutine chol1d
-        subroutine colloc(aleft,aright,lbegin,iorder,ntimes,addbrk,relerr) ! in :pppack:netlib/colloc.f
-            real*8 :: aleft
-            real*8 :: aright
-            integer :: lbegin
-            integer :: iorder
-            integer :: ntimes
-            real*8 :: addbrk
-            real*8 :: relerr
-            real*8 dimension(100) :: break
-            real*8 dimension(2000) :: coef
-            integer :: l
-            integer :: kpm
-            integer :: itermx
-            integer :: k
-            real*8 dimension(19) :: rho
-            integer :: m
-            integer :: iside
-            real*8 dimension(10) :: xside
-            common /approx/ break,coef,l,kpm
-            common /other/ itermx,k,rho
-            common /side/ m,iside,xside
-        end subroutine colloc
         subroutine colpnt(k,rho) ! in :pppack:netlib/colpnt.f
             integer, optional,check(len(rho)>=k),depend(rho) :: k=len(rho)
             real*8 dimension(k) :: rho
@@ -130,44 +108,6 @@ python module pppack ! in
             real*8 dimension(nequ),depend(nequ) :: x
             integer :: iflag
         end subroutine cwidth
-        subroutine difequ(mode,xx,v) ! in :pppack:netlib/difequ.f
-            integer :: mode
-            real*8 :: xx
-            real*8 dimension(20) :: v
-            real*8 dimension(100) :: break
-            real*8 dimension(2000) :: coef
-            integer :: l
-            integer :: kpm
-            integer :: itermx
-            integer :: k
-            real*8 dimension(19) :: rho
-            integer :: m
-            integer :: iside
-            real*8 dimension(10) :: xside
-            common /approx/ break,coef,l,kpm
-            common /other/ itermx,k,rho
-            common /side/ m,iside,xside
-        end subroutine difequ
-        subroutine eqblok(t,n,kpm,work1,work2,bloks,lenblk,integs,nbloks,b) ! in :pppack:netlib/eqblok.f
-            real*8 dimension(1) :: t
-            integer :: n
-            integer :: kpm
-            real*8 dimension(1) :: work1
-            real*8 dimension(1) :: work2
-            real*8 dimension(1) :: bloks
-            integer :: lenblk
-            integer dimension(3,1) :: integs
-            integer :: nbloks
-            real*8 dimension(1) :: b
-            integer :: itermx
-            integer :: k
-            real*8 dimension(19) :: rho
-            integer :: m
-            integer :: iside
-            real*8 dimension(10) :: xside
-            common /other/ itermx,k,rho
-            common /side/ m,iside,xside
-        end subroutine eqblok
         subroutine interv(xt,lxt,x,left,mflag) ! in :pppack:netlib/interv.f
             real*8 dimension(lxt) :: xt
             integer, optional,check(len(xt)>=lxt),depend(xt) :: lxt=len(xt)
@@ -175,17 +115,6 @@ python module pppack ! in
             integer intent(out) :: left
             integer intent(out) :: mflag
         end subroutine interv
-        subroutine knots(break_bn,l,kpm,t,n) ! in :pppack:netlib/knots.f
-            real*8 dimension(1) :: break_bn
-            integer :: l
-            integer :: kpm
-            real*8 dimension(1) :: t
-            integer :: n
-            integer :: m
-            integer :: iside
-            real*8 dimension(10) :: xside
-            common /side/ m,iside,xside
-        end subroutine knots
         subroutine l2appr(t,n,k,q,diag,bcoef,ntau,tau,gtau,weight) ! in :pppack:netlib/l2appr.f
             real*8 dimension(n+k),depend(n,k) :: t
             integer, optional,check(shape(q,1)==n),depend(q) :: n=shape(q,1)
@@ -237,30 +166,6 @@ python module pppack ! in
             integer :: jderiv
             real*8 :: ppvalu
         end function ppvalu
-        subroutine putit(t,kpm,left,scrtch,dbiatx,q,nrow,b) ! in :pppack:netlib/putit.f
-            real*8 dimension(1) :: t
-            integer, optional,check(shape(dbiatx,0)==kpm),depend(dbiatx) :: kpm=shape(dbiatx,0)
-            integer :: left
-            real*8 dimension(1) :: scrtch
-            real*8 dimension(kpm,1) :: dbiatx
-            real*8 dimension(nrow,kpm),depend(kpm) :: q
-            integer, optional,check(shape(q,0)==nrow),depend(q) :: nrow=shape(q,0)
-            real*8 dimension(1) :: b
-            integer :: itermx
-            integer :: k
-            real*8 dimension(19) :: rho
-            integer :: m
-            integer :: iside
-            real*8 dimension(10) :: xside
-            common /other/ itermx,k,rho
-            common /side/ m,iside,xside
-        end subroutine putit
-        function round(x) ! in :pppack:netlib/round.f
-            real*8 :: x
-            real*8 :: size
-            real*8 :: round
-            common /rount/ size
-        end function round
         subroutine setdatex2(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:netlib/setdatex2.f
             integer :: icount
             integer intent(out) :: ntau

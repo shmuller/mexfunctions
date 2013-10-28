@@ -100,6 +100,9 @@ class Spline(object):
     def __init__(self, *args, **kw):
         self.spmak(*args, **kw)
     
+    def __call__(self, x):
+        return self.spval(x)
+
     @classmethod
     def from_knots_coefs(cls, t, c):
         self = cls.__new__(cls)
@@ -113,7 +116,17 @@ class Spline(object):
 
     def spbrk(self):
         return self.t, self.c, self.k, self.p, self.n, self.d
-    
+
+    def bbox(self):
+        return self.t[0], self.t[-1]
+
+    def tave(self):
+        t, k, n = self.t, self.k, self.n
+        tstar = np.zeros(n)
+        for j in xrange(n):
+            tstar[j] = t[j+1:j+k].mean()
+        return tstar
+
     def spval(self, x):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -135,8 +148,7 @@ class Spline(object):
                     yj = c[j,i]
                     self._sprval(tx, yj, k)
                     y[j] = yj[0]
-                y = y.reshape((p, m, d))
-        return y
+        return y.reshape((p, m, d))
 
     def deriv(self, dorder=1):
         t, c, k, p, n, d = self.spbrk()
@@ -174,6 +186,17 @@ class Spline(object):
                     a[j] = c[j,i]
                     self._sprpp(tx, a[j], k, backwd=backwd)
         return PP(b, a.reshape(p, k, -1))
+
+    def plot(self):
+        from matplotlib.pyplot import plot
+        bbox = self.bbox()
+        x = np.linspace(bbox[0], bbox[-1], 200)
+        y = self(x)
+        plot(x, y[0])
+
+    def plot_ctrlpoly(self):
+        from matplotlib.pyplot import plot
+        plot(self.tave(), self.c[0])
 
     @staticmethod
     def _setup_tx_i(t, x, k, d, inter, backwd=False):
@@ -356,16 +379,22 @@ class SplineND:
         mx, my = x.size, y.size
         
         C = np.zeros((mx, ny))
-        pppack.spualder(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T, derx)
+        if derx == 0:
+            pppack.spual(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T)
+        else:
+            pppack.spualder(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T, derx)
 
         Z = np.zeros((mx, my))
-        pppack.spualder(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T, dery)
+        if dery == 0:
+            pppack.spual(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T)
+        else:
+            pppack.spualder(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T, dery)
         return Z
 
 
-test1 = test2 = False
+test1 = test2 = test3 = False
 if __name__ == "__main__":
-    test2 = True
+    test1 = True
 
 if test1:
     p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
@@ -453,4 +482,25 @@ if test2:
     ax.set_ylabel('y')
 
     show()
+
+if test3:
+    nx, ny = 10000, 10000
+    kx, ky = 4, 3
+    tx = augknt(np.arange(nx-kx+2), kx)
+    ty = augknt(np.arange(ny-ky+2), ky)
+
+    c = np.random.rand(nx, ny)
+
+    sp = SplineND((tx, ty), c)
+
+    x = np.linspace(tx[0], tx[-1], 1000)
+    y = np.linspace(ty[0], ty[-1], 1000)
+
+    Z = sp.spval(x, y)
+
+    from pytokamak.utils import splines
+    sp2 = splines.Spline2D(data=dict(tck=(ty, tx, c.T.ravel()), degrees=(ky-1, kx-1)))
+    Z2 = sp2(y, x).T
+
+    print (Z - Z2).ptp()
 

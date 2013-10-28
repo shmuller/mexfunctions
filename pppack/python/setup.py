@@ -16,9 +16,9 @@ def configuration(parent_package='', top_path=None):
     and build again with no f2py_options and sources=['pppackmodule.c', 'fortranobject.c']
     """
     config.add_extension('pppack', 
-                         sources = ['pppack.pyf'],
-                         f2py_options = ['--no-wrap-functions'],
-                         #sources = ['pppackmodule.c', 'fortranobject.c'],
+                         #sources = ['pppack.pyf'],
+                         #f2py_options = ['--no-wrap-functions'],
+                         sources = ['pppackmodule.c', 'fortranobject.c'],
                          libraries = ['pppack'])
     return config
 
