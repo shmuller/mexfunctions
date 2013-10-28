@@ -394,7 +394,7 @@ class SplineND:
 
 test1 = test2 = test3 = False
 if __name__ == "__main__":
-    test1 = True
+    test3 = True
 
 if test1:
     p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
@@ -452,12 +452,15 @@ if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
     ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
 
+    """
     coefs = np.array(
        (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
         ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
         (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
         (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
         (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
+    """
+    coefs = np.random.rand(tx.size-kx, ty.size-ky)
 
     sp = SplineND((tx, ty), coefs)
 
@@ -480,21 +483,20 @@ if test2:
     ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
-
     show()
 
 if test3:
-    nx, ny = 10000, 10000
-    kx, ky = 4, 3
-    tx = augknt(np.arange(nx-kx+2), kx)
-    ty = augknt(np.arange(ny-ky+2), ky)
+    nx, ny = 20, 25
+    kx, ky = 3, 3
+    tx = augknt(np.arange(nx-kx+2.), kx)
+    ty = augknt(np.arange(ny-ky+2.), ky)
 
     c = np.random.rand(nx, ny)
 
     sp = SplineND((tx, ty), c)
 
-    x = np.linspace(tx[0], tx[-1], 1000)
-    y = np.linspace(ty[0], ty[-1], 1000)
+    x = np.linspace(tx[0], tx[-1], 140)
+    y = np.linspace(ty[0], ty[-1], 100)
 
     Z = sp.spval(x, y)
 
@@ -503,4 +505,16 @@ if test3:
     Z2 = sp2(y, x).T
 
     print (Z - Z2).ptp()
+
+    from scipy.ndimage import map_coordinates
+
+    coordinates = np.meshgrid(x+0.5, y+0.5)
+
+    Z3 = map_coordinates(c, coordinates, order=2, prefilter=False).T
+
+    i = y.size / 2
+
+    from matplotlib.pyplot import plot, show
+    plot(x, Z[:,i], x, Z3[:,i])
+    show()
 
