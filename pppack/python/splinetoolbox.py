@@ -317,6 +317,33 @@ class SplinePGS(Spline):
             pppack.spualder(t, c.T, k, x, y.T, der)
         return y
 
+    def evalB(self, x, der=0):
+        t, c, k, p, n, d = self.spbrk()
+        left = t.searchsorted(x, 'right')
+        left[left == n+k] = n
+
+        m = x.size
+        B = np.zeros((m, k))
+        if der == 0:
+            for i in xrange(m):
+                pppack.bsplvb(t[:1], 1, x[i], left[i], B[i])
+        else:
+            a = np.zeros((k, k))
+            dbiatx = np.zeros((der+1, k))
+            for i in xrange(m):
+                pppack.bsplvd(t[:1], x[i], left[i], a.T, dbiatx.T)
+                B[i] = dbiatx[der]
+        return left, B
+
+    def spval2(self, x, der=0):
+        left, B = self.evalB(x, der)
+        c, k, m = self.c, self.k, x.size
+        B = B[:,None,:,None]
+        y = np.zeros((self.p, m, self.d))
+        for i in xrange(m):
+            y[:,i,:] = (c[:,left[i]-k:left[i],:] * B[i]).sum(axis=1)
+        return y
+
     def deriv(self, dorder=1):
         t, c, k, p, n, d = self.spbrk()
         if k <= dorder:
@@ -394,13 +421,13 @@ class SplineND:
 
 test1 = test2 = test3 = False
 if __name__ == "__main__":
-    test3 = True
+    test1 = True
 
 if test1:
     p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     c = np.zeros((p, n, d))
-    for i in xrange(d): c[:,i,i] = 1.
+    for i in xrange(d): c[:,n-1-i,i] = 1.
     #c = np.random.rand(p, n, d)
 
     #knots = np.arange(n-k+2.)
@@ -421,11 +448,13 @@ if test1:
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
+    y3b = sp_pgs.spval2(x, der=der)
 
     dsp_pgs = sp_pgs.deriv(der)
 
     y4 = dsp_pgs.spval(x)
     y4b = dsp_pgs.spval(x, fast=False)
+    y4c = dsp_pgs.spval2(x)
 
     pp_pgs = sp_pgs.to_pp()
     y5 = pp_pgs.ppual(x, der=der)

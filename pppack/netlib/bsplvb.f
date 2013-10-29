@@ -61,8 +61,7 @@ c  gorithm  (8)  in chapter x of the text.
 c
       integer index,jhigh,left,   i,j,jmax,jp1
       parameter (jmax = 20)
-      real biatx(jhigh),t(left+jhigh),x,deltal(jmax),deltar(jmax),
-     *     saved,term
+      real biatx(jhigh),t(1),x,   deltal(jmax),deltar(jmax),saved,term
 C     real biatx(jhigh),t(1),x,   deltal(20),deltar(20),saved,term
 c     dimension biatx(jout), t(left+jout)
 current fortran standard makes it impossible to specify the length of

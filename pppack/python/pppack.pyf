@@ -42,7 +42,7 @@ python module pppack ! in
             integer intent(out) :: l
         end subroutine bsplpp
         subroutine bsplvb(t,jhigh,index_bn,x,left,biatx) ! in :pppack:netlib/bsplvb.f
-            real dimension(left+jhigh),depend(jhigh,left) :: t
+            real dimension(1) :: t
             integer, optional,check(len(biatx)>=jhigh),depend(biatx) :: jhigh=len(biatx)
             integer :: index_bn
             real :: x
