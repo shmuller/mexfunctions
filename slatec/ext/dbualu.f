@@ -100,7 +100,7 @@ C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
    60 IF (IDERIV.EQ.KM1) GO TO 100
-      CALL DEVAL (T(IP1), A, KMIDER, WORK, WORK(K+1), WORK(K+K+1), X)
+      CALL DEVAL (T(IP1), A, KMIDER, WORK, WORK(K+K+1), X)
   100 DBUALU = WORK(1)
       RETURN
 C
@@ -140,28 +140,26 @@ C
       END
 C
       SUBROUTINE DDERIV (T, A, KM1, KMIDER, AJ)
-      INTEGER KM1, KMIDER, KMJ, JJ
+      INTEGER KM1, KMIDER, KMJ, J
       DOUBLE PRECISION T(*), A(*), AJ(*), FKMJ
       DO 50 KMJ=KM1,KMIDER,-1
         FKMJ = KMJ
-        DO 40 JJ=1,KMJ
-          AJ(JJ) = (AJ(JJ+1)-AJ(JJ))/(T(JJ)-T(JJ-KMJ))*FKMJ
+        DO 40 J=1,KMJ
+          AJ(J) = (AJ(J+1)-AJ(J))/(T(J)-T(J-KMJ))*FKMJ
    40   CONTINUE
    50 CONTINUE
       END
 C
-      SUBROUTINE DEVAL (T, A, KMIDER, AJ, DP, DM, X)
+      SUBROUTINE DEVAL (T, A, KMIDER, AJ, TX, X)
       INTEGER KMIDER, J, KMJ, ILO
-      DOUBLE PRECISION T(*), A(*), AJ(*), DP(*), DM(*), X
-      DO 70 J=1,KMIDER
-        DP(J) = T(J) - X
-        DM(J) = X - T(1-J)
+      DOUBLE PRECISION T(*), A(*), AJ(*), TX(*), X
+      DO 70 J=1-KMIDER,KMIDER
+        TX(J) = T(J) - X
    70 CONTINUE
       DO 90 KMJ=KMIDER-1,1,-1
-        ILO = KMJ
         DO 80 J=1,KMJ
-          AJ(J) = (AJ(J+1)*DM(ILO)+AJ(J)*DP(J))/(DM(ILO)+DP(J))
-          ILO = ILO - 1
+          ILO = J - KMJ
+          AJ(J) = (AJ(J)*TX(J)-AJ(J+1)*TX(ILO))/(TX(J)-TX(ILO))
    80   CONTINUE
    90 CONTINUE
       END
