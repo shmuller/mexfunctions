@@ -127,12 +127,16 @@ class Spline(object):
             tstar[j] = t[j+1:j+k].mean()
         return tstar
 
+    def get_left(self, x):
+        t, k, n = self.t, self.k, self.n
+        left = t.searchsorted(x, 'right')
+        left[left == n+k] = n
+        return left
+
     def spval(self, x):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
-
-        index = searchsorted(t[:n], x)
-        index[index < k-1] = k-1
+        index = self.get_left(x) - 1
         if k == 1:
             y = c[:,index]
         else:
@@ -294,15 +298,17 @@ class PPPGS2(PPPGS):
     def ppual(self, x, der=0):
         # this uses the PGS normalization
         b, a, p, l, k, d = self.ppbrk()
-
         m = x.size
         y = np.zeros((p, m, d))
-        a = a.transpose((0, 3, 1, 2)).copy()
+        a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
         for j in xrange(p):
+            yj = y[j]
+            aj = a[j]
             for i in xrange(m):
-                yi = y[j,i]
+                xi = x[i]
+                yji = yj[i]
                 for dd in xrange(d):
-                    yi[dd] = pppack.ppvalu(b, a[j,dd].T, x[i], der)
+                    yji[dd] = pppack.ppvalu(b, aj[dd].T, xi, der)
         return y
 
 
@@ -319,9 +325,7 @@ class SplinePGS(Spline):
 
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
-        left = t.searchsorted(x, 'right')
-        left[left == n+k] = n
-
+        left = self.get_left(x)
         m = x.size
         B = np.zeros((m, k))
         if der == 0:
@@ -393,6 +397,86 @@ class SplinePGS(Spline):
         return PPPGS2(b, a)
 
 
+import slatec
+
+class PPSLA2(PPPGS2):
+    def ppual(self, x, der=0):
+        # this uses the PGS normalization
+        b, a, p, l, k, d = self.ppbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
+        inppv = self.get_index(x) + 1
+        for j in xrange(p):
+            yj = y[j]
+            aj = a[j]
+            for i in xrange(m):
+                xi = x[i]
+                yji = yj[i]
+                inppvi = inppv[i]
+                for dd in xrange(d):
+                    yji[dd] = slatec.dppval(aj[dd].T, b, l, k, der, xi, inppvi)
+        return y
+
+
+class SplineSLA(SplinePGS):
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        inbv = self.get_left(x)
+        work = np.zeros(3*k)
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        for j in xrange(p):
+            yj = y[j]
+            cj = c[j]
+            for i in xrange(m):
+                xi = x[i]
+                yji = yj[i]
+                inbvi = inbv[i]
+                for dd in xrange(d):
+                    yji[dd] = slatec.dbvalu(t, cj[dd], n, k, der, xi, inbvi, work)
+        return y
+
+    def evalB(self, x, der=0):
+        t, c, k, p, n, d = self.spbrk()
+        left = self.get_left(x)
+        m = x.size
+        B = np.zeros((m, k))
+        work = np.zeros(2*k)
+        iwork = np.zeros(1, 'i')
+        if der == 0:
+            for i in xrange(m):
+                slatec.dbspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
+        else:
+            a = np.zeros((k, k))
+            dbiatx = np.zeros((der+1, k))
+            work = np.zeros((k+1)*(k+2)/2)
+            for i in xrange(m):
+                slatec.dbspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
+                B[i] = dbiatx[der]
+        return left, B
+
+    def to_pp2(self):
+        # this uses the PGS normalization
+        t, c, k, p, n, d = self.spbrk()
+        l = len(np.unique(t)) - 1
+
+        b = np.zeros(l+1)
+        scrtch = np.zeros((d, k, k))
+        a = np.zeros((p, d, l, k))
+        work = np.zeros(k*(n+3))
+
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        for j in xrange(p):
+            cj = c[j]
+            aj = a[j]
+            for i in xrange(d):
+                slatec.dbsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
+        a = np.ascontiguousarray(a.transpose((0, 2, 3, 1)))
+        return PPSLA2(b, a)
+
+
 class SplineND:
     def __init__(self, t, c):
         self.t, self.c = t, c
@@ -424,14 +508,14 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 10, 6, 4, 100, 1
+    p, n, d, k, m, der = 2, 10, 6, 4, 101, 2
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     c = np.zeros((p, n, d))
     for i in xrange(d): c[:,n-1-i,i] = 1.
     #c = np.random.rand(p, n, d)
 
     #knots = np.arange(n-k+2.)
-    knots = np.array((0., 1.2, 2.5, 2.5, 4.3, 5.2, 6.1, 7.))
+    knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
@@ -445,7 +529,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplinePGS.from_knots_coefs(t, c)
+    sp_pgs = SplineSLA.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)

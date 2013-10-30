@@ -10,3 +10,16 @@
 ../src/bspdr.f
 ../src/bspev.f
 ../src/bspvn.f
+
+../src/dbint4.f
+../src/dbintk.f
+../src/dbsqad.f
+../src/dppqad.f
+../src/dbvalu.f
+../src/dppval.f
+../src/dintrv.f
+../src/dbsppp.f
+../src/dbspvd.f
+../src/dbspdr.f
+../src/dbspev.f
+../src/dbspvn.f
