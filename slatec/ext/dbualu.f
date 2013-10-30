@@ -68,8 +68,7 @@ C   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
 C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
-      INTEGER I,IDERIV,IDERP1,ILO, INBV, IPJ,
-     1 IP1, IP1MJ, J, JJ, J1, J2, K, KMIDER, KMJ, KM1, KPK, MFLAG, N
+      INTEGER I, IDERIV, INBV, IP1, K, IP1MK, KMIDER, KM1, MFLAG, N
       DOUBLE PRECISION A, FKMJ, T, WORK, X
       DIMENSION T(*), A(*), WORK(*)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
@@ -94,12 +93,15 @@ C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
 C     WORK(I) = AJ(I), WORK(K+I) = DP(I), WORK(K+K+I) = DM(I), I=1.K
 C
    20 IP1 = I + 1
-      CALL DDERIV (T(IP1), A(IP1-K), K, IDERIV, WORK)
+      IP1MK = IP1 - K
+      CALL DINIT (A(IP1MK), K, WORK)
+      IF (IDERIV.EQ.0) GO TO 60
+      CALL DDERIV (T(IP1), A(IP1MK), KM1, KMIDER, WORK)
 C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
-      IF (IDERIV.EQ.KM1) GO TO 100
-      CALL DEVAL (T, A, K, IDERIV, WORK, X, KMIDER, I, IP1)
+   60 IF (IDERIV.EQ.KM1) GO TO 100
+      CALL DEVAL (T(IP1), A, KMIDER, WORK, WORK(K+1), WORK(K+K+1), X)
   100 DBUALU = WORK(1)
       RETURN
 C
@@ -130,44 +132,36 @@ C
       RETURN
       END
 C
-      SUBROUTINE DDERIV (T, A, K, IDERIV, WORK)
-      INTEGER K, IDERIV, KMJ, JJ
-      DOUBLE PRECISION T, A, WORK, FKMJ
-      DIMENSION T(*), A(*), WORK(*)
+      SUBROUTINE DINIT (A, K, AJ)
+      INTEGER K, J
+      DOUBLE PRECISION A(*), AJ(*)
       DO 30 J=1,K
-        WORK(J) = A(J)
+        AJ(J) = A(J)
    30 CONTINUE
-      IF (IDERIV.EQ.0) RETURN
-      DO 50 KMJ=K-1,K-IDERIV,-1
+      END
+C
+      SUBROUTINE DDERIV (T, A, KM1, KMIDER, AJ)
+      INTEGER KM1, KMIDER, KMJ, JJ
+      DOUBLE PRECISION T(*), A(*), AJ(*), FKMJ
+      DO 50 KMJ=KM1,KMIDER,-1
         FKMJ = KMJ
         DO 40 JJ=1,KMJ
-          WORK(JJ) = (WORK(JJ+1)-WORK(JJ))/(T(JJ)-T(JJ-KMJ))*FKMJ
+          AJ(JJ) = (AJ(JJ+1)-AJ(JJ))/(T(JJ)-T(JJ-KMJ))*FKMJ
    40   CONTINUE
    50 CONTINUE
       END
 C
-      SUBROUTINE DEVAL (T, A, K, IDERIV, WORK, X, KMIDER, I, IP1)
-      INTEGER I, IDERIV, ILO, INBV, IPJ,
-     1 IP1, IP1MJ, J, JJ, J1, J2, K, KMIDER, KMJ, KM1, KPK
-      DOUBLE PRECISION A, FKMJ, T, WORK, X
-      DIMENSION T(*), A(*), WORK(*)
-      KPK = K + K
-      J1 = K + 1
-      J2 = KPK + 1
+      SUBROUTINE DEVAL (T, A, KMIDER, AJ, DP, DM, X)
+      INTEGER KMIDER, J, KMJ, ILO
+      DOUBLE PRECISION T(*), A(*), AJ(*), DP(*), DM(*), X
       DO 70 J=1,KMIDER
-        IPJ = I + J
-        WORK(J1) = T(IPJ) - X
-        IP1MJ = IP1 - J
-        WORK(J2) = X - T(IP1MJ)
-        J1 = J1 + 1
-        J2 = J2 + 1
+        DP(J) = T(J) - X
+        DM(J) = X - T(1-J)
    70 CONTINUE
-      DO 90 J=IDERIV+1,K-1
-        KMJ = K - J
+      DO 90 KMJ=1,KMIDER-1,-1
         ILO = KMJ
         DO 80 JJ=1,KMJ
-          WORK(JJ) = (WORK(JJ+1)*WORK(KPK+ILO)+WORK(JJ)
-     1              *WORK(K+JJ))/(WORK(KPK+ILO)+WORK(K+JJ))
+          AJ(JJ) = (AJ(JJ+1)*DM(ILO)+AJ(JJ)*DP(JJ))/(DM(ILO)+DP(JJ))
           ILO = ILO - 1
    80   CONTINUE
    90 CONTINUE
