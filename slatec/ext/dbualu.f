@@ -69,8 +69,7 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV, IP1, K, IP1MK, KMIDER, KM1, MFLAG, N
-      DOUBLE PRECISION A, FKMJ, T, WORK, X
-      DIMENSION T(*), A(*), WORK(*)
+      DOUBLE PRECISION T(*), A(*), WORK(*), X
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       DBUALU = 0.0D0
       IF(K.LT.1) GO TO 102
@@ -158,12 +157,13 @@ C
         DP(J) = T(J) - X
         DM(J) = X - T(1-J)
    70 CONTINUE
-      DO 90 KMJ=1,KMIDER-1,-1
+      DO 90 KMJ=KMIDER-1,1,-1
         ILO = KMJ
-        DO 80 JJ=1,KMJ
-          AJ(JJ) = (AJ(JJ+1)*DM(ILO)+AJ(JJ)*DP(JJ))/(DM(ILO)+DP(JJ))
+        DO 80 J=1,KMJ
+          AJ(J) = (AJ(J+1)*DM(ILO)+AJ(J)*DP(J))/(DM(ILO)+DP(J))
           ILO = ILO - 1
    80   CONTINUE
    90 CONTINUE
       END
+
 
