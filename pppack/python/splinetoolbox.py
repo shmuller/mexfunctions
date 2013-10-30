@@ -160,7 +160,7 @@ class Spline(object):
         knew = k - dorder;
         if knew <= 0:
             t = t[k-1:n+1]
-            c = zeros((p, n-k, d))
+            c = zeros((p, n-k+1, d))
         else:
             for j in xrange(k-1, knew-1, -1):
                 tt = t[j+1:j+n] - t[1:n]
@@ -352,7 +352,7 @@ class SplinePGS(Spline):
         t, c, k, p, n, d = self.spbrk()
         if k <= dorder:
             t = t[k-1:n+1]
-            cnew = zeros((p, n-k, d))
+            cnew = zeros((p, n-k+1, d))
         else:
             cnew = c.copy()
             pppack.spder(t, cnew.T, k, dorder)

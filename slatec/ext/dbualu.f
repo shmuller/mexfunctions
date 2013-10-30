@@ -68,7 +68,7 @@ C   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
 C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
-      INTEGER I,IDERIV,IDERP1,IHI,IHMKMJ,ILO,IMK,IMKPJ, INBV, IPJ,
+      INTEGER I,IDERIV,IDERP1,ILO, INBV, IPJ,
      1 IP1, IP1MJ, J, JJ, J1, J2, K, KMIDER, KMJ, KM1, KPK, MFLAG, N
       DOUBLE PRECISION A, FKMJ, T, WORK, X
       DIMENSION T(*), A(*), WORK(*)
@@ -93,26 +93,12 @@ C
 C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
 C     WORK(I) = AJ(I), WORK(K+I) = DP(I), WORK(K+K+I) = DM(I), I=1.K
 C
-   20 IMK = I - K
-      DO 30 J=1,K
-        IMKPJ = IMK + J
-        WORK(J) = A(IMKPJ)
-   30 CONTINUE
-      IF (IDERIV.EQ.0) GO TO 60
-      DO 50 J=1,IDERIV
-        KMJ = K - J
-        FKMJ = KMJ
-        DO 40 JJ=1,KMJ
-          IHI = I + JJ
-          IHMKMJ = IHI - KMJ
-          WORK(JJ) = (WORK(JJ+1)-WORK(JJ))/(T(IHI)-T(IHMKMJ))*FKMJ
-   40   CONTINUE
-   50 CONTINUE
+   20 IP1 = I + 1
+      CALL DDERIV (T(IP1), A(IP1-K), K, IDERIV, WORK)
 C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
-   60 IF (IDERIV.EQ.KM1) GO TO 100
-      IP1 = I + 1
+      IF (IDERIV.EQ.KM1) GO TO 100
       KPK = K + K
       J1 = K + 1
       J2 = KPK + 1
@@ -163,3 +149,20 @@ C
      +   'A LEFT LIMITING VALUE CANNOT BE OBTAINED AT T(K)', 2, 1)
       RETURN
       END
+C
+      SUBROUTINE DDERIV (T, A, K, IDERIV, WORK)
+      INTEGER K, IDERIV, KMJ, JJ
+      DOUBLE PRECISION T, A, WORK, FKMJ
+      DIMENSION T(*), A(*), WORK(*)
+      DO 30 J=1,K
+        WORK(J) = A(J)
+   30 CONTINUE
+      IF (IDERIV.EQ.0) RETURN
+      DO 50 KMJ=K-1,K-IDERIV,-1
+        FKMJ = KMJ
+        DO 40 JJ=1,KMJ
+          WORK(JJ) = (WORK(JJ+1)-WORK(JJ))/(T(JJ)-T(JJ-KMJ))*FKMJ
+   40   CONTINUE
+   50 CONTINUE
+      END
+
