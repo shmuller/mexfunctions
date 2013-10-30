@@ -23,3 +23,5 @@
 ../src/dbspdr.f
 ../src/dbspev.f
 ../src/dbspvn.f
+
+../ext/dbualu.f
