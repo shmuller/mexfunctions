@@ -26,11 +26,12 @@ add_library(slatec_static STATIC $<TARGET_OBJECTS:slatec_obj>)
 set_target_properties(slatec_static PROPERTIES OUTPUT_NAME slatec)
 
 add_library(slatec SHARED $<TARGET_OBJECTS:slatec_obj>)
-set_target_properties(slatec PROPERTIES LINK_FLAGS ${lflags})
+#set_target_properties(slatec PROPERTIES LINK_FLAGS ${lflags})
 
 file(GLOB slatec_chk_SRC "chk/*.f")
 add_library(slatec_chk SHARED ${slatec_chk_SRC})
 set_target_properties(slatec_chk PROPERTIES COMPILE_FLAGS ${cflags})
+#set_target_properties(slatec_chk PROPERTIES LINK_FLAGS ${lflags})
 target_link_libraries(slatec_chk slatec)
 
 file(GLOB test_src "chk/tests/*.f")

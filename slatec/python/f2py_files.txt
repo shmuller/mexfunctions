@@ -1,0 +1,12 @@
+../src/bint4.f
+../src/bintk.f
+../src/bsqad.f
+../src/ppqad.f
+../src/bvalu.f
+../src/ppval.f
+../src/intrv.f
+../src/bsppp.f
+../src/bspvd.f
+../src/bspdr.f
+../src/bspev.f
+../src/bspvn.f
