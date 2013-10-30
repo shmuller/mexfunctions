@@ -99,27 +99,7 @@ C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
       IF (IDERIV.EQ.KM1) GO TO 100
-      KPK = K + K
-      J1 = K + 1
-      J2 = KPK + 1
-      DO 70 J=1,KMIDER
-        IPJ = I + J
-        WORK(J1) = T(IPJ) - X
-        IP1MJ = IP1 - J
-        WORK(J2) = X - T(IP1MJ)
-        J1 = J1 + 1
-        J2 = J2 + 1
-   70 CONTINUE
-      IDERP1 = IDERIV + 1
-      DO 90 J=IDERP1,KM1
-        KMJ = K - J
-        ILO = KMJ
-        DO 80 JJ=1,KMJ
-          WORK(JJ) = (WORK(JJ+1)*WORK(KPK+ILO)+WORK(JJ)
-     1              *WORK(K+JJ))/(WORK(KPK+ILO)+WORK(K+JJ))
-          ILO = ILO - 1
-   80   CONTINUE
-   90 CONTINUE
+      CALL DEVAL (T, A, K, IDERIV, WORK, X, KMIDER, I, IP1)
   100 DBUALU = WORK(1)
       RETURN
 C
@@ -164,5 +144,32 @@ C
           WORK(JJ) = (WORK(JJ+1)-WORK(JJ))/(T(JJ)-T(JJ-KMJ))*FKMJ
    40   CONTINUE
    50 CONTINUE
+      END
+C
+      SUBROUTINE DEVAL (T, A, K, IDERIV, WORK, X, KMIDER, I, IP1)
+      INTEGER I, IDERIV, ILO, INBV, IPJ,
+     1 IP1, IP1MJ, J, JJ, J1, J2, K, KMIDER, KMJ, KM1, KPK
+      DOUBLE PRECISION A, FKMJ, T, WORK, X
+      DIMENSION T(*), A(*), WORK(*)
+      KPK = K + K
+      J1 = K + 1
+      J2 = KPK + 1
+      DO 70 J=1,KMIDER
+        IPJ = I + J
+        WORK(J1) = T(IPJ) - X
+        IP1MJ = IP1 - J
+        WORK(J2) = X - T(IP1MJ)
+        J1 = J1 + 1
+        J2 = J2 + 1
+   70 CONTINUE
+      DO 90 J=IDERIV+1,K-1
+        KMJ = K - J
+        ILO = KMJ
+        DO 80 JJ=1,KMJ
+          WORK(JJ) = (WORK(JJ+1)*WORK(KPK+ILO)+WORK(JJ)
+     1              *WORK(K+JJ))/(WORK(KPK+ILO)+WORK(K+JJ))
+          ILO = ILO - 1
+   80   CONTINUE
+   90 CONTINUE
       END
 
