@@ -437,28 +437,8 @@ class SplineSLA(SplinePGS):
                 inbvi = inbv[i]
                 for dd in xrange(d):
                     slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work, yji[dd:dd+1])
-        print inbv
         return y
     
-    def spval3(self, x, der=0):
-        t, c, k, p, n, d = self.spbrk()
-        m = x.size
-        nderiv = der+1
-        y = np.zeros((p, m, d))
-        inev = np.ones(1, 'i')
-        work = np.zeros(3*k)
-        svalue = np.zeros(nderiv)
-        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
-        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
-        for j in xrange(p):
-            yj = y[j]
-            cj = c[j]
-            for dd in xrange(d):
-                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
-                for i in xrange(m):
-                    slatec.dbsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
-        return y
-
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
         left = self.get_left(x)
@@ -477,6 +457,46 @@ class SplineSLA(SplinePGS):
                 slatec.dbspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
                 B[i] = dbiatx[der]
         return left, B
+
+    def deriv(self, dorder=1):
+        # This is a memory-wasting approach to spline differentiation, since
+        # all the temporary derivatives are kept in 'ad'.
+        t, c, k, p, n, d = self.spbrk()
+        nderiv = dorder+1
+        cnew = np.zeros((p, n-dorder, d))
+        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        for j in xrange(p):
+            yj = y[j]
+            cj = c[j]
+            cjnew = cnew[j]
+            for dd in xrange(d):
+                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
+                cjnew[:,dd] = ad[dorder-n:]
+        t = t[dorder:n+k-dorder]
+        return self.from_knots_coefs(t, cnew)
+
+    def spval3(self, x, der=0):
+        # 'dbspdr' does nothing else than differentiating the spline 'der' times, 
+        # storing the coefficients one after each other in the linear array 'ad', 
+        # where 'dbsped' retrieves them from the correct location. Then 'dbsped' 
+        # evaluates the spline using the approach of spval2().
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        nderiv = der+1
+        y = np.zeros((p, m, d))
+        inev = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        for j in xrange(p):
+            yj = y[j]
+            cj = c[j]
+            for dd in xrange(d):
+                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
+                for i in xrange(m):
+                    slatec.dbsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
+        return y
 
     def to_pp2(self):
         # this uses the PGS normalization
@@ -529,7 +549,7 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 5, 101, 1
+    p, n, d, k, m, der = 2, 16, 6, 5, 101, 2
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
