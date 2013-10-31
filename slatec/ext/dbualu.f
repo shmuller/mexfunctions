@@ -48,7 +48,7 @@ C          INBV    - INBV contains information for efficient process-
 C                    ing after the initial call and INBV must not
 C                    be changed by the user.  Distinct splines require
 C                    distinct INBV parameters.
-C          WORK    - work vector of length 3*K.
+C          WORK    - work vector of length 3*K + K*(K-1)/2.
 C          DBUALU  - value of the IDERIV-th derivative at X
 C
 C     Error Conditions
@@ -69,7 +69,7 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
-     1 I1, I2
+     1 I1, I2, I3
       DOUBLE PRECISION T(*), A(*), WORK(*), X, Y(*)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       IF(K.LT.1) GO TO 102
@@ -93,18 +93,24 @@ C     WORK(I) = AJ(I), WORK(K+I) = DP(I), WORK(K+K+I) = DM(I), I=1.K
 C
    20 IP1 = I + 1
       IP1MK = IP1 - K
+      I1 = K + K + 1
+      I2 = I1 + K
+      I3 = I2 + (K*KM1-KMIDER*(KMIDER-1))/2
+C
       CALL DINIT (A(IP1MK), K, WORK)
-      IF (IDERIV.EQ.0) GO TO 60
-      CALL DDERIV (T(IP1), KM1, KMIDER, WORK)
+      CALL DINITF (T(IP1), X, KMIDER, WORK(I1), WORK(I3))
+C
+C      IF (IDERIV.EQ.0) GO TO 60
+C
+C      CALL DDERIV (T(IP1), KM1, KMIDER, WORK)
+      CALL DINITG (T(IP1), KM1, KMIDER, WORK(I2))
+      CALL DEVALG (T(IP1), KM1, KMIDER, WORK(I2), WORK)
 C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
-   60 IF (IDERIV.EQ.KM1) GO TO 100
-      I1 = K + K + 1
-      I2 = I1 + K
+C   60 IF (IDERIV.EQ.KM1) GO TO 100
 C      CALL DEVAL (T(IP1), X, KMIDER, WORK(I1), WORK)
-      CALL DINITF (T(IP1), X, KMIDER, WORK(I1), WORK(I2))
-      CALL DEVALF (KMIDER, WORK(I2), WORK)
+      CALL DEVALF (KMIDER, WORK(I3), WORK)
   100 Y(1) = WORK(1)
       RETURN
 C
@@ -138,49 +144,75 @@ C
       SUBROUTINE DINIT (A, K, AJ)
       INTEGER K, J
       DOUBLE PRECISION A(*), AJ(*)
-      DO 30 J=1,K
+      DO 5 J=1,K
         AJ(J) = A(J)
-   30 CONTINUE
+    5 CONTINUE
       END
 C
       SUBROUTINE DDERIV (T, KM1, KMIDER, AJ)
       INTEGER KM1, KMIDER, KMJ, J
       DOUBLE PRECISION T(*), AJ(*), FKMJ
-      DO 50 KMJ=KM1,KMIDER,-1
+      DO 20 KMJ=KM1,KMIDER,-1
         FKMJ = KMJ
-        DO 40 J=1,KMJ
+        DO 10 J=1,KMJ
           AJ(J) = (AJ(J+1)-AJ(J))/(T(J)-T(J-KMJ))*FKMJ
-   40   CONTINUE
-   50 CONTINUE
+   10   CONTINUE
+   20 CONTINUE
       END
 C
       SUBROUTINE DEVAL (T, X, K, TX, AJ)
       INTEGER K, KK, J, ILO
       DOUBLE PRECISION T(*), TX(*), AJ(*), X
-      DO 70 KK=1-K,K
+      DO 5 KK=1-K,K
         TX(KK) = T(KK) - X
-   70 CONTINUE
-      DO 90 KK=K-1,1,-1
-        DO 80 J=1,KK
+    5 CONTINUE
+      DO 20 KK=K-1,1,-1
+        DO 10 J=1,KK
           ILO = J - KK
           AJ(J) = (AJ(J)*TX(J)-AJ(J+1)*TX(ILO))/(TX(J)-TX(ILO))
-   80   CONTINUE
-   90 CONTINUE
+   10   CONTINUE
+   20 CONTINUE
+      END
+C
+      SUBROUTINE DINITG (T, KM1, KMIDER, G)
+      INTEGER KM1, KMIDER, KMJ, J, I
+      DOUBLE PRECISION T(*), G(*), FKMJ
+      I = 0
+      DO 20 KMJ=KM1,KMIDER,-1
+        FKMJ = KMJ
+        DO 10 J=1,KMJ
+          I = I + 1
+          G(I) = FKMJ/(T(J)-T(J-KMJ))
+   10   CONTINUE
+   20 CONTINUE
       END
 C
       SUBROUTINE DINITF (T, X, K, TX, F)
       INTEGER K, KK, J, I
       DOUBLE PRECISION T(*), TX(*), F(*), X
-      DO 150 KK=1-K,K
+      DO 5 KK=1-K,K
         TX(KK) = T(KK) - X
-  150 CONTINUE
+    5 CONTINUE
       I = 0
-      DO 170 KK=K-1,1,-1
-        DO 160 J=1,KK
+      DO 20 KK=K-1,1,-1
+        DO 10 J=1,KK
           I = I + 1
           F(I) = TX(J)/(TX(J)-TX(J-KK))
-  160   CONTINUE
-  170 CONTINUE
+   10   CONTINUE
+   20 CONTINUE
+      END
+C
+      SUBROUTINE DEVALG (T, KM1, KMIDER, G, AJ)
+      INTEGER KM1, KMIDER, KMJ, J, I
+      DOUBLE PRECISION T(*), G(*), AJ(*)
+      I = 0
+      DO 20 KMJ=KM1,KMIDER,-1
+        FKMJ = KMJ
+        DO 10 J=1,KMJ
+          I = I + 1
+          AJ(J) = (AJ(J+1)-AJ(J))*G(I)
+   10   CONTINUE
+   20 CONTINUE
       END
 C
       SUBROUTINE DEVALF (K, F, AJ)
@@ -188,13 +220,13 @@ C
       DOUBLE PRECISION F(*), AJ(*), ONE, FI
       ONE = 1
       I = 0
-      DO 190 KK=K-1,1,-1
-        DO 180 J=1,KK
+      DO 20 KK=K-1,1,-1
+        DO 10 J=1,KK
           I = I + 1
           FI = F(I)
           AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
-  180   CONTINUE
-  190 CONTINUE
+   10   CONTINUE
+   20 CONTINUE
       END
 
 

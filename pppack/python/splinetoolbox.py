@@ -426,7 +426,7 @@ class SplineSLA(SplinePGS):
         y = np.zeros((p, m, d))
         #inbv = self.get_left(x).astype('i')
         inbv = np.ones(m, 'i')
-        work = np.zeros(3*k + (k-der)*(k-der-1)/2)
+        work = np.zeros(3*k + k*(k-1)/2)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
             yj = y[j]
@@ -437,6 +437,12 @@ class SplineSLA(SplinePGS):
                 inbvi = inbv[i]
                 for dd in xrange(d):
                     slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work, yji[dd:dd+1])
+                if j == 0 and i == 28:
+                    print xi
+                    print work[:k]
+                    print work[k:3*k]
+                    print work[3*k:3*k+(k-der)*(k-der-1)/2]
+                    print work[3*k+(k-der)*(k-der-1)/2:]
         return y
     
     def evalB(self, x, der=0):
@@ -549,14 +555,14 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 5, 101, 2
+    p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
 
-    knots = np.sort(np.random.rand(n-k+2.))
-    #knots = np.arange(n-k+2.)
+    #knots = np.sort(np.random.rand(n-k+2.))
+    knots = np.arange(n-k+2.)
     #knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
