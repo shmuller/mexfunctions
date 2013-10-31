@@ -277,25 +277,36 @@ python module slatec ! in
             integer :: kmider
             double precision dimension(*) :: aj
         end subroutine dderiv
-        subroutine deval(t,x,kmider,tx,aj) ! in :slatec:../ext/dbualu.f
+        subroutine deval(t,x,k,tx,aj) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
             double precision :: x
-            integer :: kmider
+            integer :: k
             double precision dimension(*) :: tx
             double precision dimension(*) :: aj
         end subroutine deval
-        subroutine dinitf(t,x,kmider,tx,f) ! in :slatec:../ext/dbualu.f
+        subroutine dinitf(t,x,k,tx,f) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
             double precision :: x
-            integer :: kmider
+            integer :: k
             double precision dimension(*) :: tx
             double precision dimension(*) :: f
         end subroutine dinitf
-        subroutine devalf(kmider,f,aj) ! in :slatec:../ext/dbualu.f
-            integer :: kmider
+        subroutine devalf(k,f,aj) ! in :slatec:../ext/dbualu.f
+            integer :: k
             double precision dimension(*) :: f
             double precision dimension(*) :: aj
         end subroutine devalf
+        subroutine dbsped(t,ad,n,k,nderiv,x,inev,svalue,work) ! in :slatec:../ext/dbsped.f
+            double precision dimension(*) :: t
+            double precision dimension(*) :: ad
+            integer :: n
+            integer :: k
+            integer :: nderiv
+            double precision :: x
+            integer dimension(*) :: inev
+            double precision dimension(*) :: svalue
+            double precision dimension(*) :: work
+        end subroutine dbsped
     end interface 
 end python module slatec
 

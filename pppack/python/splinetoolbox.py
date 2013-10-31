@@ -456,8 +456,7 @@ class SplineSLA(SplinePGS):
             for dd in xrange(d):
                 slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
                 for i in xrange(m):
-                    slatec.dbspev(t, ad, n, k, nderiv, x[i], inev[0], svalue, work)
-                    yj[i,dd] = svalue[der]
+                    slatec.dbsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
         return y
 
     def evalB(self, x, der=0):

@@ -25,3 +25,4 @@
 ../src/dbspvn.f
 
 ../ext/dbualu.f
+../ext/dbsped.f
