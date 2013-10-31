@@ -255,7 +255,7 @@ python module slatec ! in
             double precision dimension(*) :: work
             integer :: iwork
         end subroutine dbspvn
-        function dbualu(t,a,n,k,ideriv,x,inbv,work) ! in :slatec:../ext/dbualu.f
+        subroutine dbualu(t,a,n,k,ideriv,x,inbv,work,y) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
             double precision dimension(*) :: a
             integer :: n
@@ -264,8 +264,8 @@ python module slatec ! in
             double precision :: x
             integer dimension(*) :: inbv
             double precision dimension(*) :: work
-            double precision :: dbualu
-        end function dbualu
+            double precision dimension(*) :: y
+        end subroutine dbualu
         subroutine dinit(a,k,aj) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: a
             integer :: k

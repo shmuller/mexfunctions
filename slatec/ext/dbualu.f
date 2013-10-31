@@ -1,6 +1,6 @@
 *DECK DBUALU
-      DOUBLE PRECISION FUNCTION DBUALU (T, A, N, K, IDERIV, X, INBV,
-     +   WORK)
+      SUBROUTINE DBUALU (T, A, N, K, IDERIV, X, INBV,
+     +   WORK, Y)
 C***BEGIN PROLOGUE  DBUALU
 C***PURPOSE  Evaluate the B-representation of a B-spline at X for the
 C            function value or any of its derivatives.
@@ -70,9 +70,8 @@ C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
      1 I1, I2
-      DOUBLE PRECISION T(*), A(*), WORK(*), X
+      DOUBLE PRECISION T(*), A(*), WORK(*), X, Y(*)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
-      DBUALU = 0.0D0
       IF(K.LT.1) GO TO 102
       IF(N.LT.K) GO TO 101
       IF(IDERIV.LT.0 .OR. IDERIV.GE.K) GO TO 110
@@ -106,7 +105,7 @@ C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
 C      CALL DEVAL (T(IP1), X, KMIDER, WORK(I1), WORK)
       CALL DINITF (T(IP1), X, KMIDER, WORK(I1), WORK(I2))
       CALL DEVALF (KMIDER, WORK(I2), WORK)
-  100 DBUALU = WORK(1)
+  100 Y(1) = WORK(1)
       RETURN
 C
 C

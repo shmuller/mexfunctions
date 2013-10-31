@@ -436,7 +436,7 @@ class SplineSLA(SplinePGS):
                 yji = yj[i]
                 inbvi = inbv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work)
+                    slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work, yji[dd:dd+1])
         print inbv
         return y
 
