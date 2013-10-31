@@ -425,7 +425,7 @@ class SplineSLA(SplinePGS):
         m = x.size
         y = np.zeros((p, m, d))
         inbv = self.get_left(x)
-        work = np.zeros(3*k)
+        work = np.zeros(3*k + (k-der)*(k-der-1)/2)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
             yj = y[j]
@@ -508,14 +508,15 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 10, 6, 4, 101, 2
+    p, n, d, k, m, der = 2, 16, 6, 4, 101, 0
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
-    c = np.zeros((p, n, d))
-    for i in xrange(d): c[:,n-1-i,i] = 1.
-    #c = np.random.rand(p, n, d)
+    #c = np.zeros((p, n, d))
+    #for i in xrange(d): c[:,n-1-i,i] = 1.
+    c = np.random.rand(p, n, d)
 
+    knots = np.sort(np.random.rand(n-k+2.))
     #knots = np.arange(n-k+2.)
-    knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 5.2, 6.1, 7.))
+    #knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 5.2, 6.1, 7.))
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
