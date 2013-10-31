@@ -154,42 +154,42 @@ C
    50 CONTINUE
       END
 C
-      SUBROUTINE DEVAL (T, X, KMIDER, TX, AJ)
-      INTEGER KMIDER, J, KMJ, ILO
+      SUBROUTINE DEVAL (T, X, K, TX, AJ)
+      INTEGER K, KK, J, ILO
       DOUBLE PRECISION T(*), TX(*), AJ(*), X
-      DO 70 J=1-KMIDER,KMIDER
-        TX(J) = T(J) - X
+      DO 70 KK=1-K,K
+        TX(KK) = T(KK) - X
    70 CONTINUE
-      DO 90 KMJ=KMIDER-1,1,-1
-        DO 80 J=1,KMJ
-          ILO = J - KMJ
+      DO 90 KK=K-1,1,-1
+        DO 80 J=1,KK
+          ILO = J - KK
           AJ(J) = (AJ(J)*TX(J)-AJ(J+1)*TX(ILO))/(TX(J)-TX(ILO))
    80   CONTINUE
    90 CONTINUE
       END
 C
-      SUBROUTINE DINITF (T, X, KMIDER, TX, F)
-      INTEGER KMIDER, J, KMJ, I
+      SUBROUTINE DINITF (T, X, K, TX, F)
+      INTEGER K, KK, J, I
       DOUBLE PRECISION T(*), TX(*), F(*), X
-      DO 150 J=1-KMIDER,KMIDER
-        TX(J) = T(J) - X
+      DO 150 KK=1-K,K
+        TX(KK) = T(KK) - X
   150 CONTINUE
       I = 0
-      DO 170 KMJ=KMIDER-1,1,-1
-        DO 160 J=1,KMJ
+      DO 170 KK=K-1,1,-1
+        DO 160 J=1,KK
           I = I + 1
-          F(I) = TX(J)/(TX(J)-TX(J-KMJ))
+          F(I) = TX(J)/(TX(J)-TX(J-KK))
   160   CONTINUE
   170 CONTINUE
       END
 C
-      SUBROUTINE DEVALF (KMIDER, F, AJ)
-      INTEGER KMIDER, J, KMJ, I
+      SUBROUTINE DEVALF (K, F, AJ)
+      INTEGER K, KK, J, I
       DOUBLE PRECISION F(*), AJ(*), ONE, FI
       ONE = 1
       I = 0
-      DO 190 KMJ=KMIDER-1,1,-1
-        DO 180 J=1,KMJ
+      DO 190 KK=K-1,1,-1
+        DO 180 J=1,KK
           I = I + 1
           FI = F(I)
           AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)

@@ -439,6 +439,26 @@ class SplineSLA(SplinePGS):
                     slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work, yji[dd:dd+1])
         print inbv
         return y
+    
+    def spval3(self, x, der=0):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        nderiv = der+1
+        y = np.zeros((p, m, d))
+        inev = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        svalue = np.zeros(nderiv)
+        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        for j in xrange(p):
+            yj = y[j]
+            cj = c[j]
+            for dd in xrange(d):
+                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
+                for i in xrange(m):
+                    slatec.dbspev(t, ad, n, k, nderiv, x[i], inev[0], svalue, work)
+                    yj[i,dd] = svalue[der]
+        return y
 
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
@@ -510,7 +530,7 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 4, 101, 0
+    p, n, d, k, m, der = 2, 16, 6, 5, 101, 1
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
@@ -536,6 +556,7 @@ if test1:
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
+    y3c = sp_pgs.spval3(x, der=der)
 
     dsp_pgs = sp_pgs.deriv(der)
 

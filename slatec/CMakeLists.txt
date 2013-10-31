@@ -35,14 +35,14 @@ set_target_properties(slatec_chk PROPERTIES COMPILE_FLAGS ${cflags})
 #set_target_properties(slatec_chk PROPERTIES LINK_FLAGS ${lflags})
 target_link_libraries(slatec_chk slatec)
 
-file(GLOB test_src "chk/tests/*.f")
-foreach(testsourcefile ${test_src})
-    get_filename_component(testname ${testsourcefile} NAME_WE)
-    message(STATUS "Adding executable ${testname} from source ${testsourcefile}")
-    add_executable(${testname} ${testsourcefile})
-    set_target_properties(${testname} PROPERTIES COMPILE_FLAGS ${cflags})
-    target_link_libraries(${testname} slatec_chk)
-endforeach(testsourcefile)
+#file(GLOB test_src "chk/tests/*.f")
+#foreach(testsourcefile ${test_src})
+#    get_filename_component(testname ${testsourcefile} NAME_WE)
+#    message(STATUS "Adding executable ${testname} from source ${testsourcefile}")
+#    add_executable(${testname} ${testsourcefile})
+#    set_target_properties(${testname} PROPERTIES COMPILE_FLAGS ${cflags})
+#    target_link_libraries(${testname} slatec_chk)
+#endforeach(testsourcefile)
 
 install(TARGETS slatec slatec_static slatec_chk
     RUNTIME DESTINATION bin
