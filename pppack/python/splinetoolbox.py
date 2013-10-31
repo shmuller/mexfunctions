@@ -424,7 +424,8 @@ class SplineSLA(SplinePGS):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
         y = np.zeros((p, m, d))
-        inbv = self.get_left(x)
+        #inbv = self.get_left(x).astype('i')
+        inbv = np.ones(m, 'i')
         work = np.zeros(3*k + (k-der)*(k-der-1)/2)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
@@ -435,7 +436,8 @@ class SplineSLA(SplinePGS):
                 yji = yj[i]
                 inbvi = inbv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.dbualu(t, cj[dd], n, k, der, xi, inbvi, work)
+                    yji[dd] = slatec.dbualu(t, cj[dd], n, k, der, xi, inbv[i:i+1], work)
+        print inbv
         return y
 
     def evalB(self, x, der=0):

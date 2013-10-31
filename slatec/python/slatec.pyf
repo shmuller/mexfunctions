@@ -262,10 +262,40 @@ python module slatec ! in
             integer :: k
             integer :: ideriv
             double precision :: x
-            integer :: inbv
+            integer dimension(*) :: inbv
             double precision dimension(*) :: work
             double precision :: dbualu
         end function dbualu
+        subroutine dinit(a,k,aj) ! in :slatec:../ext/dbualu.f
+            double precision dimension(*) :: a
+            integer :: k
+            double precision dimension(*) :: aj
+        end subroutine dinit
+        subroutine dderiv(t,km1,kmider,aj) ! in :slatec:../ext/dbualu.f
+            double precision dimension(*) :: t
+            integer :: km1
+            integer :: kmider
+            double precision dimension(*) :: aj
+        end subroutine dderiv
+        subroutine deval(t,x,kmider,tx,aj) ! in :slatec:../ext/dbualu.f
+            double precision dimension(*) :: t
+            double precision :: x
+            integer :: kmider
+            double precision dimension(*) :: tx
+            double precision dimension(*) :: aj
+        end subroutine deval
+        subroutine dinitf(t,x,kmider,tx,f) ! in :slatec:../ext/dbualu.f
+            double precision dimension(*) :: t
+            double precision :: x
+            integer :: kmider
+            double precision dimension(*) :: tx
+            double precision dimension(*) :: f
+        end subroutine dinitf
+        subroutine devalf(kmider,f,aj) ! in :slatec:../ext/dbualu.f
+            integer :: kmider
+            double precision dimension(*) :: f
+            double precision dimension(*) :: aj
+        end subroutine devalf
     end interface 
 end python module slatec
 

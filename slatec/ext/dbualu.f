@@ -68,8 +68,8 @@ C   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
 C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
-      INTEGER I, IDERIV, INBV, IP1, K, IP1MK, KMIDER, KM1, MFLAG, N, I1,
-     1 I2
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
+     1 I1, I2
       DOUBLE PRECISION T(*), A(*), WORK(*), X
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       DBUALU = 0.0D0
@@ -81,7 +81,7 @@ C
 C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
       KM1 = K - 1
-      CALL DINTRV(T, N+1, X, INBV, I, MFLAG)
+      CALL DINTRV(T, N+1, X, INBV(1), I, MFLAG)
       IF (X.LT.T(K)) GO TO 120
       IF (MFLAG.EQ.0) GO TO 20
       IF (X.GT.T(I)) GO TO 130
