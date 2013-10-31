@@ -95,23 +95,11 @@ C
       IP1MK = IP1 - K
       I1 = K + K + 1
       I2 = I1 + K
-      I3 = I2 + (K*KM1-KMIDER*(KMIDER-1))/2
+C
+      CALL DINITX (T(IP1), X, K, WORK(I1))
+      CALL DINIT2 (WORK(I1), KM1, KMIDER, WORK(I2))
 C
       CALL DINIT (A(IP1MK), K, WORK)
-      CALL DINITF (T(IP1), X, KMIDER, WORK(I1), WORK(I3))
-C
-C      IF (IDERIV.EQ.0) GO TO 60
-C
-C      CALL DDERIV (T(IP1), KM1, KMIDER, WORK)
-      CALL DINITG (T(IP1), KM1, KMIDER, WORK(I2))
-C
-C      CALL DEVALG (KM1, KMIDER, WORK(I2), WORK)
-C
-C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
-C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
-C   60 IF (IDERIV.EQ.KM1) GO TO 100
-C      CALL DEVAL (T(IP1), X, KMIDER, WORK(I1), WORK)
-C      CALL DEVALF (KMIDER, WORK(I3), WORK)
       CALL DEVAL2 (KM1, KMIDER, WORK(I2), WORK)
   100 Y(1) = WORK(1)
       RETURN
@@ -142,7 +130,37 @@ C
      +   'A LEFT LIMITING VALUE CANNOT BE OBTAINED AT T(K)', 2, 1)
       RETURN
       END
+
+
+      SUBROUTINE DINITX (T, X, K, TX)
+      INTEGER K, KK
+      DOUBLE PRECISION T(*), TX(*), X
+      DO 5 KK=1-K,K
+        TX(KK) = T(KK) - X
+    5 CONTINUE
+      END
 C
+      SUBROUTINE DINIT2 (TX, KM1, KMIDER, F)
+      INTEGER KM1, KMIDER, KK, J, I
+      DOUBLE PRECISION TX(*), F(*), FKMJ
+      I = 0
+      DO 20 KK=KM1,KMIDER,-1
+        FKMJ = KK
+        DO 10 J=1,KK
+          I = I + 1
+          F(I) = FKMJ/(TX(J)-TX(J-KK))
+   10   CONTINUE
+   20 CONTINUE
+      DO 40 KK=KMIDER-1,1,-1
+        DO 30 J=1,KK
+          I = I + 1
+          F(I) = TX(J)/(TX(J)-TX(J-KK))
+   30   CONTINUE
+   40 CONTINUE
+      END
+
+
+
       SUBROUTINE DINIT (A, K, AJ)
       INTEGER K, J
       DOUBLE PRECISION A(*), AJ(*)
@@ -150,7 +168,28 @@ C
         AJ(J) = A(J)
     5 CONTINUE
       END
-C
+
+      SUBROUTINE DEVAL2 (KM1, KMIDER, F, AJ)
+      INTEGER KM1, KMIDER, KK, J, I
+      DOUBLE PRECISION F(*), AJ(*), ONE, FI
+      ONE = 1
+      I = 0
+      DO 20 KK=KM1,KMIDER,-1
+        DO 10 J=1,KK
+          I = I + 1
+          AJ(J) = (AJ(J+1)-AJ(J))*F(I)
+   10   CONTINUE
+   20 CONTINUE
+      DO 40 KK=KMIDER-1,1,-1
+        DO 30 J=1,KK
+          I = I + 1
+          FI = F(I)
+          AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
+   30   CONTINUE
+   40 CONTINUE
+      END
+      
+
       SUBROUTINE DDERIV (T, KM1, KMIDER, AJ)
       INTEGER KM1, KMIDER, KMJ, J
       DOUBLE PRECISION T(*), AJ(*), FKMJ
@@ -175,81 +214,4 @@ C
    10   CONTINUE
    20 CONTINUE
       END
-C
-      SUBROUTINE DINITG (T, KM1, KMIDER, G)
-      INTEGER KM1, KMIDER, KMJ, J, I
-      DOUBLE PRECISION T(*), G(*), FKMJ
-      I = 0
-      DO 20 KMJ=KM1,KMIDER,-1
-        FKMJ = KMJ
-        DO 10 J=1,KMJ
-          I = I + 1
-          G(I) = FKMJ/(T(J)-T(J-KMJ))
-   10   CONTINUE
-   20 CONTINUE
-      END
-C
-      SUBROUTINE DINITF (T, X, K, TX, F)
-      INTEGER K, KK, J, I
-      DOUBLE PRECISION T(*), TX(*), F(*), X
-      DO 5 KK=1-K,K
-        TX(KK) = T(KK) - X
-    5 CONTINUE
-      I = 0
-      DO 20 KK=K-1,1,-1
-        DO 10 J=1,KK
-          I = I + 1
-          F(I) = TX(J)/(TX(J)-TX(J-KK))
-   10   CONTINUE
-   20 CONTINUE
-      END
-C
-      SUBROUTINE DEVALG (KM1, KMIDER, G, AJ)
-      INTEGER KM1, KMIDER, KMJ, J, I
-      DOUBLE PRECISION G(*), AJ(*)
-      I = 0
-      DO 20 KMJ=KM1,KMIDER,-1
-        DO 10 J=1,KMJ
-          I = I + 1
-          AJ(J) = (AJ(J+1)-AJ(J))*G(I)
-   10   CONTINUE
-   20 CONTINUE
-      END
-C
-      SUBROUTINE DEVALF (K, F, AJ)
-      INTEGER K, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), ONE, FI
-      ONE = 1
-      I = 0
-      DO 20 KK=K-1,1,-1
-        DO 10 J=1,KK
-          I = I + 1
-          FI = F(I)
-          AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
-   10   CONTINUE
-   20 CONTINUE
-      END
-C
-      SUBROUTINE DEVAL2 (KM1, KMIDER, F, AJ)
-      INTEGER KM1, KMIDER, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), ONE, FI
-      ONE = 1
-      I = 0
-      DO 20 KK=KM1,KMIDER,-1
-        DO 10 J=1,KK
-          I = I + 1
-          AJ(J) = (AJ(J+1)-AJ(J))*F(I)
-   10   CONTINUE
-   20 CONTINUE
-      DO 40 KK=KMIDER-1,1,-1
-        DO 30 J=1,KK
-          I = I + 1
-          FI = F(I)
-          AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
-   30   CONTINUE
-   40 CONTINUE
-      END
-      
-
-
 

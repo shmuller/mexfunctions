@@ -555,7 +555,7 @@ if __name__ == "__main__":
     test1 = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 4, 101, 2
+    p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
     #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
