@@ -426,7 +426,7 @@ class SplineSLA(SplinePGS):
         y = np.zeros((p, m, d))
         #inbv = self.get_left(x).astype('i')
         inbv = np.ones(m, 'i')
-        work = np.zeros(3*k + k*(k-1)/2)
+        work = np.zeros(3*k + k*(k-1))
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
             yj = y[j]
