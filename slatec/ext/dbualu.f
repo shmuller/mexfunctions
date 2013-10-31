@@ -104,13 +104,15 @@ C      IF (IDERIV.EQ.0) GO TO 60
 C
 C      CALL DDERIV (T(IP1), KM1, KMIDER, WORK)
       CALL DINITG (T(IP1), KM1, KMIDER, WORK(I2))
-      CALL DEVALG (T(IP1), KM1, KMIDER, WORK(I2), WORK)
+C
+C      CALL DEVALG (KM1, KMIDER, WORK(I2), WORK)
 C
 C *** COMPUTE VALUE AT *X* IN (T(I),(T(I+1)) OF IDERIV-TH DERIVATIVE,
 C     GIVEN ITS RELEVANT B-SPLINE COEFF. IN AJ(1),...,AJ(K-IDERIV).
 C   60 IF (IDERIV.EQ.KM1) GO TO 100
 C      CALL DEVAL (T(IP1), X, KMIDER, WORK(I1), WORK)
-      CALL DEVALF (KMIDER, WORK(I3), WORK)
+C      CALL DEVALF (KMIDER, WORK(I3), WORK)
+      CALL DEVAL2 (KM1, KMIDER, WORK(I2), WORK)
   100 Y(1) = WORK(1)
       RETURN
 C
@@ -202,12 +204,11 @@ C
    20 CONTINUE
       END
 C
-      SUBROUTINE DEVALG (T, KM1, KMIDER, G, AJ)
+      SUBROUTINE DEVALG (KM1, KMIDER, G, AJ)
       INTEGER KM1, KMIDER, KMJ, J, I
-      DOUBLE PRECISION T(*), G(*), AJ(*)
+      DOUBLE PRECISION G(*), AJ(*)
       I = 0
       DO 20 KMJ=KM1,KMIDER,-1
-        FKMJ = KMJ
         DO 10 J=1,KMJ
           I = I + 1
           AJ(J) = (AJ(J+1)-AJ(J))*G(I)
@@ -228,6 +229,27 @@ C
    10   CONTINUE
    20 CONTINUE
       END
+C
+      SUBROUTINE DEVAL2 (KM1, KMIDER, F, AJ)
+      INTEGER KM1, KMIDER, KK, J, I
+      DOUBLE PRECISION F(*), AJ(*), ONE, FI
+      ONE = 1
+      I = 0
+      DO 20 KK=KM1,KMIDER,-1
+        DO 10 J=1,KK
+          I = I + 1
+          AJ(J) = (AJ(J+1)-AJ(J))*F(I)
+   10   CONTINUE
+   20 CONTINUE
+      DO 40 KK=KMIDER-1,1,-1
+        DO 30 J=1,KK
+          I = I + 1
+          FI = F(I)
+          AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
+   30   CONTINUE
+   40 CONTINUE
+      END
+      
 
 
 
