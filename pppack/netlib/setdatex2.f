@@ -15,7 +15,7 @@ c    i c o u n t  is equal to zero when setdat is called in  l 2 m a i n
 c     for the first time. after that, it is up to setdat to use icount
 c     for keeping track of the passes through setdat . this is important
 c     since l2main relies on setdat for  t e r m i n a t i o n .
-      integer icount,  i,k,l,lp1,ntau,ntaum1
+      integer icount,  i,k,l,lp1,ntau,ntaum1,lpkmax,ntmax,ltkmax
       real break,coef,gtau,step,tau,totalw,weight
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
       dimension tau(ntmax),gtau(ntmax),weight(ntmax)

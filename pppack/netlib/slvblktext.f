@@ -116,7 +116,7 @@ c  b1 b2 b3 ** b4 b5 b6 b7 b8 ** ** b9 ** ** b10 b11
 c
 c  (it would have been more efficient to combine block 3 with block 4)
 c
-      integer integs(3,nbloks),ipivot(1),iflag
+      integer nbloks,integs(3,nbloks),ipivot(1),iflag
       real bloks(1),b(1),x(1)
 c     in the call to fcblok,  x  is used for temporary storage.
       call fcblok(bloks,integs,nbloks,ipivot,x,iflag)
@@ -152,8 +152,8 @@ c            = 0  in case matrix was found to be singular.
 c            otherwise,
 c            = (-1)**(number of row interchanges during factorization)
 c
-      integer integs(3,nbloks),ipivot(1),iflag, i,index,indexb,indexn,
-     *        last,ncol,nrow
+      integer nbloks,integs(3,nbloks),ipivot(1),iflag, i,index,indexb,
+     *        indexn,last,ncol,nrow
       real bloks(1),scrtch(1)
       iflag = 1
       indexb = 1
@@ -202,7 +202,7 @@ c            row interchanges during the factorization process), in
 c            case no zero pivot was encountered.
 c            otherwise, iflag = 0 on output.
 c
-      integer ipivot(nrow),ncol,last,iflag, i,ipivi,ipivk,j,k,kp1
+      integer nrow,ipivot(nrow),ncol,last,iflag, i,ipivi,ipivk,j,k,kp1
       real w(nrow,ncol),d(nrow), awikdi,colmax,ratio,rowmax
 c  initialize ipivot, d
       do 10 i=1,nrow
@@ -296,7 +296,8 @@ c  ncoli1= 5        1x  x  x  x  x          1x  x  x  x  x1
 c  -------------------------------          1-------------1
 c                   1
 c
-      integer ipivot(nrowi),last, ip,j,jmax,jmaxp1,m,mmax
+      integer nrowi,ipivot(nrowi),ncoli,last,nrowi1,ncoli1,   ip,j,jmax
+     *                                                   ,jmaxp1,m,mmax
       real ai(nrowi,ncoli),ai1(nrowi1,ncoli1)
       mmax = nrowi - last
       jmax = ncoli - last
@@ -328,8 +329,8 @@ c    b       the right side, stored corresponding to the storage of
 c            the equations. see comments in  s l v b l k  for details.
 c    x       solution vector
 c
-      integer integs(3,nbloks),ipivot(1), i,index,indexb,indexx,j,last,
-     *        nbp1,ncol,nrow
+      integer nbloks,integs(3,nbloks),ipivot(1),   i,index,indexb,indexx
+     *                                            ,j,last,nbp1,ncol,nrow
       real bloks(1),b(1),x(1)
 c
 c      forward substitution pass
@@ -381,9 +382,9 @@ c    x(j)   contains, on output, the appropriately modified right
 c           side of equation ipivot(j) in this block, j=1,...,last (and
 c           even for j=last+1,...,nrow).
 c
-      integer ipivot(nrow), ip,jmax,k
+      integer nrow,ipivot(nrow),last, ip,j,jmax,k,nrowml,lastp1
 c     dimension b(nrow + nrow-last)
-      real w(nrow,last),b(1),x(nrow)
+      real w(nrow,last),b(1),x(nrow), sum
       ip = ipivot(1)
       x(1) = b(ip)
       if (nrow .eq. 1)                  go to 99
@@ -419,7 +420,7 @@ c            ion vector.
 c    x(1),...,x(ncol) contains, on output, the components of the solut-
 c            ion corresponding to the present block.
 c
-      integer ipivot(nrow),last,  ip,j,k,kp1
+      integer nrow,ipivot(nrow),ncol,last,  ip,j,k,kp1
       real w(nrow,ncol),x(ncol), sum
       k = last
       ip = ipivot(k)
@@ -452,7 +453,8 @@ c    detsgn  on output, contains the sign of the determinant.
 c    detlog  on output, contains the natural logarithm of the determi-
 c            nant if determinant is not zero. otherwise contains 0.
 c
-      integer integs(3,nbloks),ipivot(1),iflag, i,indexp,ip,k,last
+      integer nbloks,integs(3,nbloks),ipivot(1),iflag, i,index,indexp
+     *                                                ,ip,k,nrow,last
       real bloks(1),detsgn,detlog
 c
       detsgn = iflag

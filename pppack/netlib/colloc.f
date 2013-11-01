@@ -42,7 +42,7 @@ c
       parameter (npiece=100)
       integer iorder,lbegin,ntimes,   i,iflag,ii,integs(3,npiece),iside
      *                  ,iter,itermx,k,kmax,kpm,l,lenblk,lnew,m,n,nbloks
-     *                  ,ndim,ncoef,nncoef,nt
+     *                  ,ndim,ncoef,nncoef,nt,j
       parameter (ndim=200,kmax=20,ncoef=npiece*kmax,lenblk=ncoef)
       real addbrk,aleft,aright,relerr,   a(ndim),amax,asave(ndim)
      *     ,b(ndim),bloks(lenblk),break,coef,dx,err,rho,t(ndim)

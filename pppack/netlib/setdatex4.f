@@ -7,7 +7,7 @@ c  to be called in main program  l 2 m a i n .
 c       calls titand
 c     this routine is set up to provide the specific data for example 4
 c     in chapter xiv.
-      integer icount,  i,k,l,n,ntau
+      integer icount,  i,k,l,n,ntau,lpkmax,ntmax,ltkmax
       real break,brkpic(9),coef,gtau,tau,totalw,weight
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
       dimension tau(ntmax),gtau(ntmax),weight(ntmax)

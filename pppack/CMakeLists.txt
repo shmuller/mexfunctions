@@ -12,6 +12,8 @@ else()
     set(real8_flag "-r8")
 endif()
 
+set(cflags "${real8_flag} -fimplicit-none")
+
 set(pppack_SRC
     netlib/banfac.f
     netlib/banslv.f
@@ -82,14 +84,14 @@ set(pppack_SRC
 )
 
 add_library(pppack SHARED ${pppack_SRC})
-set_target_properties(pppack PROPERTIES COMPILE_FLAGS ${real8_flag})
+set_target_properties(pppack PROPERTIES COMPILE_FLAGS ${cflags})
 
 add_library(pppack_static STATIC ${pppack_SRC})
 set_target_properties(pppack_static PROPERTIES OUTPUT_NAME pppack)
-set_target_properties(pppack_static PROPERTIES COMPILE_FLAGS "${real8_flag} -fPIC")
+set_target_properties(pppack_static PROPERTIES COMPILE_FLAGS "${cflags} -fPIC")
 
 add_executable(l2main netlib/l2main.f)
-set_target_properties(l2main PROPERTIES COMPILE_FLAGS ${real8_flag})
+set_target_properties(l2main PROPERTIES COMPILE_FLAGS ${cflags})
 target_link_libraries(l2main pppack)
 
 add_subdirectory(python)

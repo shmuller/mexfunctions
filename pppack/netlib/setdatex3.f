@@ -7,8 +7,8 @@ c  to be called in main program  l 2 m a i n .
 c     this routine is set up to provide the specific data for example 3
 c     in chapter xiv.
 c
-      integer icount,  i,k,l,ntau
-      real break,coef,gtau,step,tau,totalw,weight
+      integer icount,  i,k,l,ntau,lpkmax,ntmax,ltkmax
+      real break,coef,gtau,step,tau,totalw,weight,round,x
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
       dimension tau(ntmax),gtau(ntmax),weight(ntmax)
       dimension break(lpkmax),coef(ltkmax)

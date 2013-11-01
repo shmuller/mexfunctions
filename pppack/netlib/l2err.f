@@ -26,8 +26,8 @@ c          abs(error))  over all  i  lies between  10  and  100. this
 c          makes the printed output more illustrative.
 c
       integer prfun,   ie,k,l,ll,lpkmax,ltkmax,ntau,ntmax,on
-      real ftau(ntau),error(ntau),  break,coef,err,errmax,errl1,errl2
-     *                             ,gtau,scale,tau,totalw,weight
+      real ftau(ntau),error(ntau),ppvalu,   break,coef,err,errmax,errl1
+     *                              ,errl2,gtau,scale,tau,totalw,weight
       parameter (lpkmax=100,ntmax=200,ltkmax=2000)
       dimension tau(ntmax),gtau(ntmax),weight(ntmax)
       dimension break(lpkmax),coef(ltkmax)

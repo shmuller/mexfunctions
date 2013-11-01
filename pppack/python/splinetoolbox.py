@@ -549,8 +549,9 @@ class SplineSLA2(SplineSLA):
         m = x.size
         y = np.zeros((p, m, d))
         inbv = np.ones(1, 'i')
-        work = np.zeros(k*(k+2))
-        slatec.dbualu(t, c.T, k, der, x, inbv, work, y.T)
+        work = np.zeros(k*(k+1))
+        work2 = np.zeros((k, d))
+        slatec.dbualu(t, c.T, k, der, x, inbv, work, work2.T, y.T)
         return y
 
 
@@ -582,8 +583,8 @@ class SplineND:
 
 test1 = test2 = test3 = bench = False
 if __name__ == "__main__":
-    #test1 = True
-    bench = True
+    test1 = True
+    #bench = True
 
 if test1:
     p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
@@ -639,7 +640,7 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 0 
+    p, n, d, k, m, der = 20*10, 1000, 2, 4, 10000, 0 
     c = np.random.rand(p, n, d)
 
     knots = np.arange(n-k+2.)
@@ -650,9 +651,16 @@ if bench:
     sp_sla = SplineSLA2.from_knots_coefs(t, c)
     pp_pgs = sp_pgs.to_pp().deriv(der)
 
-    y = sp_pgs.spval(x, der=der)
-    y = sp_sla.spval(x, der=der)
+    #y = sp_pgs.spval(x, der=der)
+    #y = sp_sla.spval(x, der=der)
     y = pp_pgs.ppual(x)
+
+    #"""
+    mgc = get_ipython().magic
+    mgc(u'%timeit sp_pgs.spval(x, der=der)')
+    mgc(u'%timeit sp_sla.spval(x, der=der)')
+    mgc(u'%timeit pp_pgs.ppual(x)')
+    #"""
 
 if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))

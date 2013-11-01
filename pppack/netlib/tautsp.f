@@ -84,7 +84,7 @@ c
       integer iflag,k,l,ntau,   i,method,ntaum1
       real break(*),coef(4,*),gamma,gtau(ntau),s(ntau,6),tau(ntau)
      *    ,alpha,c,d,del,denom,divdif,entry,entry3,factor,factr2,gam
-     *    ,onemg3,onemzt,ratio,sixth,temp,x,z,zeta,zt2
+     *    ,onemg3,onemzt,ratio,sixth,temp,x,z,zeta,zt2,alph
       alph(x) = amin1(1.,onemg3/x)
 c
 c  there must be at least  4  interpolation points.

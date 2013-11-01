@@ -100,10 +100,10 @@ c
 c     in all other respects, the procedure is standard, including the   
 c  scaled partial pivoting.   
 c     
-      integer iflag,integs(2,nbloks),ncols,nequ,   i,ii,icount,ipvteq   
-     *                     ,istar,j,lastcl,lasteq,lasti,nexteq,nrowad   
-      real b(nequ),d(nequ),w(nequ,ncols),x(nequ),   awi1od,colmax 
-     *                                             ,rowmax,temp   
+      integer iflag,nbloks,integs(2,nbloks),ncols,nequ,   i,ii,icount,
+     *      ipvteq,ipvtp1,jmax,istar,j,lastcl,lasteq,lasti,nexteq,nrowad
+      real b(nequ),d(nequ),w(nequ,ncols),x(nequ),   awi1od,colmax,ratio 
+     *                                             ,rowmax,temp,sum
       iflag = 1   
       ipvteq = 0  
       lasteq = 0  

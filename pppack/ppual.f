@@ -18,9 +18,9 @@
       return
    99 call ppual0 (break, coef(1,:,:,1), l, k, x, m, y(1,:,1))
       return
-  199 call ppualp (break, coef(1,:,:,:), n, k, p, x, m, y(1,:,:))
+  199 call ppualp (break, coef(1,:,:,:), l, k, p, x, m, y(1,:,:))
       return
-  299 call ppuald (break, coef(:,:,:,1), n, k, d, x, m, y(:,:,1))
+  299 call ppuald (break, coef(:,:,:,1), l, k, d, x, m, y(:,:,1))
       return
       end
 

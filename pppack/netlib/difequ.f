@@ -17,8 +17,8 @@ c  v  depends on the  mode  . see comments below
 c
       integer mode,   i,iside,itermx,k,kmax,kpm,l,m,ncoef,npiece
       parameter (npiece=100, kmax=20, ncoef=npiece*kmax)
-      real v(kmax),xx,   break,coef,eps,ep1,ep2,error,factor,rho,solutn
-     *                ,s2ovep,un,x,xside
+      real v(kmax),xx,ppvalu,   break,coef,eps,ep1,ep2,error,factor,rho
+     *               ,solutn,s2ovep,un,x,xside
       common /approx/ break(npiece),coef(ncoef),l,kpm
 C     common /approx/ break(100),coef(2000),l,kpm
       common /side/ m,iside,xside(10)

@@ -1,5 +1,5 @@
       subroutine spder( t, bcoef, n, k, d, p, jderiv )
-      integer jderiv,n,k,d,p,   i,dd,pp
+      integer jderiv,n,k,d,p,   i,j,dd,pp
       real t(n+k),bcoef(d,n,p),   h,fkmj
 
       if (d .eq. 1 .and. p .eq. 1)         go to 99
@@ -23,7 +23,7 @@
       end
 
       subroutine spder0( t, bcoef, n, k, jderiv )
-      integer jderiv,n,k,   i
+      integer jderiv,n,k,   i,j
       real t(n+k),bcoef(n),   fkmj
 
       do 60 j=1,jderiv
@@ -33,7 +33,7 @@
       end
 
       subroutine spderp( t, bcoef, n, k, p, jderiv )
-      integer jderiv,n,k,p,   i,pp
+      integer jderiv,n,k,p,   i,j,pp
       real t(n+k),bcoef(n,p),   h,fkmj
 
       do 70 j=1,jderiv
@@ -45,7 +45,7 @@
       end
 
       subroutine spderd( t, bcoef, n, k, d, jderiv )
-      integer jderiv,n,k,d,   i,dd
+      integer jderiv,n,k,d,   i,j,dd
       real t(n+k),bcoef(d,n),   h,fkmj
 
       do 80 j=1,jderiv

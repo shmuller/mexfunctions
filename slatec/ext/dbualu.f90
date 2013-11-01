@@ -1,5 +1,6 @@
 !DECK DBUALU
-      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
+      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, &
+       WORK2, Y)
 !***BEGIN PROLOGUE  DBUALU
 !***PURPOSE  Evaluate the B-representation of a B-spline at X for the
 !            function value or any of its derivatives.
@@ -72,14 +73,14 @@
 !
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N, &
        I1, I2, I3, D, DD, P, PP, M, MM
-      DOUBLE PRECISION T(*), WORK(*), X(*), Y(D,M,P)
-      double precision, dimension(D,N,P) :: A
+      DOUBLE PRECISION T(*), A(D,N,*), WORK(*), WORK2(D,*), X(*), &
+       Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
 
       KM1 = K - 1
-      I1 = K + 1
+      I1 = 1
       I2 = I1 + K
       I3 = I2 + K
 
@@ -93,14 +94,20 @@
 
         CALL DINIT3 (WORK(I2), KM1, KMIDER, WORK(I3))
 
-        do 40 PP=1,P
-          do 30 DD=1,D
-!            CALL DINIT (A(:,IP1MK:,PP), K, WORK, D, DD)
-            WORK(1:K) = A(DD,IP1MK:I,PP)
-            CALL DEVAL3 (KM1, WORK(I3), WORK)
-            Y(DD,MM,PP) = WORK(1)
-   30     CONTINUE
+        DO 40 PP=1,P
+          WORK2(:,1:K) = A(:,IP1MK:I,PP)
+          CALL DEVAL3 (KM1, WORK(I3), WORK2, D)
+          Y(:,MM,PP) = WORK2(:,1)
    40   CONTINUE
+
+!        do 40 PP=1,P
+!          do 30 DD=1,D
+!!            CALL DINIT (A(:,IP1MK:,PP), K, WORK, D, DD)
+!            WORK(1:K) = A(DD,IP1MK:I,PP)
+!            CALL DEVAL3 (KM1, WORK(I3), WORK)
+!            Y(DD,MM,PP) = WORK(1)
+!   30     CONTINUE
+!   40   CONTINUE
    50 CONTINUE
       RETURN
 
@@ -208,9 +215,9 @@
    40 CONTINUE
       END
 
-      SUBROUTINE DEVAL3 (KM1, F, AJ)
-      INTEGER KM1, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), F1, F2
+      SUBROUTINE DEVAL3 (KM1, F, AJ, D)
+      INTEGER KM1, KK, J, I, D
+      DOUBLE PRECISION F(*), AJ(D,*), F1, F2
       I = 0
       DO 20 KK=KM1,1,-1
         DO 10 J=1,KK
@@ -218,7 +225,7 @@
           F1 = F(I)
           I = I + 1
           F2 = F(I)
-          AJ(J) = AJ(J)*F1 + AJ(J+1)*F2
+          AJ(:,J) = AJ(:,J)*F1 + AJ(:,J+1)*F2
    10   CONTINUE
    20 CONTINUE
       END

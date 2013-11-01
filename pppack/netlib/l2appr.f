@@ -63,7 +63,8 @@ c  them to all relevant entries.
 c
       integer k,n,   i,j,jj,kmax,left,leftmk,ll,mm,ntau,ntmax
       parameter (kmax=20,ntmax=200)
-      real bcoef(n),diag(n),q(k,n),t(n+k),  biatx(kmax),dw,gtau,tau,weight
+      real bcoef(n),diag(n),q(k,n),t(n+k),  biatx(kmax),dw,gtau,tau
+     *                                     ,weight
       dimension tau(ntmax),gtau(ntmax),weight(ntmax)
 c
       do 7 j=1,n

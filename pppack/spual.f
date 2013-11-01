@@ -1,6 +1,6 @@
       subroutine spual( t, bcoef, n, k, d, p, x, m, y )
       integer n,k,d,p,m,jderiv,   dd,pp,mm
-      real t(n+k),bcoef(d,n,p),x(m),y(d,m,p),  xm
+      real t(n+k),bcoef(d,n,p),x(m),y(d,m,p),bvalue
 
       if (d .eq. 1 .and. p .eq. 1)         go to 99
 
@@ -13,7 +13,7 @@
 
       subroutine eval0( t, bcoef, n, k, x, m, y )
       integer n,k,m,   mm
-      real t(n+k),bcoef(n),x(m),y(m)
+      real t(n+k),bcoef(n),x(m),y(m),bvalue
       do 60 mm=1,m
    60   y(mm) = bvalue (t, bcoef, n, k, x(mm), 0)
       end
