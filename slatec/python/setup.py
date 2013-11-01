@@ -1,6 +1,6 @@
-def configuration(parent_package='', top_path=None):
+def configuration(from_pyf=True):
     from numpy.distutils.misc_util import Configuration
-    config = Configuration('', parent_package, top_path)
+    config = Configuration()
 
     """
     regenerate python wrappers with:
@@ -13,14 +13,28 @@ def configuration(parent_package='', top_path=None):
 
     and build again with no f2py_options and sources=['slatecmodule.c', 'fortranobject.c']
     """
+    if from_pyf:
+        sources = ['slatec.pyf']
+    else:
+        sources = ['slatecmodule.c', 'fortranobject.c'],
+
     config.add_extension('slatec', 
-                         #sources = ['slatec.pyf'],
-                         #f2py_options = ['--no-wrap-functions'],
-                         sources = ['slatecmodule.c', 'fortranobject.c'],
+                         sources = sources,
+                         f2py_options = ['--no-wrap-functions'],
                          libraries = ['slatec'])
     return config
 
 if __name__ == "__main__":
-    from numpy.distutils.core import setup
-    setup(**configuration(top_path='').todict())
+    import os
+    os.system('rm -rf build')
 
+    from numpy.distutils.core import setup
+    os.system('f2py -m slatec -h slatec.pyf `cat f2py_files.txt` --overwrite-signature')
+    
+    print "*** Building from *.pyf with system fortranobject.c ***"
+    setup(**configuration(from_pyf=True).todict())
+     
+    os.system('cp build/src*/slatecmodule.c .')
+    print "*** Building from *module.c with local fortranobject.c ***"
+    os.system('rm -rf build/lib*/* build/temp*/*')
+    setup(**configuration(from_pyf=False).todict())

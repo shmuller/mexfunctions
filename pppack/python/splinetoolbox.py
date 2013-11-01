@@ -424,23 +424,18 @@ class SplineSLA(SplinePGS):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
         y = np.zeros((p, m, d))
-        #inbv = self.get_left(x).astype('i')
-        inbv = np.ones(m, 'i')
-        work = np.zeros(3*k + k*(k-1))
-        #c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        inbv = self.get_left(x).astype('i')
+        work = np.zeros(3*k)
+        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
             for i in xrange(m):
                 xi = x[i]
                 yji = yj[i]
-                slatec.dbualu(t, cj.T, k, der, xi, inbv[i:i+1], work, yji)
-                if j == 0 and i == 28:
-                    print xi
-                    print work[:k]
-                    print work[k:3*k]
-                    print work[3*k:3*k+(k-der)*(k-der-1)/2]
-                    print work[3*k+(k-der)*(k-der-1)/2:]
+                inbvi = inbv[i]
+                for dd in xrange(d):
+                    yji[dd] = slatec.dbvalu(t, cj[dd], n, k, der, xi, inbvi, work)
         return y
     
     def evalB(self, x, der=0):
@@ -522,6 +517,21 @@ class SplineSLA(SplinePGS):
         return PPSLA2(b, a)
 
 
+class SplineSLA2(SplineSLA):
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        yi = np.zeros((p, d))
+        #inbv = self.get_left(x).astype('i')
+        inbv = np.ones(m, 'i')
+        work = np.zeros(k*(k+2))
+        for i in xrange(m):
+            slatec.dbualu(t, c.T, k, der, x[i], inbv[i:i+1], work, yi.T)
+            y[:,i,:] = yi
+        return y
+
+
 class SplineND:
     def __init__(self, t, c):
         self.t, self.c = t, c
@@ -575,7 +585,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLA.from_knots_coefs(t, c)
+    sp_pgs = SplineSLA2.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)

@@ -1,6 +1,5 @@
 *DECK DBUALU
-      SUBROUTINE DBUALU (T, A, N, K, D, IDERIV, X, INBV,
-     +   WORK, Y)
+      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, INBV, WORK, Y)
 C***BEGIN PROLOGUE  DBUALU
 C***PURPOSE  Evaluate the B-representation of a B-spline at X for the
 C            function value or any of its derivatives.
@@ -48,7 +47,7 @@ C          INBV    - INBV contains information for efficient process-
 C                    ing after the initial call and INBV must not
 C                    be changed by the user.  Distinct splines require
 C                    distinct INBV parameters.
-C          WORK    - work vector of length 3*K + K*(K-1)/2.
+C          WORK    - work vector of length K*(K+2).
 C          DBUALU  - value of the IDERIV-th derivative at X
 C
 C     Error Conditions
@@ -69,8 +68,8 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
-     1 I1, I2, I3, D, DD
-      DOUBLE PRECISION T(*), A(D,N), WORK(*), X, Y(D)
+     1 I1, I2, I3, D, DD, P, PP
+      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X, Y(D,P)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       IF(K.LT.1) GO TO 102
       IF(N.LT.K) GO TO 101
@@ -99,11 +98,13 @@ C
       CALL DINITX (T(IP1), X, K, WORK(I1))
       CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
 C
-      do 30 DD=1,D
-        CALL DINIT (A(DD,IP1MK:), K, WORK)
-        CALL DEVAL3 (KM1, WORK(I2), WORK)
-        Y(DD) = WORK(1)
-   30 CONTINUE
+      do 40 PP=1,P
+        do 30 DD=1,D
+          CALL DINIT (A(DD,IP1MK:,PP), K, WORK)
+          CALL DEVAL3 (KM1, WORK(I2), WORK)
+          Y(DD,PP) = WORK(1)
+   30   CONTINUE
+   40 CONTINUE
       RETURN
 C
 C
@@ -189,7 +190,7 @@ C
 
 
       SUBROUTINE DINIT (A, K, AJ)
-      INTEGER K, O, J
+      INTEGER K, J
       DOUBLE PRECISION A(*), AJ(*)
       DO 5 J=1,K
         AJ(J) = A(J)
@@ -198,7 +199,7 @@ C
 C
       SUBROUTINE DEVAL2 (KM1, KMIDER, F, AJ)
       INTEGER KM1, KMIDER, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), ONE, FI
+      DOUBLE PRECISION F(*), AJ(*), ONE, F1
       ONE = 1
       I = 0
       DO 20 KK=KM1,KMIDER,-1
@@ -210,23 +211,23 @@ C
       DO 40 KK=KMIDER-1,1,-1
         DO 30 J=1,KK
           I = I + 1
-          FI = F(I)
-          AJ(J) = AJ(J)*FI+AJ(J+1)*(ONE-FI)
+          F1 = F(I)
+          AJ(J) = AJ(J)*F1+AJ(J+1)*(ONE-F1)
    30   CONTINUE
    40 CONTINUE
       END
 C
       SUBROUTINE DEVAL3 (KM1, F, AJ)
       INTEGER KM1, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), A, B
+      DOUBLE PRECISION F(*), AJ(*), F1, F2
       I = 0
       DO 20 KK=KM1,1,-1
         DO 10 J=1,KK
           I = I + 1
-          A = F(I)
+          F1 = F(I)
           I = I + 1
-          B = F(I)
-          AJ(J) = AJ(J)*A + AJ(J+1)*B
+          F2 = F(I)
+          AJ(J) = AJ(J)*F1 + AJ(J+1)*F2
    10   CONTINUE
    20 CONTINUE
       END

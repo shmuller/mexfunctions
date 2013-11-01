@@ -255,17 +255,18 @@ python module slatec ! in
             double precision dimension(*) :: work
             integer :: iwork
         end subroutine dbspvn
-        subroutine dbualu(t,a,n,k,d,ideriv,x,inbv,work,y) ! in :slatec:../ext/dbualu.f
+        subroutine dbualu(t,a,n,k,d,p,ideriv,x,inbv,work,y) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
-            double precision dimension(d,n) :: a
+            double precision dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
+            integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
             double precision :: x
             integer dimension(*) :: inbv
             double precision dimension(*) :: work
-            double precision dimension(d),depend(d) :: y
+            double precision dimension(d,p),depend(d,p) :: y
         end subroutine dbualu
         subroutine dinitx(t,x,k,tx) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
