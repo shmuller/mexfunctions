@@ -548,13 +548,9 @@ class SplineSLA2(SplineSLA):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
         y = np.zeros((p, m, d))
-        yi = np.zeros((p, d))
-        #inbv = self.get_left(x).astype('i')
-        inbv = np.ones(m, 'i')
+        inbv = np.ones(1, 'i')
         work = np.zeros(k*(k+2))
-        for i in xrange(m):
-            slatec.dbualu(t, c.T, k, der, x[i], inbv[i:i+1], work, yi.T)
-            y[:,i,:] = yi
+        slatec.dbualu(t, c.T, k, der, x, inbv, work, y.T)
         return y
 
 

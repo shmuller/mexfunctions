@@ -1,5 +1,5 @@
 *DECK DBUALU
-      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, INBV, WORK, Y)
+      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
 C***BEGIN PROLOGUE  DBUALU
 C***PURPOSE  Evaluate the B-representation of a B-spline at X for the
 C            function value or any of its derivatives.
@@ -68,8 +68,8 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
-     1 I1, I2, I3, D, DD, P, PP
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X, Y(D,P)
+     1 I1, I2, D, DD, P, PP, M, MM
+      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
@@ -77,41 +77,44 @@ C
 C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
       KM1 = K - 1
-      CALL DINTRV(T, N+1, X, INBV(1), I, MFLAG)
-      IF (MFLAG.NE.0) THEN
-        IF (MFLAG.EQ.1) THEN
-          I = N
-        ELSE
-          I = K
-        END IF
-      END IF
-
-   20 IP1 = I + 1
-      IP1MK = IP1 - K
       I1 = K + K + 1
       I2 = I1 + K
 C
+      do 50 MM=1,M
+        CALL DINTRV(T, N+1, X(MM), INBV(1), I, MFLAG)
+        IF (MFLAG.NE.0) THEN
+          IF (MFLAG.EQ.1) THEN
+            I = N
+          ELSE
+            I = K
+          END IF
+        END IF
+C
+   20   IP1 = I + 1
+        IP1MK = IP1 - K
+C
 C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
-C     WORK(I) = AJ(I), I=1.K
-C     WORK(2*K+I) = T(I)-X, I=1-K.K
-C     WORK(3*K+I) = F(I), I=1,K*(K-1)
+C       WORK(I) = AJ(I), I=1.K
+C       WORK(2*K+I) = T(I)-X, I=1-K.K
+C       WORK(3*K+I) = F(I), I=1,K*(K-1)
 C
-      CALL DINITX (T(IP1), X, K, WORK(I1))
-      CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
+        CALL DINITX (T(IP1), X(MM), K, WORK(I1))
+        CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
 C
-      do 40 PP=1,P
-        do 30 DD=1,D
-          CALL DINIT (A(DD,IP1MK:,PP), K, WORK)
-          CALL DEVAL3 (KM1, WORK(I2), WORK)
-          Y(DD,PP) = WORK(1)
-   30   CONTINUE
-   40 CONTINUE
+        do 40 PP=1,P
+          do 30 DD=1,D
+            CALL DINIT (A(DD,IP1MK:,PP), K, WORK)
+            CALL DEVAL3 (KM1, WORK(I2), WORK)
+            Y(DD,MM,PP) = WORK(1)
+   30     CONTINUE
+   40   CONTINUE
+   50 CONTINUE
       RETURN
 C
 C
    99 CONTINUE
-      DO 100 I=1,P*D
-  100   Y(I,1) = 0.0D0
+      DO 100 I=1,P*M*D
+  100   Y(I,1,1) = 0.0D0
       RETURN
       END
 
