@@ -47,7 +47,10 @@ C          INBV    - INBV contains information for efficient process-
 C                    ing after the initial call and INBV must not
 C                    be changed by the user.  Distinct splines require
 C                    distinct INBV parameters.
-C          WORK    - work vector of length K*(K+2).
+C          WORK    - work vector of length K*(K+2), used as:
+C                      WORK(I) = AJ(I), I=1.K
+C                      WORK(2*K+I) = T(I)-X, I=1-K.K
+C                      WORK(3*K+I) = F(I), I=1,K*(K-1)
 C          DBUALU  - value of the IDERIV-th derivative at X
 C
 C     Error Conditions
@@ -67,43 +70,25 @@ C   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
 C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
-      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N,
      1 I1, I2, D, DD, P, PP, M, MM
       DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
 C
-C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
-C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
       KM1 = K - 1
       I1 = K + K + 1
       I2 = I1 + K
 C
       do 50 MM=1,M
-        CALL DINTRV(T, N+1, X(MM), INBV(1), I, MFLAG)
-        IF (MFLAG.NE.0) THEN
-          IF (MFLAG.EQ.1) THEN
-            I = N
-          ELSE
-            I = K
-          END IF
-        END IF
-C
-   20   IP1 = I + 1
-        IP1MK = IP1 - K
-C
-C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
-C       WORK(I) = AJ(I), I=1.K
-C       WORK(2*K+I) = T(I)-X, I=1-K.K
-C       WORK(3*K+I) = F(I), I=1,K*(K-1)
-C
+        CALL DFINDI (T, N, K, X(MM), INBV(1), IP1, IP1MK)
         CALL DINITX (T(IP1), X(MM), K, WORK(I1))
         CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
 C
         do 40 PP=1,P
           do 30 DD=1,D
-            CALL DINIT (A(DD,IP1MK:,PP), K, WORK)
+            CALL DINIT (A(:,IP1MK:,PP), K, WORK, D, DD)
             CALL DEVAL3 (KM1, WORK(I2), WORK)
             Y(DD,MM,PP) = WORK(1)
    30     CONTINUE
@@ -118,7 +103,23 @@ C
       RETURN
       END
 
-
+      SUBROUTINE DFINDI(T, N, K, X, INBV, IP1, IP1MK)
+C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
+C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
+      INTEGER N, K, INBV, IP1, IP1MK, I, MFLAG
+      DOUBLE PRECISION T(*), X
+      CALL DINTRV(T, N+1, X, INBV, I, MFLAG)
+      IF (MFLAG.NE.0) THEN
+        IF (MFLAG.EQ.1) THEN
+          I = N
+        ELSE
+          I = K
+        END IF
+      END IF
+      IP1 = I + 1
+      IP1MK = IP1 - K
+      END
+C
       SUBROUTINE DINITX (T, X, K, TX)
       INTEGER K, KK
       DOUBLE PRECISION T(*), TX(*), X
@@ -173,11 +174,11 @@ C
       END
 
 
-      SUBROUTINE DINIT (A, K, AJ)
-      INTEGER K, J
-      DOUBLE PRECISION A(*), AJ(*)
+      SUBROUTINE DINIT (A, K, AJ, D, DD)
+      INTEGER K, J, D, DD
+      DOUBLE PRECISION A(D,*), AJ(*)
       DO 5 J=1,K
-        AJ(J) = A(J)
+        AJ(J) = A(DD,J)
     5 CONTINUE
       END
 C

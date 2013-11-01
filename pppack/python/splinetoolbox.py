@@ -580,13 +580,12 @@ class SplineND:
         return Z
 
 
-test1 = test2 = test3 = False
+test1 = test2 = test3 = bench = False
 if __name__ == "__main__":
     test1 = True
 
 if test1:
     p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
-    #p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
@@ -633,12 +632,24 @@ if test1:
 
     assert np.allclose(pp_pgs.a, pp_pgsb.a)
 
-    #"""
     s = 0
     from matplotlib.pyplot import plot, show
     plot(x, np.c_[y[s], y2[s], y3[s], y4[s], y5[s], y6[s], y7[s], y8[s]], '.-')
     show()
-    #"""
+
+if bench:
+    p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 0 
+    c = np.random.rand(p, n, d)
+
+    knots = np.arange(n-k+2.)
+    t = augknt(knots, k)
+    x = np.linspace(knots[0]-0.5, knots[-1]+0.5, m)
+
+    sp_pgs = SplinePGS.from_knots_coefs(t, c)
+    sp_sla = SplineSLA2.from_knots_coefs(t, c)
+
+    y = sp_pgs.spval(x, der=der)
+    y = sp_sla.spval(x, der=der)
 
 if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))

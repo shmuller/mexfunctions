@@ -269,6 +269,15 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(d,m,p),depend(d,p) :: y
         end subroutine dbualu
+        subroutine dfindi(t,n,k,x,inbv,ip1,ip1mk) ! in :slatec:../ext/dbualu.f
+            double precision dimension(*) :: t
+            integer :: n
+            integer :: k
+            double precision :: x
+            integer :: inbv
+            integer :: ip1
+            integer :: ip1mk
+        end subroutine dfindi
         subroutine dinitx(t,x,k,tx) ! in :slatec:../ext/dbualu.f
             double precision dimension(*) :: t
             double precision :: x
@@ -287,10 +296,12 @@ python module slatec ! in
             integer :: kmider
             double precision dimension(*) :: f
         end subroutine dinit3
-        subroutine dinit(a,k,aj) ! in :slatec:../ext/dbualu.f
-            double precision dimension(*) :: a
+        subroutine dinit(a,k,aj,d,dd) ! in :slatec:../ext/dbualu.f
+            double precision dimension(d,*) :: a
             integer :: k
             double precision dimension(*) :: aj
+            integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
+            integer :: dd
         end subroutine dinit
         subroutine deval2(km1,kmider,f,aj) ! in :slatec:../ext/dbualu.f
             integer :: km1
