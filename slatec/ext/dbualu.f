@@ -1,5 +1,5 @@
 *DECK DBUALU
-      SUBROUTINE DBUALU (T, A, N, K, IDERIV, X, INBV,
+      SUBROUTINE DBUALU (T, A, N, K, D, IDERIV, X, INBV,
      +   WORK, Y)
 C***BEGIN PROLOGUE  DBUALU
 C***PURPOSE  Evaluate the B-representation of a B-spline at X for the
@@ -69,8 +69,8 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, MFLAG, N,
-     1 I1, I2, I3
-      DOUBLE PRECISION T(*), A(*), WORK(*), X, Y(*)
+     1 I1, I2, I3, D, DD
+      DOUBLE PRECISION T(*), A(D,N), WORK(*), X, Y(D)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       IF(K.LT.1) GO TO 102
       IF(N.LT.K) GO TO 101
@@ -99,9 +99,11 @@ C
       CALL DINITX (T(IP1), X, K, WORK(I1))
       CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
 C
-      CALL DINIT (A(IP1MK), K, WORK)
-      CALL DEVAL3 (KM1, WORK(I2), WORK)
-  100 Y(1) = WORK(1)
+      do 30 DD=1,D
+        CALL DINIT (A(DD,IP1MK:), K, WORK)
+        CALL DEVAL3 (KM1, WORK(I2), WORK)
+        Y(DD) = WORK(1)
+   30 CONTINUE
       RETURN
 C
 C
@@ -187,7 +189,7 @@ C
 
 
       SUBROUTINE DINIT (A, K, AJ)
-      INTEGER K, J
+      INTEGER K, O, J
       DOUBLE PRECISION A(*), AJ(*)
       DO 5 J=1,K
         AJ(J) = A(J)
