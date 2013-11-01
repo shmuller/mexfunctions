@@ -20,13 +20,16 @@ file(GLOB slatec_SRC "src/*.f")
 file(GLOB extra_SRC "ext/*.f90")
 set(mach_SRC d1mach.f90 i1mach.f90 r1mach.f90)
 
-add_library(slatec_obj OBJECT ${slatec_SRC} ${mach_SRC} ${extra_SRC})
+add_library(slatec_obj OBJECT ${slatec_SRC} ${mach_SRC})
 set_target_properties(slatec_obj PROPERTIES COMPILE_FLAGS ${cflags})
 
-add_library(slatec_static STATIC $<TARGET_OBJECTS:slatec_obj>)
+add_library(slatec_ext OBJECT ${extra_SRC})
+set_target_properties(slatec_ext PROPERTIES COMPILE_FLAGS "${cflags} -fimplicit-none")
+
+add_library(slatec_static STATIC $<TARGET_OBJECTS:slatec_obj> $<TARGET_OBJECTS:slatec_ext>)
 set_target_properties(slatec_static PROPERTIES OUTPUT_NAME slatec)
 
-add_library(slatec SHARED $<TARGET_OBJECTS:slatec_obj>)
+add_library(slatec SHARED $<TARGET_OBJECTS:slatec_obj> $<TARGET_OBJECTS:slatec_ext>)
 #set_target_properties(slatec PROPERTIES LINK_FLAGS ${lflags})
 
 file(GLOB slatec_chk_SRC "chk/*.f")
