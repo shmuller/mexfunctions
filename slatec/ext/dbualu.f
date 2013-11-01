@@ -71,29 +71,30 @@ C
      1 I1, I2, I3, D, DD, P, PP
       DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X, Y(D,P)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
-      IF(K.LT.1) GO TO 102
-      IF(N.LT.K) GO TO 101
-      IF(IDERIV.LT.0 .OR. IDERIV.GE.K) GO TO 110
       KMIDER = K - IDERIV
+      IF (KMIDER.LE.0) GO TO 99
 C
 C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
       KM1 = K - 1
       CALL DINTRV(T, N+1, X, INBV(1), I, MFLAG)
-      IF (X.LT.T(K)) GO TO 120
-      IF (MFLAG.EQ.0) GO TO 20
-      IF (X.GT.T(I)) GO TO 130
-   10 IF (I.EQ.K) GO TO 140
-      I = I - 1
-      IF (X.EQ.T(I)) GO TO 10
-C
-C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
-C     WORK(I) = AJ(I), WORK(K+I) = DP(I), WORK(K+K+I) = DM(I), I=1.K
-C
+      IF (MFLAG.NE.0) THEN
+        IF (MFLAG.EQ.1) THEN
+          I = N
+        ELSE
+          I = K
+        END IF
+      END IF
+
    20 IP1 = I + 1
       IP1MK = IP1 - K
       I1 = K + K + 1
       I2 = I1 + K
+C
+C *** DIFFERENCE THE COEFFICIENTS *IDERIV* TIMES
+C     WORK(I) = AJ(I), I=1.K
+C     WORK(2*K+I) = T(I)-X, I=1-K.K
+C     WORK(3*K+I) = F(I), I=1,K*(K-1)
 C
       CALL DINITX (T(IP1), X, K, WORK(I1))
       CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
@@ -108,29 +109,9 @@ C
       RETURN
 C
 C
-  101 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU', 'N DOES NOT SATISFY N.GE.K', 2,
-     +   1)
-      RETURN
-  102 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU', 'K DOES NOT SATISFY K.GE.1', 2,
-     +   1)
-      RETURN
-  110 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU',
-     +   'IDERIV DOES NOT SATISFY 0.LE.IDERIV.LT.K', 2, 1)
-      RETURN
-  120 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU',
-     +   'X IS N0T GREATER THAN OR EQUAL TO T(K)', 2, 1)
-      RETURN
-  130 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU',
-     +   'X IS NOT LESS THAN OR EQUAL TO T(N+1)', 2, 1)
-      RETURN
-  140 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBUALU',
-     +   'A LEFT LIMITING VALUE CANNOT BE OBTAINED AT T(K)', 2, 1)
+   99 CONTINUE
+      DO 100 I=1,P*D
+  100   Y(I,1) = 0.0D0
       RETURN
       END
 

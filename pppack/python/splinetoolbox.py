@@ -52,18 +52,26 @@ class PP:
     def ppbrk(self):
         return self.b, self.a, self.p, self.l, self.k, self.d
 
-    def deriv(self, dorder=1):
+    def zeros(self):
+        b, a, p, l, k, d = self.ppbrk()
+        anew = np.zeros((p, 1, d*l))
+        return self.__class__(b, anew)
+
+    def _deriv(self, dorder):
         b, a, p, l, k, d = self.ppbrk()
         knew = k - dorder
-        if knew > 0:
-            fact = np.ones(knew)
-            expo = np.arange(k-1, 0, -1)
-            for j in xrange(dorder):
-                fact[:] *= expo[j:j+knew]
-            anew = a[:,:knew] * fact[None,:,None]
-        else:
-            anew = np.zeros((p, 1, d*l))
+        fact = np.ones(knew)
+        expo = np.arange(k-1, 0, -1)
+        for j in xrange(dorder):
+            fact[:] *= expo[j:j+knew]
+        anew = a[:,:knew] * fact[None,:,None]
         return self.__class__(b, anew)
+
+    def deriv(self, dorder=1):
+        if dorder < self.k:
+            return self._deriv(dorder)
+        else:
+            return self.zeros()
 
     def ppual(self, x):
         if any(diff(x) < 0):
@@ -130,6 +138,7 @@ class Spline(object):
     def get_left(self, x):
         t, k, n = self.t, self.k, self.n
         left = t.searchsorted(x, 'right')
+        left[left == 0] = k
         left[left == n+k] = n
         return left
 
@@ -154,22 +163,28 @@ class Spline(object):
                     y[j] = yj[0]
         return y.reshape((p, m, d))
 
-    def deriv(self, dorder=1):
+    def zeros(self):
         t, c, k, p, n, d = self.spbrk()
-
-        knew = k - dorder;
-        if knew <= 0:
-            t = t[k-1:n+1]
-            c = zeros((p, n-k+1, d))
-        else:
-            for j in xrange(k-1, knew-1, -1):
-                tt = t[j+1:j+n] - t[1:n]
-                i = find(tt > 0)
-                temp = diff(c, axis=1)
-                c = temp[:,i] * (j / tt[i])[None,:,None]
-                t = cat((t[i+1], t[n+1:n+j+2]))
-                n = len(i)
+        t = t[k-1:n+1]
+        c = zeros((p, n-k+1, d))
         return self.from_knots_coefs(t, c)
+
+    def _deriv(self, dorder):
+        t, c, k, p, n, d = self.spbrk()
+        for j in xrange(k-1, k-dorder-1, -1):
+            tt = t[j+1:j+n] - t[1:n]
+            i = find(tt > 0)
+            temp = diff(c, axis=1)
+            c = temp[:,i] * (j / tt[i])[None,:,None]
+            t = cat((t[i+1], t[n+1:n+j+2]))
+            n = len(i)
+        return self.from_knots_coefs(t, c)
+
+    def deriv(self, dorder=1):
+        if dorder < self.k:
+            return self._deriv(dorder)
+        else:
+            return self.zeros()
 
     def to_pp(self, backwd=True):
         t, c, k, p, n, d = self.spbrk()
@@ -268,19 +283,21 @@ class PPPGS(PP):
         self.b, self.a = b, a
         self.p, self.l, self.k, self.d = a.shape
 
-    def deriv(self, dorder=1):
+    def zeros(self):
         b, a, p, l, k, d = self.ppbrk()
-        knew = k - dorder
-        if knew > 0:
-            fact = np.ones(knew)
-            expo = np.arange(k-1, 0, -1)
-            for j in xrange(dorder):
-                fact[:] *= expo[j:j+knew]
-            anew = a[:,:,k-knew:] * fact[None,None,::-1,None]
-        else:
-            anew = np.zeros((p, l, 1, d))
+        anew = np.zeros((p, l, 1, d))
         return self.__class__(b, anew)
 
+    def _deriv(self, dorder):
+        b, a, p, l, k, d = self.ppbrk()
+        knew = k - dorder
+        fact = np.ones(knew)
+        expo = np.arange(k-1, 0, -1)
+        for j in xrange(dorder):
+            fact[:] *= expo[j:j+knew]
+        anew = a[:,:,k-knew:] * fact[None,None,::-1,None]
+        return self.__class__(b, anew)
+  
     def ppual(self, x, der=0, fast=True):
         b, a, p, l, k, d = self.ppbrk()
 
@@ -348,19 +365,17 @@ class SplinePGS(Spline):
             y[:,i,:] = (c[:,left[i]-k:left[i],:] * B[i]).sum(axis=1)
         return y
 
-    def deriv(self, dorder=1):
+    spval3 = spval2
+
+    def _deriv(self, dorder):
         t, c, k, p, n, d = self.spbrk()
-        if k <= dorder:
-            t = t[k-1:n+1]
-            cnew = zeros((p, n-k+1, d))
+        cnew = c.copy()
+        pppack.spder(t, cnew.T, k, dorder)
+        if p == 1:
+            cnew.resize((1, n-dorder, d))
         else:
-            cnew = c.copy()
-            pppack.spder(t, cnew.T, k, dorder)
-            if p == 1:
-                cnew.resize((1, n-dorder, d))
-            else:
-                cnew = cnew[:,:n-dorder].copy()
-            t = t[dorder:n+k-dorder]
+            cnew = cnew[:,:n-dorder].copy()
+        t = t[dorder:n+k-dorder]
         return self.from_knots_coefs(t, cnew)
 
     def to_pp(self):
@@ -405,6 +420,8 @@ class PPSLA2(PPPGS2):
         b, a, p, l, k, d = self.ppbrk()
         m = x.size
         y = np.zeros((p, m, d))
+        if der >= k:
+            return y
         a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
         inppv = self.get_index(x) + 1
         for j in xrange(p):
@@ -424,13 +441,16 @@ class SplineSLA(SplinePGS):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
         y = np.zeros((p, m, d))
+        if der >= k:
+            return y
         inbv = self.get_left(x).astype('i')
         work = np.zeros(3*k)
+        ind = find((t[0] <= x) & (x <= t[-1]))
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
-            for i in xrange(m):
+            for i in ind:
                 xi = x[i]
                 yji = yj[i]
                 inbvi = inbv[i]
@@ -443,21 +463,24 @@ class SplineSLA(SplinePGS):
         left = self.get_left(x)
         m = x.size
         B = np.zeros((m, k))
+        if der >= k:
+            return left, B
         work = np.zeros(2*k)
         iwork = np.zeros(1, 'i')
+        ind = find((t[0] <= x) & (x <= t[-1]))
         if der == 0:
-            for i in xrange(m):
+            for i in ind:
                 slatec.dbspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
         else:
             a = np.zeros((k, k))
             dbiatx = np.zeros((der+1, k))
             work = np.zeros((k+1)*(k+2)/2)
-            for i in xrange(m):
+            for i in ind:
                 slatec.dbspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
                 B[i] = dbiatx[der]
         return left, B
 
-    def deriv(self, dorder=1):
+    def _deriv(self, dorder):
         # This is a memory-wasting approach to spline differentiation, since
         # all the temporary derivatives are kept in 'ad'.
         t, c, k, p, n, d = self.spbrk()
@@ -482,18 +505,21 @@ class SplineSLA(SplinePGS):
         # evaluates the spline using the approach of spval2().
         t, c, k, p, n, d = self.spbrk()
         m = x.size
-        nderiv = der+1
         y = np.zeros((p, m, d))
+        if der >= k:
+            return y
+        nderiv = der+1
         inev = np.ones(1, 'i')
         work = np.zeros(3*k)
         ad = np.zeros((2*n-nderiv+1)*nderiv/2)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        ind = find((t[0] <= x) & (x <= t[-1]))
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
             for dd in xrange(d):
                 slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
-                for i in xrange(m):
+                for i in ind:
                     slatec.dbsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
         return y
 
@@ -575,7 +601,7 @@ if test1:
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
-    x = np.linspace(knots[0], knots[-1], m)
+    x = np.linspace(knots[0]-0.5, knots[-1]+0.5, m)
 
     dsp = sp.deriv(der)
 
