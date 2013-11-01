@@ -582,7 +582,8 @@ class SplineND:
 
 test1 = test2 = test3 = bench = False
 if __name__ == "__main__":
-    test1 = True
+    #test1 = True
+    bench = True
 
 if test1:
     p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
@@ -647,9 +648,11 @@ if bench:
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
     sp_sla = SplineSLA2.from_knots_coefs(t, c)
+    pp_pgs = sp_pgs.to_pp().deriv(der)
 
     y = sp_pgs.spval(x, der=der)
     y = sp_sla.spval(x, der=der)
+    y = pp_pgs.ppual(x)
 
 if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
