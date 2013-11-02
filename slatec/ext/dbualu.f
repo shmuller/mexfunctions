@@ -1,5 +1,6 @@
 *DECK DBUALU
-      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
+      SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK,
+     + WORK2, Y)
 C***BEGIN PROLOGUE  DBUALU
 C***PURPOSE  Evaluate the B-representation of a B-spline at X for the
 C            function value or any of its derivatives.
@@ -71,26 +72,32 @@ C   920501  Reformatted the REFERENCES section.  (WRB)
 C***END PROLOGUE  DBUALU
 C
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N,
-     1 I1, I2, D, DD, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
+     1 I1, I2, I3, D, DD, P, PP, M, MM, DK
+      DOUBLE PRECISION T(*), A(D,N,*), WORK(*), WORK2(D,*), X(*), 
+     1 Y(D,M,P)
 C***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
 C
       KM1 = K - 1
-      I1 = K + K + 1
+      DK = D*K
+      I1 = 1
       I2 = I1 + K
+      I3 = I2 + K
 C
       do 50 MM=1,M
-        CALL DFINDI (T, N, K, X(MM), INBV(1), IP1, IP1MK)
-        CALL DINITX (T(IP1), X(MM), K, WORK(I1))
-        CALL DINIT3 (WORK(I1), KM1, KMIDER, WORK(I2))
+        CALL DFINDI (T, N, K, X(MM), INBV(1), I)
+        IP1 = I + 1
+        IP1MK = IP1 - K
+C
+        CALL DINITX (T(IP1), X(MM), K, WORK(I2))
+        CALL DINIT3 (WORK(I2), KM1, KMIDER, WORK(I3))
 C
         do 40 PP=1,P
+          CALL DINIT (A(:,IP1MK,PP), DK, WORK2(:,1))
+          CALL DEVAL3 (KM1, WORK(I3), WORK2, D)
           do 30 DD=1,D
-            CALL DINIT (A(:,IP1MK:,PP), K, WORK, D, DD)
-            CALL DEVAL3 (KM1, WORK(I2), WORK)
-            Y(DD,MM,PP) = WORK(1)
+            Y(DD,MM,PP) = WORK2(DD,1)
    30     CONTINUE
    40   CONTINUE
    50 CONTINUE
@@ -103,10 +110,10 @@ C
       RETURN
       END
 
-      SUBROUTINE DFINDI(T, N, K, X, INBV, IP1, IP1MK)
+      SUBROUTINE DFINDI(T, N, K, X, INBV, I)
 C *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
-      INTEGER N, K, INBV, IP1, IP1MK, I, MFLAG
+      INTEGER N, K, INBV, I, MFLAG
       DOUBLE PRECISION T(*), X
       CALL DINTRV(T, N+1, X, INBV, I, MFLAG)
       IF (MFLAG.NE.0) THEN
@@ -116,8 +123,6 @@ C     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
           I = K
         END IF
       END IF
-      IP1 = I + 1
-      IP1MK = IP1 - K
       END
 C
       SUBROUTINE DINITX (T, X, K, TX)
@@ -174,11 +179,11 @@ C
       END
 
 
-      SUBROUTINE DINIT (A, K, AJ, D, DD)
-      INTEGER K, J, D, DD
-      DOUBLE PRECISION A(D,*), AJ(*)
-      DO 5 J=1,K
-        AJ(J) = A(DD,J)
+      SUBROUTINE DINIT (A, DK, AJ)
+      INTEGER DK, J
+      DOUBLE PRECISION A(*), AJ(*)
+      DO 5 J=1,DK
+        AJ(J) = A(J)
     5 CONTINUE
       END
 C
@@ -202,9 +207,9 @@ C
    40 CONTINUE
       END
 C
-      SUBROUTINE DEVAL3 (KM1, F, AJ)
-      INTEGER KM1, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), F1, F2
+      SUBROUTINE DEVAL3 (KM1, F, AJ, D)
+      INTEGER KM1, KK, J, I, D, DD
+      DOUBLE PRECISION F(*), AJ(D,*), F1, F2
       I = 0
       DO 20 KK=KM1,1,-1
         DO 10 J=1,KK
@@ -212,7 +217,9 @@ C
           F1 = F(I)
           I = I + 1
           F2 = F(I)
-          AJ(J) = AJ(J)*F1 + AJ(J+1)*F2
+          DO 5 DD=1,D
+            AJ(DD,J) = AJ(DD,J)*F1 + AJ(DD,J+1)*F2
+    5     CONTINUE
    10   CONTINUE
    20 CONTINUE
       END
