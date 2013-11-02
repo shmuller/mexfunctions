@@ -555,6 +555,20 @@ class SplineSLA2(SplineSLA):
         return y
 
 
+import dierckx
+
+class SplineDie(SplinePGS):
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        pd = p*d
+        y = np.zeros(m*pd)
+        c = c.transpose((0, 2, 1)).ravel()
+        ier = 0
+        dierckx.splevv(t, c, k-1, x, y, pd, ier)
+        return y.reshape((m, p, d)).transpose((1, 0, 2))
+
+
 class SplineND:
     def __init__(self, t, c):
         self.t, self.c = t, c
@@ -587,7 +601,7 @@ if __name__ == "__main__":
     bench = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 4, 101, 1
+    p, n, d, k, m, der = 2, 16, 6, 4, 101, 0
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
@@ -598,7 +612,7 @@ if test1:
     t = augknt(knots, k)
     sp = Spline.from_knots_coefs(t, c)
 
-    x = np.linspace(knots[0]-0.5, knots[-1]+0.5, m)
+    x = np.linspace(knots[0], knots[-1], m)
 
     dsp = sp.deriv(der)
 
@@ -608,7 +622,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLA2.from_knots_coefs(t, c)
+    sp_pgs = SplineDie.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -640,7 +654,7 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 20*10, 1000, 2, 4, 10000, 0 
+    p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 0 
     c = np.random.rand(p, n, d)
 
     knots = np.arange(n-k+2.)
@@ -649,6 +663,7 @@ if bench:
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
     sp_sla = SplineSLA2.from_knots_coefs(t, c)
+    sp_die = SplineDie.from_knots_coefs(t, c)
     pp_pgs = sp_pgs.to_pp().deriv(der)
 
     y = sp_pgs.spval(x, der=der)
@@ -659,6 +674,7 @@ if bench:
     mgc = get_ipython().magic
     mgc(u'%timeit sp_pgs.spval(x, der=der)')
     mgc(u'%timeit sp_sla.spval(x, der=der)')
+    mgc(u'%timeit sp_die.spval(x, der=der)')
     mgc(u'%timeit pp_pgs.ppual(x)')
     #"""
 

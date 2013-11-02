@@ -17,7 +17,7 @@ set(cflags "-fPIC")
 set(lflags "-undefined dynamic_lookup")
 
 file(GLOB slatec_SRC "src/*.f")
-file(GLOB extra_SRC "ext/*.f")
+file(GLOB extra_SRC "ext/*.f90")
 set(mach_SRC d1mach.f90 i1mach.f90 r1mach.f90)
 
 add_library(slatec_obj OBJECT ${slatec_SRC} ${mach_SRC})
