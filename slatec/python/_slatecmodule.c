@@ -9,7 +9,7 @@ dintrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
 static PyObject* dbvali(PyObject *self, PyObject *args)
 {
     int n, k, ideriv, m, *inbv, np1, i, mflag, mm, kmider, km1, kk, j;
-    double *t, *a, *x, *work, *y, *ti, *ai, f1, f2, fkmj;
+    double *t, *a, *x, *work, *y, *ti, *ai, f1, f2, fkmj, xm;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
     t = PyArray_DATA(obj);
@@ -44,8 +44,9 @@ static PyObject* dbvali(PyObject *self, PyObject *args)
     }
     km1 = k - 1;
     np1 = n + 1;
-    for (mm=0; mm<m; ++mm) {
-        dintrv_(t, &np1, &x[mm], inbv, &i, &mflag);
+    for (mm=m+1; --mm; ) {
+        xm = *x++;
+        dintrv_(t, &np1, &xm, inbv, &i, &mflag);
         if (mflag) i = (mflag == 1) ? n : k;
         ti = t + i;
         ai = a + i - k;
@@ -61,12 +62,12 @@ static PyObject* dbvali(PyObject *self, PyObject *args)
         }
         for (kk=kmider-1; kk>=1; --kk) {
             for(j=0; j<kk; ++j) {
-                f1 = ti[j] - x[mm];
-                f2 = ti[j-kk] - x[mm];
+                f1 = ti[j] - xm;
+                f2 = ti[j-kk] - xm;
                 work[j] = (work[j]*f1-work[j+1]*f2)/(f1-f2);
             }
         }
-        y[mm] = work[0];
+        *y++ = work[0];
     }
     Py_RETURN_NONE;
 }

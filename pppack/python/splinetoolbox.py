@@ -741,7 +741,7 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 1, 1000, 1, 4, 10000, 0
+    p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 0
     c = np.random.rand(p, n, d)
 
     knots = np.arange(n-k+2.)
