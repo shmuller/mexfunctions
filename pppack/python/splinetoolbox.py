@@ -544,6 +544,19 @@ class SplineSLA(SplinePGS):
 
 
 class SplineSLA2(SplineSLA):
+    dbual = slatec.dbualu
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(k*(k+2))
+        self.dbual(t, c.T, k, der, x, inbv, work, y.T)
+        return y
+
+
+class SplineSLA3(SplineSLA):
+    dbual = slatec.dbualu2
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -551,8 +564,61 @@ class SplineSLA2(SplineSLA):
         inbv = np.ones(1, 'i')
         work = np.zeros(k*(k+1))
         work2 = np.zeros((k, d))
-        slatec.dbualu(t, c.T, k, der, x, inbv, work, work2.T, y.T)
+        self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
         return y
+
+
+class SplineSLA4(SplineSLA):
+    dbual = slatec.dbual
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        self.dbual(t, c.T, k, der, x, inbv, work, y.T)
+        return y
+
+class SplineSLA5(SplineSLA4):
+    dbual = slatec.dbual2
+
+
+class SplineSLA6(SplineSLA):
+    dbual = slatec.dbual3
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        work2 = np.zeros((k, p, d))
+        self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
+        return y
+
+
+class SplineSLA7(SplineSLA4):
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((1, m, p*d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((1, n, p*d)))
+        self.dbual(t, c.T, k, der, x, inbv, work, y.T)
+        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
+
+
+class SplineSLA8(SplineSLA):
+    dbual = slatec.dbual4
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((m, p*d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((n, p*d)))
+        self.dbual(t, c.T, k, der, x, inbv, work, y.T)
+        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 import dierckx
@@ -566,7 +632,7 @@ class SplineDie(SplinePGS):
         c = c.transpose((0, 2, 1)).ravel()
         ier = 0
         dierckx.splevv(t, c, k-1, x, y, pd, ier)
-        return y.reshape((m, p, d)).transpose((1, 0, 2))
+        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineND:
@@ -622,7 +688,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineDie.from_knots_coefs(t, c)
+    sp_pgs = SplineSLA7.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -659,24 +725,21 @@ if bench:
 
     knots = np.arange(n-k+2.)
     t = augknt(knots, k)
-    x = np.linspace(knots[0]-0.5, knots[-1]+0.5, m)
+    x = np.linspace(knots[0], knots[-1], m)
+
+    mgc = get_ipython().magic
+
+    SplineClasses = (SplineDie, SplinePGS, SplineSLA2, SplineSLA3, 
+            SplineSLA4, SplineSLA5, SplineSLA6, SplineSLA7, SplineSLA8)
+    for SplineClass in SplineClasses:
+        sp = SplineClass.from_knots_coefs(t, c)
+        print SplineClass.__name__
+        mgc(u'%timeit sp.spval(x, der=der)')
 
     sp_pgs = SplinePGS.from_knots_coefs(t, c)
-    sp_sla = SplineSLA2.from_knots_coefs(t, c)
-    sp_die = SplineDie.from_knots_coefs(t, c)
     pp_pgs = sp_pgs.to_pp().deriv(der)
-
-    y = sp_pgs.spval(x, der=der)
-    y = sp_sla.spval(x, der=der)
-    y = pp_pgs.ppual(x)
-
-    #"""
-    mgc = get_ipython().magic
-    mgc(u'%timeit sp_pgs.spval(x, der=der)')
-    mgc(u'%timeit sp_sla.spval(x, der=der)')
-    mgc(u'%timeit sp_die.spval(x, der=der)')
+    print pp_pgs.__class__.__name__
     mgc(u'%timeit pp_pgs.ppual(x)')
-    #"""
 
 if test2:
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
