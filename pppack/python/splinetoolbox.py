@@ -688,7 +688,7 @@ if __name__ == "__main__":
     bench = True
 
 if test1:
-    p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
+    p, n, d, k, m, der = 1, 16, 1, 4, 101, 3
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)

@@ -8,7 +8,7 @@ dintrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
 
 static PyObject* dbvali(PyObject *self, PyObject *args)
 {
-    int n, k, ideriv, m, *inbv, np1, i, mflag, mm, kmider, km1, kk, j;
+    int n, k, ideriv, m, *inbv, np1, i, mflag, mm, kmider, kk, j;
     double *t, *a, *x, *work, *y, *ti, *ai, f1, f2, fkmj, xm;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
@@ -42,7 +42,6 @@ static PyObject* dbvali(PyObject *self, PyObject *args)
         memset(y, 0., m);
         Py_RETURN_NONE;
     }
-    km1 = k - 1;
     np1 = n + 1;
     for (mm=m+1; --mm; ) {
         xm = *x++;
@@ -54,13 +53,13 @@ static PyObject* dbvali(PyObject *self, PyObject *args)
         for (kk=0; kk<k; ++kk) {
             work[kk] = ai[kk];
         }
-        for (kk=km1; kk>=kmider; --kk) {
+        for (--kk; kk>=kmider; --kk) {
             fkmj = kk;
             for (j=0; j<kk; ++j) {
                 work[j] = (work[j+1]-work[j])/(ti[j]-ti[j-kk])*fkmj;
             }
         }
-        for (kk=kmider-1; kk>=1; --kk) {
+        for (; kk>=1; --kk) {
             for(j=0; j<kk; ++j) {
                 f1 = ti[j] - xm;
                 f2 = ti[j-kk] - xm;
