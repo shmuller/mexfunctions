@@ -197,6 +197,86 @@
       END
 
 
+      SUBROUTINE DBVAL1 (T, A, N, K, IDERIV, X, M, INBV, WORK, Y)
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N, &
+       I1, I2, I3, M, MM
+      DOUBLE PRECISION T(*), A(N), WORK(*), X(*), Y(M)
+!***FIRST EXECUTABLE STATEMENT  DBVAL1
+      KMIDER = K - IDERIV
+      IF (KMIDER.LE.0) GO TO 99
+
+      KM1 = K - 1
+      I1 = K + 1
+      I2 = I1 + K
+      I3 = I2 + K
+
+      DO 50 MM=1,M
+        CALL DFINDI (T, N, K, X(MM), INBV(1), I)
+        IP1 = I + 1
+        IP1MK = IP1 - K
+
+        WORK(1:K) = A(IP1MK:I)
+        CALL DDERIV (T(IP1), KM1, KMIDER, WORK)
+        CALL DEVAL (T(IP1), X(MM), KMIDER, WORK(I2), WORK)
+        Y(MM) = WORK(1)
+   50 CONTINUE
+      RETURN
+
+   99 CONTINUE
+      DO 100 I=1,M
+  100   Y(I) = 0.0D0
+      RETURN
+      END
+
+
+      SUBROUTINE DBVALI (T, A, N, K, IDERIV, X, M, INBV, WORK, Y)
+      INTEGER I, IDERIV, INBV(*), K, KMIDER, KM1, N, NP1, &
+       M, MM, MFLAG, KK, J, IMK, IPJ
+      DOUBLE PRECISION T(*), A(N), WORK(*), X(*), Y(M), F1, F2, FKMJ
+!***FIRST EXECUTABLE STATEMENT  DBVAL1
+      KMIDER = K - IDERIV
+      IF (KMIDER.LE.0) GO TO 99
+      KM1 = K - 1
+      NP1 = N + 1
+      DO 50 MM=1,M
+        CALL DINTRV(T, NP1, X(MM), INBV(1), I, MFLAG)
+        IF (MFLAG.NE.0) THEN
+          IF (MFLAG.EQ.1) THEN
+            I = N
+          ELSE
+            I = K
+          END IF
+        END IF
+        IMK = I - K
+        DO 5 KK=1,K
+          WORK(KK) = A(IMK+KK)
+    5   CONTINUE
+        DO 20 KK=KM1,KMIDER,-1
+          FKMJ = KK
+          DO 10 J=1,KK
+            IPJ = I + J
+            WORK(J) = (WORK(J+1)-WORK(J))/(T(IPJ)-T(IPJ-KK))*FKMJ
+   10     CONTINUE
+   20   CONTINUE
+        DO 40 KK=KMIDER-1,1,-1
+          DO 30 J=1,KK
+            IPJ = I + J
+            F1 = T(IPJ) - X(MM)
+            F2 = T(IPJ-KK) - X(MM)
+            WORK(J) = (WORK(J)*F1-WORK(J+1)*F2)/(F1-F2)
+   30     CONTINUE
+   40   CONTINUE
+        Y(MM) = WORK(1)
+   50 CONTINUE
+      RETURN
+
+   99 CONTINUE
+      DO 100 I=1,M
+  100   Y(I) = 0.0D0
+      RETURN
+      END
+
+
       SUBROUTINE DFINDI(T, N, K, X, INBV, I)
 ! *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 !     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).

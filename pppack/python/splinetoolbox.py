@@ -543,6 +543,27 @@ class SplineSLA(SplinePGS):
         return PPSLA2(b, a)
 
 
+class SplineSLA1(SplineSLA):
+    dbval = slatec.dbval1
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros(m)
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+        self.dbval(t, c.ravel(), k, der, x, inbv, work, y)
+        return y.reshape((1, m, 1))
+
+
+class SplineSLAI(SplineSLA1):
+    dbval = slatec.dbvali
+
+import _slatec
+
+class SplineSLAIC(SplineSLAI):
+    dbval = _slatec.dbvali
+
+
 class SplineSLA2(SplineSLA):
     dbual = slatec.dbualu
     def spval(self, x, der=0, fast=True):
@@ -667,7 +688,7 @@ if __name__ == "__main__":
     bench = True
 
 if test1:
-    p, n, d, k, m, der = 2, 16, 6, 4, 101, 0
+    p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
@@ -688,7 +709,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLA7.from_knots_coefs(t, c)
+    sp_pgs = SplineSLAIC.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -720,17 +741,19 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 20, 1000, 20, 4, 10000, 0 
+    p, n, d, k, m, der = 1, 1000, 1, 4, 10000, 0
     c = np.random.rand(p, n, d)
 
     knots = np.arange(n-k+2.)
     t = augknt(knots, k)
     x = np.linspace(knots[0], knots[-1], m)
+    #np.random.shuffle(x)
 
     mgc = get_ipython().magic
 
-    SplineClasses = (SplineDie, SplinePGS, SplineSLA2, SplineSLA3, 
-            SplineSLA4, SplineSLA5, SplineSLA6, SplineSLA7, SplineSLA8)
+    SplineClasses = (SplineDie, SplinePGS, SplineSLA1, SplineSLAI, SplineSLAIC,
+            SplineSLA2, SplineSLA3, SplineSLA4, SplineSLA5, 
+            SplineSLA6, SplineSLA7, SplineSLA8)
     for SplineClass in SplineClasses:
         sp = SplineClass.from_knots_coefs(t, c)
         print SplineClass.__name__

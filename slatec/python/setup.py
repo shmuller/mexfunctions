@@ -22,6 +22,10 @@ def configuration(from_pyf=True):
                          sources = sources,
                          f2py_options = ['--no-wrap-functions'],
                          libraries = ['slatec'])
+    
+    config.add_extension('_slatec',
+                         sources = ['_slatecmodule.c'],
+                         libraries = ['slatec'])
     return config
 
 if __name__ == "__main__":

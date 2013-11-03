@@ -340,6 +340,30 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(d,m),depend(d) :: y
         end subroutine dbual4
+        subroutine dbval1(t,a,n,k,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: t
+            double precision dimension(n) :: a
+            integer, optional,check(len(a)>=n),depend(a) :: n=len(a)
+            integer :: k
+            integer :: ideriv
+            double precision dimension(*) :: x
+            integer, optional,check(len(y)>=m),depend(y) :: m=len(y)
+            integer dimension(*) :: inbv
+            double precision dimension(*) :: work
+            double precision dimension(m) :: y
+        end subroutine dbval1
+        subroutine dbvali(t,a,n,k,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: t
+            double precision dimension(n) :: a
+            integer, optional,check(len(a)>=n),depend(a) :: n=len(a)
+            integer :: k
+            integer :: ideriv
+            double precision dimension(*) :: x
+            integer, optional,check(len(y)>=m),depend(y) :: m=len(y)
+            integer dimension(*) :: inbv
+            double precision dimension(*) :: work
+            double precision dimension(m) :: y
+        end subroutine dbvali
         subroutine dfindi(t,n,k,x,inbv,i) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
             integer :: n
