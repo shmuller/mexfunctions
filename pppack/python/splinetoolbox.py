@@ -346,6 +346,7 @@ class PPPGS2(PPPGS):
 
 class SplinePGS(Spline):
     def __init__(self, x, y, k=4, c=None, getknt=aptknt):
+        x = np.ascontiguousarray(x, np.float64)
         p, n, d = y.shape
         t = getknt(x, k)
         q = np.zeros((2*k-1)*n)
@@ -362,10 +363,12 @@ class SplinePGS(Spline):
                 cj[:,dd] = bcoef
         self.spmak(t, c)    
 
-    def spval(self, x, der=0, fast=True):
+    def spval(self, x, der=0, fast=True, y=None):
         t, c, k, p, n, d = self.spbrk()
+        x = np.ascontiguousarray(x, np.float64)
         m = x.size
-        y = np.zeros((p, m, d))
+        if y is None:
+            y = np.zeros((p, m, d))
         if der == 0 and fast:
             pppack.spual(t, c.T, k, x, y.T)
         else:
@@ -690,8 +693,8 @@ class SplineDie(SplinePGS):
 
 class SplineND(object):
     def __init__(self, x, y, k=4):
-        shape = np.array(y.shape)
-        c = np.zeros(shape)
+        n = np.array(y.shape)
+        c = np.zeros(n)
         nd = len(x)
         t = []
         try:
@@ -699,10 +702,22 @@ class SplineND(object):
         except TypeError:
             k = (k,) * nd
         for d in xrange(nd):
-            newshape = (shape[:d].prod(), shape[d], shape[d+1:].prod())
+            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
             sp = SplinePGS(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
             t.append(sp.t)
         self.spmak(t, c.squeeze())
+
+    def __call__(self, x):
+        t, c = self.t, self.c
+        n = np.array(c.shape)
+        nd = len(t)
+        for d in xrange(nd):
+            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
+            sp = SplinePGS.from_knots_coefs(t[d], c.reshape(newshape))
+            xd = np.ascontiguousarray(x[d])
+            c = sp.spval(xd)
+            n[d] = xd.size
+        return c.squeeze()
 
     @classmethod
     def from_knots_coefs(cls, t, c):
@@ -821,30 +836,9 @@ if bench:
 
 if test2:
     kx = ky = 4
-
-    """
-    tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
-    ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
-
-    coefs = np.array(
-       (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
-        ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
-        (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
-        (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
-        (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
-    #coefs = np.random.rand(tx.size-kx, ty.size-ky)
-    
-    sp = SplineND.from_knots_coefs((tx, ty), coefs)
-    """
     x, y = np.arange(5.), np.arange(6.)
     Z = np.cos(x[:,None]) * np.cos(y[None,:])
     
-    #sp = SplinePGS(x, Z[None])
-    #sp2 = SplinePGS(y, sp.c.reshape((x.size, y.size, 1)))
-    #tx, ty = sp.t, sp2.t
-    #coefs = sp2.c[:,:,0]
-    #sp = SplineND.from_knots_coefs((tx, ty), coefs)
-
     sp = SplineND((x, y), Z, k=4)
     tx, ty = sp.t
     coefs = sp.c
@@ -852,7 +846,8 @@ if test2:
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
 
-    Z = sp.spval(x, y)
+    Z = sp((x, y))
+    #Z = sp.spval(x, y)
 
     from pytokamak.utils import splines
     sp2 = splines.Spline2D(data=dict(tck=(ty, tx, coefs.T.ravel()), degrees=(3, 3)))
