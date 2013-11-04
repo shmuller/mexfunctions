@@ -37,6 +37,24 @@ def augknt(knots, k, mults=np.array(1), with_addl=False):
     else:
         return augknot, addl
 
+def aveknt(t, k):
+    n = t.size - k
+    tstar = np.zeros(n)
+    for j in xrange(n):
+        tstar[j] = t[j+1:j+k].mean()
+    return tstar
+
+def aptknt(x, k=4):
+    return augknt(cat((x[:1], aveknt(x, k), x[-1:])), k)
+
+def optknt(x, k=4):
+    import pppack
+    n = x.size
+    t = np.zeros(n+k)
+    scrtch = np.zeros((n-k)*(2*k+3) + 5*k + 3)
+    iflag = pppack.splopt(x, k, scrtch, t)
+    return t
+
 
 class PP:
     def __init__(self, *args, **kw):
@@ -129,11 +147,8 @@ class Spline(object):
         return self.t[0], self.t[-1]
 
     def tave(self):
-        t, k, n = self.t, self.k, self.n
-        tstar = np.zeros(n)
-        for j in xrange(n):
-            tstar[j] = t[j+1:j+k].mean()
-        return tstar
+        t, k = self.t, self.k
+        return aveknt(t, k)
 
     def get_left(self, x):
         t, k, n = self.t, self.k, self.n
@@ -330,6 +345,23 @@ class PPPGS2(PPPGS):
 
 
 class SplinePGS(Spline):
+    def __init__(self, x, y, k=4, c=None, getknt=aptknt):
+        p, n, d = y.shape
+        t = getknt(x, k)
+        q = np.zeros((2*k-1)*n)
+        g = np.zeros(n)
+        bcoef = np.zeros(n)
+        if c is None:
+            c = np.zeros((p, n, d))
+        for j in xrange(p):
+            yj = y[j]
+            cj = c[j]
+            for dd in xrange(d):
+                g[:] = yj[:,dd]
+                iflag = pppack.splint(x, g, t, k, q, bcoef)
+                cj[:,dd] = bcoef
+        self.spmak(t, c)    
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -656,15 +688,26 @@ class SplineDie(SplinePGS):
         return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
-class SplineND:
+class SplineND(object):
     def __init__(self, t, c):
         self.t, self.c = t, c
 
+    @classmethod
+    def from_knots_coefs(cls, t, c):
+        self = cls.__new__(cls)
+        self.spmak(t, c)
+        return self
+
+    def spmak(self, t, c):
+        self.t, self.c = t, c
+        self.n = c.shape
+        self.k = [t.size - n for t, n in zip(self.t, self.n)]
+
     def spval(self, x, y, derx=0, dery=0):
         t, c = self.t, self.c
-        nx, ny = c.shape
         tx, ty = t
-        kx, ky = tx.size - nx, ty.size - ny
+        nx, ny = self.n
+        kx, ky = self.k
 
         mx, my = x.size, y.size
         
@@ -684,8 +727,8 @@ class SplineND:
 
 test1 = test2 = test3 = bench = False
 if __name__ == "__main__":
-    #test1 = True
-    bench = True
+    test2 = True
+    #bench = True
 
 if test1:
     p, n, d, k, m, der = 1, 16, 1, 4, 101, 3
@@ -765,20 +808,30 @@ if bench:
     mgc(u'%timeit pp_pgs.ppual(x)')
 
 if test2:
+    kx = ky = 4
+
+    """
     tx = np.array((0., 0., 0., 0., 2., 4., 4., 4., 4.))
     ty = np.array((0., 0., 0., 0., 2., 3., 5., 5., 5., 5.))
 
-    """
     coefs = np.array(
        (( 1.00000,  1.06298, -0.25667, -1.40455, -0.42843,  0.28366),
         ( 1.07407,  1.14172, -0.27569, -1.50859, -0.46016,  0.30467),
         (-0.72984, -0.77581,  0.18733,  1.02510,  0.31269, -0.20703),
         (-1.27897, -1.35952,  0.32828,  1.79638,  0.54795, -0.36280),
         (-0.65364, -0.69481,  0.16777,  0.91808,  0.28004, -0.18541)))
+    #coefs = np.random.rand(tx.size-kx, ty.size-ky)
+    
+    sp = SplineND.from_knots_coefs((tx, ty), coefs)
     """
-    coefs = np.random.rand(tx.size-kx, ty.size-ky)
+    x, y = np.arange(5.), np.arange(6.)
+    Z = np.cos(x[:,None]) * np.cos(y[None,:])
+    sp = SplinePGS(x, Z[None])
+    sp2 = SplinePGS(y, sp.c.reshape((x.size, y.size, 1)))
 
-    sp = SplineND((tx, ty), coefs)
+    tx, ty = sp.t, sp2.t
+    coefs = sp2.c[:,:,0]
+    sp = SplineND.from_knots_coefs((tx, ty), coefs)
 
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
@@ -791,15 +844,18 @@ if test2:
 
     print (Z - Z2).ptp()
 
-    from matplotlib.pyplot import figure, show
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = figure()
-    ax = fig.add_subplot(111, projection='3d')
+    def surf(x, y, Z):
+        from matplotlib.pyplot import figure, show
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = figure()
+        ax = fig.add_subplot(111, projection='3d')
 
-    ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    show()
+        ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        show()
+
+    surf(x, y, Z)
 
 if test3:
     nx, ny = 20, 25
