@@ -689,8 +689,20 @@ class SplineDie(SplinePGS):
 
 
 class SplineND(object):
-    def __init__(self, t, c):
-        self.t, self.c = t, c
+    def __init__(self, x, y, k=4):
+        shape = np.array(y.shape)
+        c = np.zeros(shape)
+        nd = len(x)
+        t = []
+        try:
+            k = tuple(k)
+        except TypeError:
+            k = (k,) * nd
+        for d in xrange(nd):
+            newshape = (shape[:d].prod(), shape[d], shape[d+1:].prod())
+            sp = SplinePGS(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
+            t.append(sp.t)
+        self.spmak(t, c.squeeze())
 
     @classmethod
     def from_knots_coefs(cls, t, c):
@@ -826,12 +838,16 @@ if test2:
     """
     x, y = np.arange(5.), np.arange(6.)
     Z = np.cos(x[:,None]) * np.cos(y[None,:])
-    sp = SplinePGS(x, Z[None])
-    sp2 = SplinePGS(y, sp.c.reshape((x.size, y.size, 1)))
+    
+    #sp = SplinePGS(x, Z[None])
+    #sp2 = SplinePGS(y, sp.c.reshape((x.size, y.size, 1)))
+    #tx, ty = sp.t, sp2.t
+    #coefs = sp2.c[:,:,0]
+    #sp = SplineND.from_knots_coefs((tx, ty), coefs)
 
-    tx, ty = sp.t, sp2.t
-    coefs = sp2.c[:,:,0]
-    sp = SplineND.from_knots_coefs((tx, ty), coefs)
+    sp = SplineND((x, y), Z, k=4)
+    tx, ty = sp.t
+    coefs = sp.c
 
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
