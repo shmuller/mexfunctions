@@ -150,9 +150,13 @@
         DO 20 D=1,NDIM
           ND = N(D)
           KD = K(D)
-          CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-          CALL DBSPVN (T(JT), KD, KD, 1, X(D,MM), I, &
-                       WORK(JB), WORK(JW), IWORK)
+          IF (MM.GT.1 .AND. X(D,MM-1).EQ.X(D,MM)) THEN
+            I = INBV(D)
+          ELSE
+            CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
+            CALL DBSPVN (T(JT), KD, KD, 1, X(D,MM), I, &
+                         WORK(JB), WORK(JW), IWORK)
+          END IF
           JT = JT + ND + KD
           JB = JB + KD
           OFFS = OFFS + (I-KD)*S(D)
@@ -165,8 +169,8 @@
       RETURN
 
    99 CONTINUE
-      DO 100 I=1,1
-  100   Y(I) = 0.0D0
+      DO 100 MM=1,M
+  100   Y(MM) = 0.0D0
       RETURN
       END
 
