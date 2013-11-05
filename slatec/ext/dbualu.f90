@@ -127,9 +127,9 @@
       end
 
 
-      SUBROUTINE DBUALND (NDIM, T, A, N, K, IDERIV, X, INBV, WORK, Y)
-      INTEGER NDIM, N(NDIM), K(NDIM), INBV(*), I, OFFS, &
-       IDERIV, KMIDER, IWORK, S(3), D, ND, KD, JT, JB, JW
+      SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, INBV, WORK, Y)
+      INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
+       IDERIV, KMIDER, IWORK, D, ND, KD, JT, JB, JW
       DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM), Y(1), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       KMIDER = K(1) - IDERIV
@@ -152,7 +152,7 @@
                      WORK(JB), WORK(JW), IWORK)
         JT = JT + ND + KD
         JB = JB + KD
-        OFFS = OFFS + I - KD
+        OFFS = OFFS + (I-KD)*S(D)
    20 CONTINUE
 
       Y(1) = 0

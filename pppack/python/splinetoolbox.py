@@ -794,16 +794,22 @@ class SplineND2(SplineND):
         nd = len(n)
         x = np.ascontiguousarray(x, np.float64)
         y = np.zeros(1)
+        s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
         work = np.zeros(k.sum() + 2*k.max())
 
-        self.dbual(t, c.ravel(), n, k, der, x.ravel(), inbv, work, y)
+        self.dbual(t, c.ravel(), n, k, s, der, x.ravel(), inbv, work, y)
+        #print 'n:', n
+        #print 'k:', k
+        #print 's:', s
+        #print 'indv:', inbv
+        #print work
         return y
 
 
 test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
-    test2 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -917,6 +923,10 @@ if test2:
 
     surf(x, y, Z)
 
+    pos = (3.0, 3.0)
+    print sp.spval1(pos).squeeze()
+    print sp(pos)
+
 if test3:
     nx, ny = 20, 25
     kx, ky = 3, 3
@@ -953,8 +963,12 @@ if test3:
 if test4:
     from pytokamak.tokamak import overview
     AUG = overview.AUGOverview(29733, eqi_dig='EQI')
-    R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
-    t, psi_n = psi_n.t, psi_n.x
+    R, z, psi = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi
+    t, psi = psi.t, psi.x
 
-    sp = SplineND((t, z, R), psi_n, k=4)
+    sp = SplineND2((t, z, R), psi, k=4)
+
+    pos = (1.3, -0.97, 1.6)
+    print sp.spval1(pos).squeeze()
+    print sp(pos)
 
