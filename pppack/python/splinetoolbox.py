@@ -150,12 +150,16 @@ class Spline(object):
         t, k = self.t, self.k
         return aveknt(t, k)
 
-    def get_left(self, x):
-        t, k, n = self.t, self.k, self.n
+    @classmethod
+    def _get_left(cls, t, k, n, x):
+        x = np.atleast_1d(x)
         left = t.searchsorted(x, 'right')
         left[left == 0] = k
         left[left == n+k] = n
         return left
+
+    def get_left(self, x):
+        return self._get_left(self.t, self.k, self.n, x)
 
     def spval(self, x):
         t, c, k, p, n, d = self.spbrk()
@@ -697,10 +701,9 @@ class SplineND(object):
         c = np.zeros(n)
         nd = len(x)
         t = []
-        try:
-            k = tuple(k)
-        except TypeError:
-            k = (k,) * nd
+        k = np.atleast_1d(k)
+        if k.size == 1:
+            k = k.repeat(nd)
         for d in xrange(nd):
             newshape = (n[:d].prod(), n[d], n[d+1:].prod())
             sp = SplinePGS(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
@@ -719,6 +722,21 @@ class SplineND(object):
             n[d] = xd.size
         return c.squeeze()
 
+    def get_left(self, x):
+        return np.array(map(SplinePGS._get_left, self.t, self.k, self.n, x))
+
+    def reduce(self, x):
+        t, k = self.t, self.k
+        nd = len(t)
+        i = self.get_left(x)
+        t = [t[d][i[d]-k[d]:i[d]+k[d]] for d in xrange(nd)]
+        s = [slice(i[d]-k[d], i[d]) for d in xrange(nd)]
+        return self.from_knots_coefs(t, np.ascontiguousarray(self.c[s]))
+
+    def spval1(self, x):
+        sp = self.reduce(x)
+        return sp(x)
+
     @classmethod
     def from_knots_coefs(cls, t, c):
         self = cls.__new__(cls)
@@ -727,8 +745,8 @@ class SplineND(object):
 
     def spmak(self, t, c):
         self.t, self.c = t, c
-        self.n = c.shape
-        self.k = [t.size - n for t, n in zip(self.t, self.n)]
+        self.n = np.array(c.shape)
+        self.k = np.array([t.size for t in self.t]) - self.n
 
     def spval(self, x, y, derx=0, dery=0):
         t, c = self.t, self.c
