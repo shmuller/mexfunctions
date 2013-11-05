@@ -791,14 +791,14 @@ class SplineND2(SplineND):
     dbual = slatec.dbualnd
     def spval1(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
-        nd = len(n)
         x = np.ascontiguousarray(x, np.float64)
-        y = np.zeros(1)
+        m, nd = x.shape
+        y = np.zeros(m)
         s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
         work = np.zeros(k.sum() + 2*k.max())
 
-        self.dbual(t, c.ravel(), n, k, s, der, x.ravel(), inbv, work, y)
+        self.dbual(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         #print 'n:', n
         #print 'k:', k
         #print 's:', s
@@ -806,6 +806,8 @@ class SplineND2(SplineND):
         #print work
         return y
 
+
+mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
@@ -874,8 +876,6 @@ if bench:
     x = np.linspace(knots[0], knots[-1], m)
     #np.random.shuffle(x)
 
-    mgc = get_ipython().magic
-
     SplineClasses = (SplineDie, SplinePGS, SplineSLA1, SplineSLAI, SplineSLAIC,
             SplineSLA2, SplineSLA3, SplineSLA4, SplineSLA5, 
             SplineSLA6, SplineSLA7, SplineSLA8)
@@ -923,9 +923,12 @@ if test2:
 
     surf(x, y, Z)
 
-    pos = (3.0, 3.0)
-    print sp.spval1(pos).squeeze()
-    print sp(pos)
+    pos = np.array([[1.0, 3.0], [2.0, 3.0], [3.0, 3.0]])
+    Z1 = sp.spval1(pos)
+    print Z1
+
+    Z1b = sp((np.array([1.,2.,3.]), 3.))
+    print Z1b
 
 if test3:
     nx, ny = 20, 25
@@ -962,13 +965,15 @@ if test3:
 
 if test4:
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
-    R, z, psi = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi
-    t, psi = psi.t, psi.x
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
+    t, psi_n = psi_n.t, psi_n.x
+    
+    mgc('%time sp = SplineND2((t, z, R), psi_n, k=(2, 4, 4))')
 
-    sp = SplineND2((t, z, R), psi, k=4)
-
-    pos = (1.3, -0.97, 1.6)
-    print sp.spval1(pos).squeeze()
-    print sp(pos)
-
+    pos = AUG.XPR.pos.t_gt(1.).compressed()
+    tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
+    
+    mgc('%time y = sp.spval1(tzR)')
+    plot(pos.t, y)
+    show()

@@ -127,37 +127,41 @@
       end
 
 
-      SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, INBV, WORK, Y)
+      SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
+       WORK, Y)
       INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
-       IDERIV, KMIDER, IWORK, D, ND, KD, JT, JB, JW
-      DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM), Y(1), F
+       IDERIV, KMIDER, IWORK, D, ND, KD, JT, JB, JW, M, MM
+      DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       KMIDER = K(1) - IDERIV
       IF (KMIDER.LE.0) GO TO 99
+
+      JW = SUM(K) + 1
 
       S(NDIM) = 1
       DO 10 D=NDIM,2,-1
         S(D-1) = N(D)*S(D)
    10 CONTINUE
 
-      JT = 1
-      JB = 1
-      JW = SUM(K) + 1
-      OFFS = 1
-      DO 20 D=1,NDIM
-        ND = N(D)
-        KD = K(D)
-        CALL DFINDI (T(JT), ND, KD, X(D), INBV(D), I)
-        CALL DBSPVN (T(JT), KD, KD, 1, X(D), I, &
-                     WORK(JB), WORK(JW), IWORK)
-        JT = JT + ND + KD
-        JB = JB + KD
-        OFFS = OFFS + (I-KD)*S(D)
-   20 CONTINUE
+      DO 50 MM=1,M
+        JT = 1
+        JB = 1
+        OFFS = 1
+        DO 20 D=1,NDIM
+          ND = N(D)
+          KD = K(D)
+          CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
+          CALL DBSPVN (T(JT), KD, KD, 1, X(D,MM), I, &
+                       WORK(JB), WORK(JW), IWORK)
+          JT = JT + ND + KD
+          JB = JB + KD
+          OFFS = OFFS + (I-KD)*S(D)
+   20   CONTINUE
 
-      Y(1) = 0
-      F = 1
-      CALL nd_dot_product(A(OFFS), S, WORK, K, NDIM, F, Y(1))
+        F = 1
+        Y(MM) = 0
+        CALL nd_dot_product(A(OFFS), S, WORK, K, NDIM, F, Y(MM))
+   50 CONTINUE
       RETURN
 
    99 CONTINUE
