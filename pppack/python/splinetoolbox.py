@@ -714,11 +714,11 @@ class SplineND(object):
     SplineClass = SplineSLA5
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
-        n = np.array(y.shape)
+        n = np.array(y.shape, 'i')
         c = np.zeros(n)
         nd = len(x)
         t = []
-        k = np.atleast_1d(k)
+        k = np.array(k, 'i')
         if k.size == 1:
             k = k.repeat(nd)
         for d in xrange(nd):
@@ -762,8 +762,8 @@ class SplineND(object):
 
     def spmak(self, t, c):
         self.t, self.c = t, c
-        self.n = np.array(c.shape)
-        self.k = np.array([t.size for t in self.t]) - self.n
+        self.n = np.array(c.shape, 'i')
+        self.k = np.array([t.size for t in self.t], 'i') - self.n
 
     def spval(self, x, y, derx=0, dery=0):
         t, c = self.t, self.c
@@ -787,9 +787,23 @@ class SplineND(object):
         return Z
 
 
+class SplineND2(SplineND):
+    dbual = slatec.dbualnd
+    def spval1(self, x, der=0):
+        t, c, n, k = cat(self.t), self.c, self.n, self.k
+        nd = len(n)
+        x = np.ascontiguousarray(x, np.float64)
+        y = np.zeros(1)
+        inbv = np.ones(nd, 'i')
+        work = np.zeros(k.sum() + 2*k.max())
+
+        self.dbual(t, c.ravel(), n, k, der, x.ravel(), inbv, work, y)
+        return y
+
+
 test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
-    test1 = True
+    test2 = True
     #bench = True
 
 if test1:
@@ -874,7 +888,7 @@ if test2:
     x, y = np.arange(5.), np.arange(6.)
     Z = np.cos(x[:,None]) * np.cos(y[None,:])
     
-    sp = SplineND((x, y), Z, k=4)
+    sp = SplineND2((x, y), Z, k=4)
     tx, ty = sp.t
     coefs = sp.c
 
