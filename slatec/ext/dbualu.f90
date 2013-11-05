@@ -107,6 +107,58 @@
       END
 
 
+      recursive subroutine nd_dot_product(a, s, b, n, nd, f, res)
+      integer s(nd), n(nd), nd, s1, n1, i, j, n1p1, ndm1
+      double precision a(*), b(*), res(1), f
+      s1 = s(1)
+      n1 = n(1)
+      n1p1 = n1 + 1
+      ndm1 = nd - 1
+      if (nd.gt.1) then
+        j = 1
+        do i=1,n1
+          call nd_dot_product(a(j), s(2), &
+                              b(n1p1), n(2), ndm1, f*b(i), res)
+          j = j + s1
+        end do
+      else
+        res(1) = res(1) + f*dot_product(a(1:n1), b(1:n1))
+      end if
+      end
+
+
+      SUBROUTINE DBUALND (ND, T, A, N, K, IDERIV, X, M, INBV, WORK, Y)
+      INTEGER ND, N(ND), K(ND), INBV(*), I, IP1, IP1MK, &
+       IDERIV, KMIDER, KP1, M, MM, IWORK, S(3)
+      DOUBLE PRECISION T(*), A(*), WORK(*), X(*), Y(*), F
+!***FIRST EXECUTABLE STATEMENT  DBUAL
+      KMIDER = K(1) - IDERIV
+      IF (KMIDER.LE.0) GO TO 99
+      KP1 = K(1) + 1
+
+      S(ND) = 1
+      DO 10 I=ND,2,-1
+        S(I-1) = N(I)*S(I)
+   10 CONTINUE
+      MM = M
+
+      CALL DFINDI (T, N(1), K(1), X(MM), INBV(1), I)
+      IP1 = I + 1
+      IP1MK = IP1 - K(1)
+
+      CALL DBSPVN (T, K(1), K(1), 1, X(MM), I, WORK, WORK(KP1), IWORK)
+      Y(MM) = 0
+      F = 1
+      CALL nd_dot_product(A(IP1MK), S, WORK, K, ND, F, Y(MM))
+      RETURN
+
+   99 CONTINUE
+      DO 100 I=1,M
+  100   Y(I) = 0.0D0
+      RETURN
+      END
+
+
       SUBROUTINE DBUAL2 (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IMK, J, KMIDER, KP1, N, &
        D, P, PP, M, MM, IWORK

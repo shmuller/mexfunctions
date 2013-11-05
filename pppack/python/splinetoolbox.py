@@ -55,6 +55,13 @@ def optknt(x, k=4):
     iflag = pppack.splopt(x, k, scrtch, t)
     return t
 
+def get_left(t, k, n, x):
+    x = np.atleast_1d(x)
+    left = t.searchsorted(x, 'right')
+    left[left == 0] = k
+    left[left == n+k] = n
+    return left
+
 
 class PP:
     def __init__(self, *args, **kw):
@@ -150,16 +157,8 @@ class Spline(object):
         t, k = self.t, self.k
         return aveknt(t, k)
 
-    @classmethod
-    def _get_left(cls, t, k, n, x):
-        x = np.atleast_1d(x)
-        left = t.searchsorted(x, 'right')
-        left[left == 0] = k
-        left[left == n+k] = n
-        return left
-
     def get_left(self, x):
-        return self._get_left(self.t, self.k, self.n, x)
+        return get_left(self.t, self.k, self.n, x)
 
     def spval(self, x):
         t, c, k, p, n, d = self.spbrk()
@@ -681,6 +680,22 @@ class SplineSLA8(SplineSLA):
         return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
+class SplineSLA9(SplineSLA):
+    dbual = slatec.dbualnd
+    def spval(self, x, der=0, fast=True):
+        t, c, k, p, n, d = self.spbrk()
+        m = x.size
+        y = np.zeros((p, m, d))
+        inbv = np.ones(1, 'i')
+        work = np.zeros(3*k)
+
+        N = np.array([n], 'i')
+        K = np.array([k], 'i')
+        self.dbual(t, c.ravel(), N, K, der, x.ravel(), 1, inbv, work, y.ravel())
+        return y
+
+
+
 import dierckx
 
 class SplineDie(SplinePGS):
@@ -696,7 +711,9 @@ class SplineDie(SplinePGS):
 
 
 class SplineND(object):
+    SplineClass = SplineSLA5
     def __init__(self, x, y, k=4):
+        SplineClass = self.SplineClass
         n = np.array(y.shape)
         c = np.zeros(n)
         nd = len(x)
@@ -706,24 +723,24 @@ class SplineND(object):
             k = k.repeat(nd)
         for d in xrange(nd):
             newshape = (n[:d].prod(), n[d], n[d+1:].prod())
-            sp = SplinePGS(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
+            sp = SplineClass(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
             t.append(sp.t)
         self.spmak(t, c.squeeze())
 
     def __call__(self, x):
-        t, c = self.t, self.c
+        t, c, SplineClass = self.t, self.c, self.SplineClass
         n = np.array(c.shape)
         nd = len(t)
         for d in xrange(nd):
             newshape = (n[:d].prod(), n[d], n[d+1:].prod())
-            sp = SplinePGS.from_knots_coefs(t[d], c.reshape(newshape))
+            sp = SplineClass.from_knots_coefs(t[d], c.reshape(newshape))
             xd = np.ascontiguousarray(x[d])
             c = sp.spval(xd)
             n[d] = xd.size
         return c.squeeze()
 
     def get_left(self, x):
-        return np.array(map(SplinePGS._get_left, self.t, self.k, self.n, x))
+        return np.array(map(get_left, self.t, self.k, self.n, x))
 
     def reduce(self, x):
         t, k = self.t, self.k
@@ -770,13 +787,13 @@ class SplineND(object):
         return Z
 
 
-test1 = test2 = test3 = bench = False
+test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
-    test2 = True
+    test1 = True
     #bench = True
 
 if test1:
-    p, n, d, k, m, der = 1, 16, 1, 4, 101, 3
+    p, n, d, k, m, der = 1, 16, 1, 4, 101, 0
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
@@ -918,4 +935,12 @@ if test3:
     from matplotlib.pyplot import plot, show
     plot(x, Z[:,i], x, Z3[:,i])
     show()
+
+if test4:
+    from pytokamak.tokamak import overview
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
+    t, psi_n = psi_n.t, psi_n.x
+
+    sp = SplineND((t, z, R), psi_n, k=4)
 

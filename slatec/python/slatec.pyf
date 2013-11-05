@@ -298,6 +298,28 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(d,m,p),depend(d,p) :: y
         end subroutine dbual
+        subroutine nd_dot_product(a,s,b,n,nd,f,res) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: a
+            integer dimension(nd) :: s
+            double precision dimension(*) :: b
+            integer dimension(nd),depend(nd) :: n
+            integer, optional,check(len(s)>=nd),depend(s) :: nd=len(s)
+            double precision :: f
+            double precision dimension(1) :: res
+        end subroutine nd_dot_product
+        subroutine dbualnd(nd,t,a,n,k,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
+            integer, optional,check(len(n)>=nd),depend(n) :: nd=len(n)
+            double precision dimension(*) :: t
+            double precision dimension(*) :: a
+            integer dimension(nd) :: n
+            integer dimension(nd),depend(nd) :: k
+            integer :: ideriv
+            double precision dimension(*) :: x
+            integer :: m
+            integer dimension(*) :: inbv
+            double precision dimension(*) :: work
+            double precision dimension(*) :: y
+        end subroutine dbualnd
         subroutine dbual2(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
             double precision dimension(d,n,p) :: a
