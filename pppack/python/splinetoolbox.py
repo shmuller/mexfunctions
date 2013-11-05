@@ -788,7 +788,8 @@ class SplineND(object):
 
 
 class SplineND2(SplineND):
-    dbual = slatec.dbualnd
+    dbual = _slatec.dbualnd
+    #dbual = slatec.dbualnd
     def spval1(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         x = np.ascontiguousarray(x, np.float64)
@@ -797,7 +798,6 @@ class SplineND2(SplineND):
         s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
         work = np.zeros(k.sum() + 2*k.max())
-
         self.dbual(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         #print 'n:', n
         #print 'k:', k
@@ -811,7 +811,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test2 = True
     #bench = True
 
 if test1:
@@ -964,13 +964,14 @@ if test3:
     show()
 
 if test4:
+    #"""
     from pytokamak.tokamak import overview
     AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
     mgc('%time sp = SplineND2((t, z, R), psi_n, k=(2, 4, 4))')
-
+    #"""
     pos = AUG.XPR.pos.t_gt(1.).compressed()
     tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
     
