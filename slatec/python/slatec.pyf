@@ -307,6 +307,21 @@ python module slatec ! in
             double precision :: f
             double precision dimension(1) :: res
         end subroutine nd_dot_product
+        subroutine dbder(t,k,x) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: t
+            integer :: k
+            double precision :: x
+        end subroutine dbder
+        subroutine dbspvn2(t,jhigh,k,index_bn,x,vnikx,work,iwork) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: t
+            integer :: jhigh
+            integer :: k
+            integer :: index_bn
+            double precision :: x
+            double precision dimension(*) :: vnikx
+            double precision dimension(*) :: work
+            integer :: iwork
+        end subroutine dbspvn2
         subroutine dbualnd(ndim,t,a,n,k,s,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
             double precision dimension(*) :: t

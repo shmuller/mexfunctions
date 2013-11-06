@@ -811,7 +811,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = bench = False
 if __name__ == "__main__":
-    test2 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -923,11 +923,11 @@ if test2:
 
     surf(x, y, Z)
 
-    pos = np.array([[1.0, 3.0], [2.0, 3.0], [3.0, 3.0]])
+    pos = np.array([[1.2, 3.2], [2.2, 3.2], [3.2, 3.2]])
     Z1 = sp.spval1(pos)
     print Z1
 
-    Z1b = sp((np.array([1.,2.,3.]), 3.))
+    Z1b = sp((np.array([1.2,2.2,3.2]), 3.2))
     print Z1b
 
 if test3:

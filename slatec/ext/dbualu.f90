@@ -127,6 +127,40 @@
       end
 
 
+      SUBROUTINE DBDER(T, K, X)
+      INTEGER K
+      DOUBLE PRECISION T(*), X
+      END
+
+
+      SUBROUTINE DBSPVN2 (T, JHIGH, K, INDEX, X, VNIKX, WORK, IWORK)
+      INTEGER INDEX, IWORK, JHIGH, JP1, JP1ML, K, L
+      DOUBLE PRECISION T(*), VM, VMPREV, VNIKX(*), WORK(*), X
+!     CONTENT OF J, DELTAM, DELTAP IS EXPECTED UNCHANGED BETWEEN CALLS.
+!     WORK(I) = DELTAP(I), WORK(K+I) = DELTAM(I), I = 1,K
+!***FIRST EXECUTABLE STATEMENT  DBSPVN2
+      GO TO (10, 20), INDEX
+   10 IWORK = 1
+      VNIKX(1) = 1.0D0
+      IF (IWORK.GE.JHIGH) GO TO 40
+
+   20 WORK(IWORK) = T(IWORK) - X
+      WORK(K+IWORK) = X - T(1-IWORK)
+      VMPREV = 0.0D0
+      JP1 = IWORK + 1
+      DO 30 L=1,IWORK
+        JP1ML = JP1 - L
+        VM = VNIKX(L)/(WORK(L)+WORK(K+JP1ML))
+        VNIKX(L) = VM*WORK(L) + VMPREV
+        VMPREV = VM*WORK(K+JP1ML)
+   30 CONTINUE
+      VNIKX(JP1) = VMPREV
+      IWORK = JP1
+      IF (IWORK.LT.JHIGH) GO TO 20
+   40 RETURN
+      END
+
+
       SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
        WORK, Y)
       INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
@@ -154,8 +188,8 @@
             I = INBV(D)
           ELSE
             CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-            CALL DBSPVN (T(JT), KD, KD, 1, X(D,MM), I, &
-                         WORK(JB), WORK(JW), IWORK)
+            CALL DBSPVN2 (T(JT+I), KD, KD, 1, X(D,MM), &
+                          WORK(JB), WORK(JW), IWORK)
           END IF
           JT = JT + ND + KD
           JB = JB + KD
