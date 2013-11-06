@@ -809,9 +809,9 @@ class SplineND2(SplineND):
 
 mgc = get_ipython().magic
 
-test1 = test2 = test3 = test4 = bench = False
+test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test5 = True
     #bench = True
 
 if test1:
@@ -966,7 +966,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
@@ -978,3 +978,27 @@ if test4:
     mgc('%time y = sp.spval1(tzR)')
     plot(pos.t, y)
     show()
+
+if test5:
+    k = 4
+    #knots = np.arange(8.)
+    knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 6.0, 6.1, 7.))
+    
+    #c = np.zeros(knots.size - 2 + k)
+    #c[4] = 1
+    c = np.random.rand(knots.size - 2 + k)
+
+    sp = SplineND2.from_knots_coefs([augknt(knots, k)], c)
+
+    m = 101
+    x = np.linspace(knots[0], knots[-1], m)
+
+    #y = sp.spval1([[2.5]])
+    #print y
+
+    sp2 = SplinePGS.from_knots_coefs(augknt(knots, k), c[None,:,None]).deriv()
+
+    y = sp.spval1(x[:,None], der=1)
+    plot(x, y, x, sp2(x)[0,:,0], '.')
+    show()
+

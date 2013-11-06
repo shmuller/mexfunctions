@@ -127,9 +127,22 @@
       end
 
 
-      SUBROUTINE DBDER(T, K, X)
-      INTEGER K
-      DOUBLE PRECISION T(*), X
+      SUBROUTINE DBDER(T, K, X, VNIKX, WORK)
+      INTEGER K, KM1, IWORK, I, J
+      DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), F1, F2
+      KM1 = K - 1
+      CALL DBSPVN2(T(1), KM1, KM1, 1, X, VNIKX(2:K), WORK, IWORK)
+      I = 1
+      J = I
+      VNIKX(I) = -KM1*VNIKX(I+1)/(T(J)-T(J-KM1))
+      DO 10 I=2,KM1
+        J = I
+        VNIKX(I) = KM1*(VNIKX(I)/(T(J-1)-T(J-1-KM1)) &
+                      - VNIKX(I+1)/(T(J)-T(J-KM1)))
+   10 CONTINUE
+      I = K
+      J = I
+      VNIKX(I) = KM1*VNIKX(I)/(T(J-1)-T(J-1-KM1))
       END
 
 
@@ -188,8 +201,12 @@
             I = INBV(D)
           ELSE
             CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-            CALL DBSPVN2 (T(JT+I), KD, KD, 1, X(D,MM), &
-                          WORK(JB), WORK(JW), IWORK)
+            IF (IDERIV.EQ.0) THEN
+              CALL DBSPVN2 (T(JT+I), KD, KD, 1, X(D,MM), &
+                            WORK(JB), WORK(JW), IWORK)
+            ELSE
+              CALL DBDER (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
+            END IF
           END IF
           JT = JT + ND + KD
           JB = JB + KD
