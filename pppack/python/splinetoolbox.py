@@ -811,7 +811,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test5 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -995,10 +995,10 @@ if test5:
 
     #y = sp.spval1([[2.5]])
     #print y
+    der = 1
+    sp2 = SplinePGS.from_knots_coefs(augknt(knots, k), c[None,:,None]).deriv(der)
 
-    sp2 = SplinePGS.from_knots_coefs(augknt(knots, k), c[None,:,None]).deriv()
-
-    y = sp.spval1(x[:,None], der=1)
+    y = sp.spval1(x[:,None], der=der)
     plot(x, y, x, sp2(x)[0,:,0], '.')
     show()
 

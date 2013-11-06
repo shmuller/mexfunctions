@@ -128,10 +128,10 @@
 
 
       SUBROUTINE DBDER(T, K, X, VNIKX, WORK)
-      INTEGER K, KM1, IWORK, I, J
+      INTEGER K, KM1, I, J
       DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), F1, F2
       KM1 = K - 1
-      CALL DBSPVN2(T(1), KM1, KM1, 1, X, VNIKX(2:K), WORK, IWORK)
+      CALL DBSPVN2(T(1), KM1, X, VNIKX(2:K), WORK)
       I = 1
       J = I
       VNIKX(I) = -KM1*VNIKX(I+1)/(T(J)-T(J-KM1))
@@ -146,38 +146,33 @@
       END
 
 
-      SUBROUTINE DBSPVN2 (T, JHIGH, K, INDEX, X, VNIKX, WORK, IWORK)
-      INTEGER INDEX, IWORK, JHIGH, JP1, JP1ML, K, L
+      SUBROUTINE DBSPVN2 (T, K, X, VNIKX, WORK)
+      INTEGER JP1, JP1ML, K, KK, L
       DOUBLE PRECISION T(*), VM, VMPREV, VNIKX(*), WORK(*), X
 !     CONTENT OF J, DELTAM, DELTAP IS EXPECTED UNCHANGED BETWEEN CALLS.
 !     WORK(I) = DELTAP(I), WORK(K+I) = DELTAM(I), I = 1,K
 !***FIRST EXECUTABLE STATEMENT  DBSPVN2
-      GO TO (10, 20), INDEX
-   10 IWORK = 1
       VNIKX(1) = 1.0D0
-      IF (IWORK.GE.JHIGH) GO TO 40
-
-   20 WORK(IWORK) = T(IWORK) - X
-      WORK(K+IWORK) = X - T(1-IWORK)
-      VMPREV = 0.0D0
-      JP1 = IWORK + 1
-      DO 30 L=1,IWORK
-        JP1ML = JP1 - L
-        VM = VNIKX(L)/(WORK(L)+WORK(K+JP1ML))
-        VNIKX(L) = VM*WORK(L) + VMPREV
-        VMPREV = VM*WORK(K+JP1ML)
-   30 CONTINUE
-      VNIKX(JP1) = VMPREV
-      IWORK = JP1
-      IF (IWORK.LT.JHIGH) GO TO 20
-   40 RETURN
+      DO 40 KK=1,K-1
+        WORK(KK) = T(KK) - X
+        WORK(K+KK) = X - T(1-KK)
+        VMPREV = 0.0D0
+        JP1 = KK + 1
+        DO 30 L=1,KK
+          JP1ML = JP1 - L
+          VM = VNIKX(L)/(WORK(L)+WORK(K+JP1ML))
+          VNIKX(L) = VM*WORK(L) + VMPREV
+          VMPREV = VM*WORK(K+JP1ML)
+   30   CONTINUE
+        VNIKX(JP1) = VMPREV
+   40 CONTINUE
       END
 
 
       SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
        WORK, Y)
       INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
-       IDERIV, KMIDER, IWORK, D, ND, KD, JT, JB, JW, M, MM
+       IDERIV, KMIDER, D, ND, KD, JT, JB, JW, M, MM
       DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       KMIDER = K(1) - IDERIV
@@ -202,8 +197,7 @@
           ELSE
             CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
             IF (IDERIV.EQ.0) THEN
-              CALL DBSPVN2 (T(JT+I), KD, KD, 1, X(D,MM), &
-                            WORK(JB), WORK(JW), IWORK)
+              CALL DBSPVN2 (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
             ELSE
               CALL DBDER (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
             END IF
