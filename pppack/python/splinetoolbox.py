@@ -794,6 +794,10 @@ class SplineND2(SplineND):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         x = np.ascontiguousarray(x, np.float64)
         m, nd = x.shape
+        der = np.array(der, 'i')
+        if der.size == 1:
+            der = der.repeat(nd)
+
         y = np.zeros(m)
         s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
@@ -811,7 +815,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test5 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -966,7 +970,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
@@ -975,12 +979,12 @@ if test4:
     pos = AUG.XPR.pos.t_gt(1.).compressed()
     tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
     
-    mgc('%time y = sp.spval1(tzR)')
+    mgc('%time y = sp.spval1(tzR, der=(0,0,0))')
     plot(pos.t, y)
     show()
 
 if test5:
-    k = 4
+    k = 2
     #knots = np.arange(8.)
     knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 6.0, 6.1, 7.))
     

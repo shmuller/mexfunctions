@@ -128,29 +128,33 @@
 
 
       SUBROUTINE DBDER(T, K, IDERIV, X, VNIKX, WORK)
-      INTEGER K, KM1, IDERIV, KMIDER, L, J
+      INTEGER K, IDERIV, KMIDER, L, J, JP1, JP1ML
       DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), VM, VMPREV, FKMJ
       KMIDER = K - IDERIV
-      KM1 = K - 1
-      CALL DBSPVN2(T(1), KMIDER, X, VNIKX, WORK)
-      DO 20 J=KMIDER,KM1
+      VNIKX(1) = 1.0D0
+      DO 20 J=1,KMIDER-1
+        WORK(J) = T(J) - X
+        WORK(KMIDER+J) = X - T(1-J)
+        VMPREV = 0.0D0
+        JP1 = J + 1
+        DO 10 L=1,J
+          JP1ML = JP1 - L
+          VM = VNIKX(L)/(WORK(L)+WORK(KMIDER+JP1ML))
+          VNIKX(L) = VM*WORK(L) + VMPREV
+          VMPREV = VM*WORK(KMIDER+JP1ML)
+   10   CONTINUE
+        VNIKX(JP1) = VMPREV
+   20 CONTINUE
+      DO 40 J=KMIDER,K-1
         FKMJ = J
         VMPREV = 0.0D0
-        DO 10 L=1,J
+        DO 30 L=1,J
           VM = VNIKX(L)/(T(L)-T(L-J))*FKMJ
           VNIKX(L) = VMPREV - VM
           VMPREV = VM
-   10   CONTINUE
+   30   CONTINUE
         VNIKX(J+1) = VMPREV
-   20 CONTINUE
-!      CALL DBSPVN2(T(1), KM1, X, VNIKX(2:K), WORK)
-!      VMPREV = 0.0D0
-!      DO 10 J=1,KM1
-!        VM = VNIKX(J+1)/(T(J)-T(J-KM1))*KM1
-!        VNIKX(J) = VMPREV - VM
-!        VMPREV = VM
-!   10 CONTINUE
-!      VNIKX(K) = VMPREV
+   40 CONTINUE
       END
 
 
@@ -179,12 +183,13 @@
 
       SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
        WORK, Y)
-      INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
-       IDERIV, KMIDER, D, ND, KD, JT, JB, JW, M, MM
+      INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), IDERIV(NDIM), &
+       INBV(NDIM), I, OFFS, D, ND, KD, JT, JB, JW, M, MM
       DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K(1) - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
+      DO 5 D=1,NDIM
+        IF (K(D).LE.IDERIV(D)) GO TO 99
+    5 CONTINUE
 
       JW = SUM(K) + 1
 
@@ -204,12 +209,8 @@
             I = INBV(D)
           ELSE
             CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-            IF (IDERIV.EQ.0) THEN
-              CALL DBSPVN2 (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
-            ELSE
-              CALL DBDER (T(JT+I), KD, IDERIV, X(D,MM), &
-                          WORK(JB), WORK(JW))
-            END IF
+            CALL DBDER (T(JT+I), KD, IDERIV(D), X(D,MM), WORK(JB), &
+                        WORK(JW))
           END IF
           JT = JT + ND + KD
           JB = JB + KD

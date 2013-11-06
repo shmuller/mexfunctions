@@ -329,10 +329,10 @@ python module slatec ! in
             integer dimension(ndim) :: n
             integer dimension(ndim),depend(ndim) :: k
             integer dimension(ndim),depend(ndim) :: s
-            integer :: ideriv
+            integer dimension(ndim),depend(ndim) :: ideriv
             double precision dimension(ndim,m),depend(ndim) :: x
             integer, optional,check(shape(x,1)==m),depend(x) :: m=shape(x,1)
-            integer dimension(*) :: inbv
+            integer dimension(ndim),depend(ndim) :: inbv
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
