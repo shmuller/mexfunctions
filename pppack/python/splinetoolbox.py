@@ -788,8 +788,8 @@ class SplineND(object):
 
 
 class SplineND2(SplineND):
-    dbual = _slatec.dbualnd
-    #dbual = slatec.dbualnd
+    #dbual = _slatec.dbualnd
+    dbual = slatec.dbualnd
     def spval1(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         x = np.ascontiguousarray(x, np.float64)

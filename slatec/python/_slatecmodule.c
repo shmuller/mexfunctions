@@ -33,8 +33,8 @@ void nd_dot_product(double *a, int *s, double *b, int *n, int nd,
 static PyObject* dbualnd(PyObject *self, PyObject *args)
 {
     int ndim, *n, *k, *s, ideriv, m, *inbv, i, d, mm,
-        jt, jb, jw, offs, nd, kd, np1, iwork, mflag, one=1;
-    double *t, *a, *x, *work, *y, f;
+        jw, offs, nd, kd, np1, iwork, mflag, one=1;
+    double *t, *a, *x, *work, *y, f, *tt, *workb, *workw;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
     t = PyArray_DATA(obj);
@@ -69,9 +69,12 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
     m = PyArray_SIZE(obj);
     
     for (d=ndim,jw=k[d-1],s[d-1]=1; --d; jw+=k[d-1],s[d-1]=n[d]*s[d]);
+    workw = work + jw;
 
     for (mm=0; mm<m; ++mm) {
-        jt = jb = offs = 0;
+        offs = 0;
+        tt = t;
+        workb = work;
         for (d=0; d<ndim; ++d) {
             nd = n[d];
             kd = k[d];
@@ -79,12 +82,12 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
             if (mm && x[0]==x[-ndim]) {
                 i = inbv[d];
             } else {
-                dintrv_(t+jt, &np1, x, inbv+d, &i, &mflag);
+                dintrv_(tt, &np1, x, inbv+d, &i, &mflag);
                 if (mflag) i = (mflag == 1) ? nd : kd;
-                dbspvn_(t+jt, &kd, &kd, &one, x, &i, work+jb, work+jw, &iwork);
+                dbspvn_(tt, &kd, &kd, &one, x, &i, workb, workw, &iwork);
             }
-            jt += nd + kd;
-            jb += kd;
+            tt += nd + kd;
+            workb += kd;
             offs += (i-kd)*s[d];
             ++x;
         }
