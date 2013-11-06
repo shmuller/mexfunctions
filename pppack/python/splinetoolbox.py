@@ -815,7 +815,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test5 = True
     #bench = True
 
 if test1:
@@ -970,7 +970,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
@@ -984,7 +984,7 @@ if test4:
     show()
 
 if test5:
-    k = 2
+    k = 4
     #knots = np.arange(8.)
     knots = np.array((0., 1.2, 2.1, 2.1, 4.3, 6.0, 6.1, 7.))
     

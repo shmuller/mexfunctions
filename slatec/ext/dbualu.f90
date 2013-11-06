@@ -127,23 +127,21 @@
       end
 
 
-      SUBROUTINE DBDER(T, K, IDERIV, X, VNIKX, WORK)
-      INTEGER K, IDERIV, KMIDER, L, J, JP1, JP1ML
-      DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), VM, VMPREV, FKMJ
+      SUBROUTINE DBDER(T, K, IDERIV, X, VNIKX)
+      INTEGER K, IDERIV, KMIDER, L, J
+      DOUBLE PRECISION T(*), X, VNIKX(*), VM, VMPREV, FKMJ, DL, DR
       KMIDER = K - IDERIV
       VNIKX(1) = 1.0D0
       DO 20 J=1,KMIDER-1
-        WORK(J) = T(J) - X
-        WORK(KMIDER+J) = X - T(1-J)
         VMPREV = 0.0D0
-        JP1 = J + 1
         DO 10 L=1,J
-          JP1ML = JP1 - L
-          VM = VNIKX(L)/(WORK(L)+WORK(KMIDER+JP1ML))
-          VNIKX(L) = VM*WORK(L) + VMPREV
-          VMPREV = VM*WORK(KMIDER+JP1ML)
+          DL = X - T(L-J)
+          DR = T(L) - X
+          VM = VNIKX(L)/(DL+DR)
+          VNIKX(L) = VM*DR + VMPREV
+          VMPREV = VM*DL
    10   CONTINUE
-        VNIKX(JP1) = VMPREV
+        VNIKX(J+1) = VMPREV
    20 CONTINUE
       DO 40 J=KMIDER,K-1
         FKMJ = J
@@ -184,14 +182,10 @@
       SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
        WORK, Y)
       INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), IDERIV(NDIM), &
-       INBV(NDIM), I, OFFS, D, ND, KD, JT, JB, JW, M, MM
+       INBV(NDIM), I, OFFS, D, ND, KD, JT, JB, M, MM
       DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      DO 5 D=1,NDIM
-        IF (K(D).LE.IDERIV(D)) GO TO 99
-    5 CONTINUE
-
-      JW = SUM(K) + 1
+      if (ANY(K.LE.IDERIV)) GO TO 99
 
       S(NDIM) = 1
       DO 10 D=NDIM,2,-1
@@ -209,8 +203,7 @@
             I = INBV(D)
           ELSE
             CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-            CALL DBDER (T(JT+I), KD, IDERIV(D), X(D,MM), WORK(JB), &
-                        WORK(JW))
+            CALL DBDER (T(JT+I), KD, IDERIV(D), X(D,MM), WORK(JB))
           END IF
           JT = JT + ND + KD
           JB = JB + KD
