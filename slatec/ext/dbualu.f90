@@ -127,38 +127,46 @@
       end
 
 
-      SUBROUTINE DBDER(T, K, X, VNIKX, WORK)
-      INTEGER K, KM1, I, J
-      DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), F1, F2
+      SUBROUTINE DBDER(T, K, IDERIV, X, VNIKX, WORK)
+      INTEGER K, KM1, IDERIV, KMIDER, L, J
+      DOUBLE PRECISION T(*), X, VNIKX(*), WORK(*), VM, VMPREV, FKMJ
+      KMIDER = K - IDERIV
       KM1 = K - 1
-      CALL DBSPVN2(T(1), KM1, X, VNIKX(2:K), WORK)
-      I = 1
-      J = I
-      VNIKX(I) = -KM1*VNIKX(I+1)/(T(J)-T(J-KM1))
-      DO 10 I=2,KM1
-        J = I
-        VNIKX(I) = KM1*(VNIKX(I)/(T(J-1)-T(J-1-KM1)) &
-                      - VNIKX(I+1)/(T(J)-T(J-KM1)))
-   10 CONTINUE
-      I = K
-      J = I
-      VNIKX(I) = KM1*VNIKX(I)/(T(J-1)-T(J-1-KM1))
+      CALL DBSPVN2(T(1), KMIDER, X, VNIKX, WORK)
+      DO 20 J=KMIDER,KM1
+        FKMJ = J
+        VMPREV = 0.0D0
+        DO 10 L=1,J
+          VM = VNIKX(L)/(T(L)-T(L-J))*FKMJ
+          VNIKX(L) = VMPREV - VM
+          VMPREV = VM
+   10   CONTINUE
+        VNIKX(J+1) = VMPREV
+   20 CONTINUE
+!      CALL DBSPVN2(T(1), KM1, X, VNIKX(2:K), WORK)
+!      VMPREV = 0.0D0
+!      DO 10 J=1,KM1
+!        VM = VNIKX(J+1)/(T(J)-T(J-KM1))*KM1
+!        VNIKX(J) = VMPREV - VM
+!        VMPREV = VM
+!   10 CONTINUE
+!      VNIKX(K) = VMPREV
       END
 
 
       SUBROUTINE DBSPVN2 (T, K, X, VNIKX, WORK)
-      INTEGER JP1, JP1ML, K, KK, L
+      INTEGER JP1, JP1ML, K, J, L
       DOUBLE PRECISION T(*), VM, VMPREV, VNIKX(*), WORK(*), X
 !     CONTENT OF J, DELTAM, DELTAP IS EXPECTED UNCHANGED BETWEEN CALLS.
 !     WORK(I) = DELTAP(I), WORK(K+I) = DELTAM(I), I = 1,K
 !***FIRST EXECUTABLE STATEMENT  DBSPVN2
       VNIKX(1) = 1.0D0
-      DO 40 KK=1,K-1
-        WORK(KK) = T(KK) - X
-        WORK(K+KK) = X - T(1-KK)
+      DO 40 J=1,K-1
+        WORK(J) = T(J) - X
+        WORK(K+J) = X - T(1-J)
         VMPREV = 0.0D0
-        JP1 = KK + 1
-        DO 30 L=1,KK
+        JP1 = J + 1
+        DO 30 L=1,J
           JP1ML = JP1 - L
           VM = VNIKX(L)/(WORK(L)+WORK(K+JP1ML))
           VNIKX(L) = VM*WORK(L) + VMPREV
@@ -199,7 +207,8 @@
             IF (IDERIV.EQ.0) THEN
               CALL DBSPVN2 (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
             ELSE
-              CALL DBDER (T(JT+I), KD, X(D,MM), WORK(JB), WORK(JW))
+              CALL DBDER (T(JT+I), KD, IDERIV, X(D,MM), &
+                          WORK(JB), WORK(JW))
             END IF
           END IF
           JT = JT + ND + KD
