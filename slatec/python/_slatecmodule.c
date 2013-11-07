@@ -100,55 +100,6 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
 }
 
 
-/*
-      SUBROUTINE DBUALND (NDIM, T, A, N, K, S, IDERIV, X, M, INBV, &
-       WORK, Y)
-      INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), INBV(*), I, OFFS, &
-       IDERIV, KMIDER, IWORK, D, ND, KD, JT, JB, JW, M, MM
-      DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
-!***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K(1) - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
-
-      JW = SUM(K) + 1
-
-      S(NDIM) = 1
-      DO 10 D=NDIM,2,-1
-        S(D-1) = N(D)*S(D)
-   10 CONTINUE
-
-      DO 50 MM=1,M
-        JT = 1
-        JB = 1
-        OFFS = 1
-        DO 20 D=1,NDIM
-          ND = N(D)
-          KD = K(D)
-          IF (MM.GT.1 .AND. X(D,MM-1).EQ.X(D,MM)) THEN
-            I = INBV(D)
-          ELSE
-            CALL DFINDI (T(JT), ND, KD, X(D,MM), INBV(D), I)
-            CALL DBSPVN (T(JT), KD, KD, 1, X(D,MM), I, &
-                         WORK(JB), WORK(JW), IWORK)
-          END IF
-          JT = JT + ND + KD
-          JB = JB + KD
-          OFFS = OFFS + (I-KD)*S(D)
-   20   CONTINUE
-
-        F = 1
-        Y(MM) = 0
-        CALL nd_dot_product(A(OFFS), S, WORK, K, NDIM, F, Y(MM))
-   50 CONTINUE
-      RETURN
-
-   99 CONTINUE
-      DO 100 MM=1,M
-  100   Y(MM) = 0.0D0
-      RETURN
-      END
-*/
-
 static PyObject* dbvali(PyObject *self, PyObject *args)
 {
     int n, k, ideriv, m, *inbv, np1, i, mflag, mm, kmider, kk, j;

@@ -80,20 +80,16 @@
 
 
       SUBROUTINE DBUAL (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
-      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KP1, N, &
-       D, P, PP, M, MM, IWORK
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, &
+       D, P, PP, M, MM
       DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
-      KP1 = K + 1
-
+      IF (K.LE.IDERIV) GO TO 99
       DO 50 MM=1,M
         CALL DFINDI (T, N, K, X(MM), INBV(1), I)
         IP1 = I + 1
         IP1MK = IP1 - K
-
-        CALL DBSPVN (T, K, K, 1, X(MM), I, WORK, WORK(KP1), IWORK)
+        CALL DBDER (T(IP1), K, IDERIV, X(MM), WORK)
         DO 20 PP=1,P
            Y(:,MM,PP) = MATMUL(A(:,IP1MK:I,PP), WORK(1:K))
    20   CONTINUE
@@ -135,10 +131,10 @@
       DO 20 J=1,KMIDER-1
         VMPREV = 0.0D0
         DO 10 L=1,J
-          DL = X - T(L-J)
           DR = T(L) - X
-          VM = VNIKX(L)/(DL+DR)
-          VNIKX(L) = VM*DR + VMPREV
+          DL = X - T(L-J)
+          VM = VNIKX(L)/(DR+DL)
+          VNIKX(L) = VMPREV + VM*DR
           VMPREV = VM*DL
    10   CONTINUE
         VNIKX(J+1) = VMPREV
@@ -224,21 +220,16 @@
 
 
       SUBROUTINE DBUAL2 (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
-      INTEGER I, IDERIV, INBV(*), IP1, K, IMK, J, KMIDER, KP1, N, &
-       D, P, PP, M, MM, IWORK
+      INTEGER I, IDERIV, INBV(*), K, IMK, J, N, &
+       D, P, PP, M, MM
       DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
-      KP1 = K + 1
-
+      IF (K.LE.IDERIV) GO TO 99
       Y = 0.0D0
       DO 50 MM=1,M
         CALL DFINDI (T, N, K, X(MM), INBV(1), I)
-        IP1 = I + 1
         IMK = I - K
-
-        CALL DBSPVN (T, K, K, 1, X(MM), I, WORK, WORK(KP1), IWORK)
+        CALL DBDER (T(I+1), K, IDERIV, X(MM), WORK)
         DO 20 PP=1,P
           DO 10 J=1,K
             Y(:,MM,PP) = Y(:,MM,PP) + A(:,IMK+J,PP)*WORK(J)
@@ -256,21 +247,16 @@
 
       SUBROUTINE DBUAL3 (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, &
        WORK2, Y)
-      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, J, KMIDER, KP1, N, &
-       D, P, PP, M, MM, IWORK
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, D, P, M, MM
       DOUBLE PRECISION T(*), A(D,N,P), WORK(*), WORK2(D,P,*), X(*), &
        Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
-      KP1 = K + 1
-
+      IF (K.LE.IDERIV) GO TO 99
       DO 50 MM=1,M
         CALL DFINDI (T, N, K, X(MM), INBV(1), I)
         IP1 = I + 1
         IP1MK = IP1 - K
-
-        CALL DBSPVN (T, K, K, 1, X(MM), I, WORK, WORK(KP1), IWORK)
+        CALL DBDER (T(IP1), K, IDERIV, X(MM), WORK)
 
         WORK2(:,:,1:K) = RESHAPE( &
           A(:,IP1MK:I,:), (/D,P,K/), ORDER=(/1,3,2/))
@@ -288,20 +274,15 @@
 
 
       SUBROUTINE DBUAL4 (T, A, N, K, D, IDERIV, X, M, INBV, WORK, Y)
-      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KP1, N, &
-       D, P, PP, M, MM, IWORK
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, D, M, MM
       DOUBLE PRECISION T(*), A(D,N), WORK(*), X(*), Y(D,M)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      KMIDER = K - IDERIV
-      IF (KMIDER.LE.0) GO TO 99
-      KP1 = K + 1
-
+      IF (K.LE.IDERIV) GO TO 99
       DO 50 MM=1,M
         CALL DFINDI (T, N, K, X(MM), INBV(1), I)
         IP1 = I + 1
         IP1MK = IP1 - K
-
-        CALL DBSPVN (T, K, K, 1, X(MM), I, WORK, WORK(KP1), IWORK)
+        CALL DBDER (T(IP1), K, IDERIV, X(MM), WORK)
         Y(:,MM) = MATMUL(A(:,IP1MK:I), WORK(1:K))
    50 CONTINUE
       RETURN

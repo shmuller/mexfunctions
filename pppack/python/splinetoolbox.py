@@ -689,11 +689,12 @@ class SplineSLA9(SplineSLA):
         inbv = np.ones(1, 'i')
         work = np.zeros(3*k)
 
-        N = np.array([n], 'i')
-        K = np.array([k], 'i')
-        self.dbual(t, c.ravel(), N, K, der, x.ravel(), 1, inbv, work, y.ravel())
+        n = np.array([n], 'i')
+        k = np.array([k], 'i')
+        s = np.ones(1, 'i')
+        der = np.array([der], 'i')
+        self.dbual(t, c.ravel(), n, k, s, der, x[:,None].T, inbv, work, y.ravel())
         return y
-
 
 
 import dierckx
@@ -711,14 +712,14 @@ class SplineDie(SplinePGS):
 
 
 class SplineND(object):
-    SplineClass = SplineSLA5
+    SplineClass = SplineSLA9
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
-        n = np.array(y.shape, 'i')
+        n = np.array(y.shape, np.int32)
         c = np.zeros(n)
         nd = len(x)
         t = []
-        k = np.array(k, 'i')
+        k = np.array(k, np.int32)
         if k.size == 1:
             k = k.repeat(nd)
         for d in xrange(nd):
@@ -727,32 +728,11 @@ class SplineND(object):
             t.append(sp.t)
         self.spmak(t, c.squeeze())
 
-    def __call__(self, x):
-        t, c, SplineClass = self.t, self.c, self.SplineClass
-        n = np.array(c.shape)
-        nd = len(t)
-        for d in xrange(nd):
-            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
-            sp = SplineClass.from_knots_coefs(t[d], c.reshape(newshape))
-            xd = np.ascontiguousarray(x[d])
-            c = sp.spval(xd)
-            n[d] = xd.size
-        return c.squeeze()
-
+    def __call__(self, x, der=0):
+        return self.spval(x, der=der)
+        
     def get_left(self, x):
         return np.array(map(get_left, self.t, self.k, self.n, x))
-
-    def reduce(self, x):
-        t, k = self.t, self.k
-        nd = len(t)
-        i = self.get_left(x)
-        t = [t[d][i[d]-k[d]:i[d]+k[d]] for d in xrange(nd)]
-        s = [slice(i[d]-k[d], i[d]) for d in xrange(nd)]
-        return self.from_knots_coefs(t, np.ascontiguousarray(self.c[s]))
-
-    def spval1(self, x):
-        sp = self.reduce(x)
-        return sp(x)
 
     @classmethod
     def from_knots_coefs(cls, t, c):
@@ -762,64 +742,57 @@ class SplineND(object):
 
     def spmak(self, t, c):
         self.t, self.c = t, c
-        self.n = np.array(c.shape, 'i')
-        self.k = np.array([t.size for t in self.t], 'i') - self.n
+        self.n = np.array(c.shape, np.int32)
+        self.k = np.array([t.size for t in self.t], np.int32) - self.n
 
-    def spval(self, x, y, derx=0, dery=0):
-        t, c = self.t, self.c
-        tx, ty = t
-        nx, ny = self.n
-        kx, ky = self.k
+    def reduce1(self, x):
+        t, k = self.t, self.k
+        nd = len(t)
+        i = self.get_left(x)
+        t = [t[d][i[d]-k[d]:i[d]+k[d]] for d in xrange(nd)]
+        s = [slice(i[d]-k[d], i[d]) for d in xrange(nd)]
+        return self.from_knots_coefs(t, np.ascontiguousarray(self.c[s]))
 
-        mx, my = x.size, y.size
-        
-        C = np.zeros((mx, ny))
-        if derx == 0:
-            pppack.spual(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T)
-        else:
-            pppack.spualder(tx, c.reshape((1, nx, ny)).T, kx, x, C.reshape(1, mx, ny).T, derx)
-
-        Z = np.zeros((mx, my))
-        if dery == 0:
-            pppack.spual(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T)
-        else:
-            pppack.spualder(ty, C.reshape(mx, ny, 1).T, ky, y, Z.reshape(mx, my, 1).T, dery)
-        return Z
-
-
-class SplineND2(SplineND):
-    #dbual = _slatec.dbualnd
-    dbual = slatec.dbualnd
-    def spval1(self, x, der=0):
+    def spval(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         x = np.ascontiguousarray(x, np.float64)
         m, nd = x.shape
-        der = np.array(der, 'i')
+        der = np.array(der, np.int32)
         if der.size == 1:
             der = der.repeat(nd)
 
         y = np.zeros(m)
         s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
-        work = np.zeros(k.sum() + 2*k.max())
-        self.dbual(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
-        #print 'n:', n
-        #print 'k:', k
-        #print 's:', s
-        #print 'indv:', inbv
-        #print work
+        work = np.zeros(k.sum())
+        slatec.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         return y
+
+    def spval_grid(self, x, der=0):
+        t, c, SplineClass = self.t, self.c, self.SplineClass
+        n = np.array(c.shape)
+        nd = len(t)
+        der = np.array(der, np.int32)
+        if der.size == 1:
+            der = der.repeat(nd)
+        for d in xrange(nd):
+            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
+            sp = SplineClass.from_knots_coefs(t[d], c.reshape(newshape))
+            xd = np.ascontiguousarray(x[d], np.float64)
+            c = sp.spval(xd, der[d])
+            n[d] = xd.size
+        return c.squeeze()
 
 
 mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test5 = True
-    #bench = True
+    #test4 = True
+    bench = True
 
 if test1:
-    p, n, d, k, m, der = 1, 16, 1, 4, 101, 0
+    p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
     c = np.random.rand(p, n, d)
@@ -840,7 +813,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLAIC.from_knots_coefs(t, c)
+    sp_pgs = SplineSLA9.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -872,7 +845,7 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 0
+    p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 1
     c = np.random.rand(p, n, d)
 
     knots = np.arange(n-k+2.)
@@ -882,7 +855,7 @@ if bench:
 
     SplineClasses = (SplineDie, SplinePGS, SplineSLA1, SplineSLAI, SplineSLAIC,
             SplineSLA2, SplineSLA3, SplineSLA4, SplineSLA5, 
-            SplineSLA6, SplineSLA7, SplineSLA8)
+            SplineSLA6, SplineSLA7, SplineSLA8, SplineSLA9)
     for SplineClass in SplineClasses:
         sp = SplineClass.from_knots_coefs(t, c)
         print SplineClass.__name__
@@ -898,19 +871,20 @@ if test2:
     x, y = np.arange(5.), np.arange(6.)
     Z = np.cos(x[:,None]) * np.cos(y[None,:])
     
-    sp = SplineND2((x, y), Z, k=4)
+    sp = SplineND((x, y), Z, k=4)
     tx, ty = sp.t
     coefs = sp.c
 
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
-
-    Z = sp((x, y))
+    
+    der = (0, 1)
+    Z = sp.spval_grid((x, y), der=der)
     #Z = sp.spval(x, y)
 
     from pytokamak.utils import splines
     sp2 = splines.Spline2D(data=dict(tck=(ty, tx, coefs.T.ravel()), degrees=(3, 3)))
-    Z2 = sp2(y, x).T
+    Z2 = sp2.deriv(der[1], der[0])(y, x).T
 
     print (Z - Z2).ptp()
 
@@ -928,10 +902,10 @@ if test2:
     surf(x, y, Z)
 
     pos = np.array([[1.2, 3.2], [2.2, 3.2], [3.2, 3.2]])
-    Z1 = sp.spval1(pos)
+    Z1 = sp(pos)
     print Z1
 
-    Z1b = sp((np.array([1.2,2.2,3.2]), 3.2))
+    Z1b = sp.spval_grid((np.array([1.2,2.2,3.2]), 3.2))
     print Z1b
 
 if test3:
@@ -942,12 +916,12 @@ if test3:
 
     c = np.random.rand(nx, ny)
 
-    sp = SplineND((tx, ty), c)
+    sp = SplineND.from_knots_coefs((tx, ty), c)
 
     x = np.linspace(tx[0], tx[-1], 140)
     y = np.linspace(ty[0], ty[-1], 100)
 
-    Z = sp.spval(x, y)
+    Z = sp.spval_grid((x, y))
 
     from pytokamak.utils import splines
     sp2 = splines.Spline2D(data=dict(tck=(ty, tx, c.T.ravel()), degrees=(ky-1, kx-1)))
@@ -974,12 +948,12 @@ if test4:
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
-    mgc('%time sp = SplineND2((t, z, R), psi_n, k=(2, 4, 4))')
+    mgc('%time sp = SplineND((t, z, R), psi_n, k=(2, 4, 4))')
     #"""
     pos = AUG.XPR.pos.t_gt(1.).compressed()
     tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
     
-    mgc('%time y = sp.spval1(tzR, der=(0,0,0))')
+    mgc('%time y = sp(tzR, der=(0,0,0))')
     plot(pos.t, y)
     show()
 
@@ -992,7 +966,7 @@ if test5:
     #c[4] = 1
     c = np.random.rand(knots.size - 2 + k)
 
-    sp = SplineND2.from_knots_coefs([augknt(knots, k)], c)
+    sp = SplineND.from_knots_coefs([augknt(knots, k)], c)
 
     m = 101
     x = np.linspace(knots[0], knots[-1], m)
@@ -1002,7 +976,7 @@ if test5:
     der = 1
     sp2 = SplinePGS.from_knots_coefs(augknt(knots, k), c[None,:,None]).deriv(der)
 
-    y = sp.spval1(x[:,None], der=der)
+    y = sp(x[:,None], der=der)
     plot(x, y, x, sp2(x)[0,:,0], '.')
     show()
 
