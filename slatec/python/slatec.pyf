@@ -321,32 +321,27 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
-        subroutine dbual3d(tx,ty,tz,a,nx,ny,nz,kx,ky,kz,x,y,z,mx,my,mz,ix,iy,iz,bx,by,bz,ax,axy,r) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(nx+kx),depend(nx,kx) :: tx
-            double precision dimension(ny+ky),depend(ny,ky) :: ty
-            double precision dimension(nz+kz),depend(nz,kz) :: tz
+        subroutine dbual3d(ndim,t,a,n,k,si,sb,nx,ny,nz,x,m,mx,my,mz,i,b,ax,axy,r) ! in :slatec:../ext/dbualu.f90
+            integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
+            double precision dimension(*) :: t
             double precision dimension(nz,ny,nx) :: a
+            integer dimension(ndim) :: n
+            integer dimension(ndim),depend(ndim) :: k
+            integer dimension(ndim),depend(ndim) :: si
+            integer dimension(ndim),depend(ndim) :: sb
             integer, optional,check(shape(a,2)==nx),depend(a) :: nx=shape(a,2)
             integer, optional,check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
             integer, optional,check(shape(a,0)==nz),depend(a) :: nz=shape(a,0)
-            integer, optional,check(shape(bx,0)==kx),depend(bx) :: kx=shape(bx,0)
-            integer, optional,check(shape(by,0)==ky),depend(by) :: ky=shape(by,0)
-            integer, optional,check(shape(bz,0)==kz),depend(bz) :: kz=shape(bz,0)
-            double precision dimension(mx) :: x
-            double precision dimension(my) :: y
-            double precision dimension(mz) :: z
-            integer, optional,check(len(x)>=mx),depend(x) :: mx=len(x)
-            integer, optional,check(len(y)>=my),depend(y) :: my=len(y)
-            integer, optional,check(len(z)>=mz),depend(z) :: mz=len(z)
-            integer dimension(mx),depend(mx) :: ix
-            integer dimension(my),depend(my) :: iy
-            integer dimension(mz),depend(mz) :: iz
-            double precision dimension(kx,mx),depend(mx) :: bx
-            double precision dimension(ky,my),depend(my) :: by
-            double precision dimension(kz,mz),depend(mz) :: bz
+            double precision dimension(*) :: x
+            integer dimension(ndim),depend(ndim) :: m
+            integer, optional,check(shape(r,2)==mx),depend(r) :: mx=shape(r,2)
+            integer, optional,check(shape(r,1)==my),depend(r) :: my=shape(r,1)
+            integer, optional,check(shape(r,0)==mz),depend(r) :: mz=shape(r,0)
+            integer dimension(*) :: i
+            double precision dimension(*) :: b
             double precision dimension(nz,ny),depend(nz,ny) :: ax
             double precision dimension(nz),depend(nz) :: axy
-            double precision dimension(mz,my,mx),depend(mz,my,mx) :: r
+            double precision dimension(mz,my,mx) :: r
         end subroutine dbual3d
         subroutine dbual(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t

@@ -792,18 +792,18 @@ class SplineND(object):
         return c.reshape(m)
 
     def spval_grid3d(self, xyz, der=0):
-        c = self.c
         x, y, z = xyz
-        tx, ty, tz = self.t
+        t, c, n, k = cat(self.t), self.c, self.n, self.k
         nx, ny, nz = self.n
-        kx, ky, kz = self.k
         mx, my, mz = x.size, y.size, z.size
-        ix, iy, iz = np.zeros(mx, 'i'), np.zeros(my, 'i'), np.zeros(mz, 'i')
-        Bx, By, Bz = np.zeros((mx, kx)), np.zeros((my, ky)), np.zeros((mz, kz))
+        si = np.zeros(3, 'i')
+        sb = np.zeros(3, 'i')
+        m = np.array((mx, my, mz), 'i')
+        i = np.zeros(mx + my + mz, 'i')
+        B = np.zeros(k.dot(m))
         Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
 
-        slatec.dbual3d(tx, ty, tz, c.T, x, y, z, ix, iy, iz, 
-                       Bx.T, By.T, Bz.T, Ax.T, Axy, R.T)
+        slatec.dbual3d(t, c.T, n, k, si, sb, cat(xyz), m, i, B, Ax.T, Axy, R.T)
         return R
 
 
