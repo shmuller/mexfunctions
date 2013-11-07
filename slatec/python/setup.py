@@ -38,7 +38,7 @@ if __name__ == "__main__":
     print "*** Building from *.pyf with system fortranobject.c ***"
     setup(**configuration(from_pyf=True).todict())
      
-    os.system('cp build/src*/slatecmodule.c .')
-    print "*** Building from *module.c with local fortranobject.c ***"
-    os.system('rm -rf build/lib*/* build/temp*/*')
-    setup(**configuration(from_pyf=False).todict())
+#    os.system('cp build/src*/slatecmodule.c .')
+#    print "*** Building from *module.c with local fortranobject.c ***"
+#    os.system('rm -rf build/lib*/* build/temp*/*')
+#    setup(**configuration(from_pyf=False).todict())

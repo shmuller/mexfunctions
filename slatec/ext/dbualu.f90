@@ -195,6 +195,41 @@
       END
 
 
+
+      SUBROUTINE DBUAL3D (TX, TY, TZ, A, NX, NY, NZ, KX, KY, KZ, &
+       X, Y, Z, MX, MY, MZ, IX, IY, IZ, BX, BY, BZ, AX, AXY, R)
+      INTEGER NX, NY, NZ, KX, KY, KZ, MX, MY, MZ, &
+       IX(MX), IY(MY), IZ(MZ), JX, JY, JZ, INBV(3)
+      DOUBLE PRECISION TX(NX+KX), TY(NY+KY), TZ(NZ+KZ), A(NZ,NY,NX), &
+       X(MX), Y(MY), Z(MZ), BX(KX,MX), BY(KY,MY), BZ(KZ,MZ), & 
+       AX(NZ,NY), AXY(NZ), R(MZ,MY,MX)
+!***FIRST EXECUTABLE STATEMENT  DBUAL
+      INBV = 1
+      DO 10 JX=1,MX
+        CALL DFINDI (TX, NX, KX, X(JX), INBV(1), IX(JX))
+        CALL DBDER (TX(IX(JX)+1), KX, 0, X(JX), BX(:,JX))
+   10 CONTINUE
+      DO 11 JY=1,MY
+        CALL DFINDI (TY, NY, KY, Y(JY), INBV(2), IY(JY))
+        CALL DBDER (TY(IY(JY)+1), KY, 0, Y(JY), BY(:,JY))
+   11 CONTINUE
+      DO 12 JZ=1,MZ
+        CALL DFINDI (TZ, NZ, KZ, Z(JZ), INBV(3), IZ(JZ))
+        CALL DBDER (TZ(IZ(JZ)+1), KZ, 0, Z(JZ), BZ(:,JZ))
+   12 CONTINUE
+      DO 22 JX=1,MX
+        AX(:,:) = RESHAPE(MATMUL(RESHAPE(A(:,:,IX(JX)+1-KX:IX(JX)), &
+                  (/NZ*NY,KX/)), BX(:,JX)), (/NZ,NY/))
+        DO 21 JY=1,MY
+          AXY(:) = MATMUL(AX(:,IY(JY)+1-KY:IY(JY)), BY(:,JY))
+          DO 20 JZ=1,MZ
+            R(JZ,JY,JX) = DOT_PRODUCT(AXY(IZ(JZ)+1-KZ:IZ(JZ)), BZ(:,JZ))
+   20     CONTINUE
+   21   CONTINUE
+   22 CONTINUE
+      END
+
+
       SUBROUTINE DBUAL (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, &
        D, P, PP, M, MM

@@ -774,19 +774,37 @@ class SplineND(object):
 
     def spval_grid(self, x, der=0):
         t, c, SplineClass = self.t, self.c, self.SplineClass
-        n = np.array(c.shape)
-        m = map(len, x)
         nd = len(t)
+        n = np.array(c.shape)
+        m = np.array(map(len, x))
+        # process dimensions in order of max reduction of points
+        perm = (m-n).argsort()
         der = np.array(der, np.int32)
         if der.size == 1:
             der = der.repeat(nd)
-        for d in xrange(nd):
-            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
-            sp = SplineClass.from_knots_coefs(t[d], c.reshape(newshape))
+        for d in perm:
+            c = c.reshape((n[:d].prod(), n[d], n[d+1:].prod()))
+            print c.shape
+            sp = SplineClass.from_knots_coefs(t[d], c)
             xd = np.ascontiguousarray(x[d], np.float64)
             c = sp.spval(xd, der[d])
-            n[d] = xd.size
+            n[d] = m[d]
         return c.reshape(m)
+
+    def spval_grid3d(self, xyz, der=0):
+        c = self.c
+        x, y, z = xyz
+        tx, ty, tz = self.t
+        nx, ny, nz = self.n
+        kx, ky, kz = self.k
+        mx, my, mz = x.size, y.size, z.size
+        ix, iy, iz = np.zeros(mx, 'i'), np.zeros(my, 'i'), np.zeros(mz, 'i')
+        Bx, By, Bz = np.zeros((mx, kx)), np.zeros((my, ky)), np.zeros((mz, kz))
+        Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
+
+        slatec.dbual3d(tx, ty, tz, c.T, x, y, z, ix, iy, iz, 
+                       Bx.T, By.T, Bz.T, Ax.T, Axy, R.T)
+        return R
 
 
 mgc = get_ipython().magic
@@ -971,10 +989,24 @@ if test4:
     plot(pos.t, y)
     show()
 
-    print "Evaluating at %d grid positions..." % (t.size * z.size * R.size)
-    mgc('%time psi_n1 = sp.spval_grid((t, z, R))')
-    maxerr = (psi_n - psi_n1).ptp()
+    n = (t.size, z.size, R.size)
+    m = np.prod(n)
+    print "Evaluating at %d grid positions..." % m
+    mgc('%time psi_n1 = sp.spval_grid3d((t, z, R))')
+    maxerr = (psi_n1 - psi_n).ptp()
     assert maxerr < 1e-14, maxerr
+
+    """
+    TZR = np.zeros(n + (3,))
+    TZR[:,:,:,0] = t[:,None,None]
+    TZR[:,:,:,1] = z[None,:,None]
+    TZR[:,:,:,2] = R[None,None,:]
+    
+    print "Evaluating at %d grid positions, using line algorithm..." % m
+    mgc('%time psi_n1 = sp(TZR.reshape((-1, 3))).reshape(n)')
+    maxerr = (psi_n1 - psi_n).ptp()
+    assert maxerr < 1e-14, maxerr
+    """
 
 if test5:
     k = 4
