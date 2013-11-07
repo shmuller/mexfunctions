@@ -9,6 +9,13 @@ extern void
 dbspvn_(double *t, int *jhigh, int *k, int *index, double *x, int *ileft, 
         double *vnikx, double *work, int *iwork);
 
+extern void
+dbder_(double *t, int *k, int *ideriv, double *x, double *vnikx);
+
+extern void
+nd_dot_product_(double *a, int *s, double *b, int *n, int *nd, 
+                double *f, double *res);
+
 
 void nd_dot_product(double *a, int *s, double *b, int *n, int nd, 
                     double f, double *res)
@@ -32,9 +39,9 @@ void nd_dot_product(double *a, int *s, double *b, int *n, int nd,
 
 static PyObject* dbualnd(PyObject *self, PyObject *args)
 {
-    int ndim, *n, *k, *s, ideriv, m, *inbv, i, d, mm,
-        jw, offs, nd, kd, np1, iwork, mflag, one=1;
-    double *t, *a, *x, *work, *y, f, *tt, *workb, *workw;
+    int ndim, *n, *k, *s, *ideriv, m, *inbv, i, mflag, d, mm,
+        offs, nd, kd, np1;
+    double *t, *a, *x, *work, *y, f, *tt, *workb;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
     t = PyArray_DATA(obj);
@@ -53,7 +60,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
     s = PyArray_DATA(obj);
 
     obj = PyTuple_GET_ITEM(args, 5);
-    ideriv = PyInt_AS_LONG(obj);
+    ideriv = PyArray_DATA(obj);
 
     obj = PyTuple_GET_ITEM(args, 6);
     x = PyArray_DATA(obj);
@@ -68,8 +75,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
     y = PyArray_DATA(obj);
     m = PyArray_SIZE(obj);
     
-    for (d=ndim,jw=k[d-1],s[d-1]=1; --d; jw+=k[d-1],s[d-1]=n[d]*s[d]);
-    workw = work + jw;
+    for (d=ndim,s[d-1]=1; --d; s[d-1]=n[d]*s[d]);
 
     for (mm=0; mm<m; ++mm) {
         offs = 0;
@@ -84,7 +90,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
             } else {
                 dintrv_(tt, &np1, x, inbv+d, &i, &mflag);
                 if (mflag) i = (mflag == 1) ? nd : kd;
-                dbspvn_(tt, &kd, &kd, &one, x, &i, workb, workw, &iwork);
+                dbder_(tt+i, &kd, ideriv+d, x, workb);
             }
             tt += nd + kd;
             workb += kd;
@@ -93,7 +99,8 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
         }
         f = 1.;
         *y = 0.;
-        nd_dot_product(a+offs, s, work, k, ndim, f, y);
+        nd_dot_product_(a+offs, s, work, k, &ndim, &f, y);
+        //nd_dot_product(a+offs, s, work, k, ndim, f, y);
         ++y;
     }
     Py_RETURN_NONE;

@@ -284,20 +284,6 @@ python module slatec ! in
             double precision dimension(d,*),depend(d) :: work2
             double precision dimension(d,m,p),depend(d,p) :: y
         end subroutine dbualu2
-        subroutine dbual(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
-            integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
-            integer :: k
-            integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
-            integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
-            integer :: ideriv
-            double precision dimension(*) :: x
-            integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
-            integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,m,p),depend(d,p) :: y
-        end subroutine dbual
         subroutine nd_dot_product(a,s,b,n,nd,f,res) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: a
             integer dimension(nd) :: s
@@ -335,6 +321,20 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
+        subroutine dbual(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: t
+            double precision dimension(d,n,p) :: a
+            integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
+            integer :: k
+            integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
+            integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
+            integer :: ideriv
+            double precision dimension(*) :: x
+            integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
+            integer dimension(*) :: inbv
+            double precision dimension(*) :: work
+            double precision dimension(d,m,p),depend(d,p) :: y
+        end subroutine dbual
         subroutine dbual2(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
             double precision dimension(d,n,p) :: a

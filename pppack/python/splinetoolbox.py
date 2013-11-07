@@ -682,6 +682,7 @@ class SplineSLA8(SplineSLA):
 
 class SplineSLA9(SplineSLA):
     dbual = slatec.dbualnd
+    #dbual = _slatec.dbualnd
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -712,21 +713,24 @@ class SplineDie(SplinePGS):
 
 
 class SplineND(object):
-    SplineClass = SplineSLA9
+    SplineClass = SplineSLA4
+    dbualnd = slatec.dbualnd
+    #dbualnd = _slatec.dbualnd
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
         n = np.array(y.shape, np.int32)
-        c = np.zeros(n)
+        c = y.copy()
         nd = len(x)
         t = []
         k = np.array(k, np.int32)
         if k.size == 1:
             k = k.repeat(nd)
         for d in xrange(nd):
-            newshape = (n[:d].prod(), n[d], n[d+1:].prod())
-            sp = SplineClass(x[d], y.reshape(newshape), k[d], c=c.reshape(newshape))
+            c = c.reshape((n[:d].prod(), n[d], n[d+1:].prod()))
+            sp = SplineClass(x[d], c, k[d], c=c)
             t.append(sp.t)
-        self.spmak(t, c.squeeze())
+            c = sp.c
+        self.spmak(t, c.reshape(n))
 
     def __call__(self, x, der=0):
         return self.spval(x, der=der)
@@ -765,12 +769,13 @@ class SplineND(object):
         s = np.zeros(nd, 'i')
         inbv = np.ones(nd, 'i')
         work = np.zeros(k.sum())
-        slatec.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
+        self.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         return y
 
     def spval_grid(self, x, der=0):
         t, c, SplineClass = self.t, self.c, self.SplineClass
         n = np.array(c.shape)
+        m = map(len, x)
         nd = len(t)
         der = np.array(der, np.int32)
         if der.size == 1:
@@ -781,15 +786,15 @@ class SplineND(object):
             xd = np.ascontiguousarray(x[d], np.float64)
             c = sp.spval(xd, der[d])
             n[d] = xd.size
-        return c.squeeze()
+        return c.reshape(m)
 
 
 mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    #test4 = True
-    bench = True
+    test4 = True
+    #bench = True
 
 if test1:
     p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
@@ -867,46 +872,54 @@ if bench:
     mgc(u'%timeit pp_pgs.ppual(x)')
 
 if test2:
+    def f(x, y):
+        return np.cos(x[:,None]) * np.cos(y[None,:])
+
     kx = ky = 4
-    x, y = np.arange(5.), np.arange(6.)
-    Z = np.cos(x[:,None]) * np.cos(y[None,:])
+    x0, y0 = np.arange(5.), np.arange(6.)
+    Z0 = f(x0, y0)    
     
-    sp = SplineND((x, y), Z, k=4)
+    sp = SplineND((x0, y0), Z0, k=4)
     tx, ty = sp.t
     coefs = sp.c
 
+    Z0_check = sp.spval_grid((x0, y0))
+    print 'Z0 check:', (Z0 - Z0_check).ptp()
+
     x = np.linspace(0., 4., 10)
     y = np.linspace(0., 5., 12)
-    
-    der = (0, 1)
-    Z = sp.spval_grid((x, y), der=der)
-    #Z = sp.spval(x, y)
+    Z = f(x, y)
+
+    der = (0, 0)
+    Z1 = sp.spval_grid((x, y), der=der)
 
     from pytokamak.utils import splines
     sp2 = splines.Spline2D(data=dict(tck=(ty, tx, coefs.T.ravel()), degrees=(3, 3)))
     Z2 = sp2.deriv(der[1], der[0])(y, x).T
 
-    print (Z - Z2).ptp()
+    print 'Z1 check:', (Z1 - Z2).ptp()
 
-    def surf(x, y, Z):
+    def surf(x, y, Z, ax=None, cmap='jet'):
         from matplotlib.pyplot import figure, show
         from mpl_toolkits.mplot3d import Axes3D
-        fig = figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap='jet')
+        if ax is None:
+            fig = figure()
+            ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap=cmap)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        show()
+        return ax
 
-    surf(x, y, Z)
+    ax = surf(x, y, Z1, cmap='jet')
+    #ax = surf(x, y, Z, ax=ax, cmap='hot')
+    show()
 
     pos = np.array([[1.2, 3.2], [2.2, 3.2], [3.2, 3.2]])
-    Z1 = sp(pos)
-    print Z1
+    Z3 = sp(pos)
+    print Z3
 
-    Z1b = sp.spval_grid((np.array([1.2,2.2,3.2]), 3.2))
-    print Z1b
+    Z4 = sp.spval_grid((np.array([1.2,2.2,3.2]), [3.2]))
+    print Z4.squeeze()
 
 if test3:
     nx, ny = 20, 25
@@ -944,7 +957,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
@@ -953,9 +966,15 @@ if test4:
     pos = AUG.XPR.pos.t_gt(1.).compressed()
     tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
     
+    print "Evaluating at %d trajectory positions..." % tzR.shape[0]
     mgc('%time y = sp(tzR, der=(0,0,0))')
     plot(pos.t, y)
     show()
+
+    print "Evaluating at %d grid positions..." % (t.size * z.size * R.size)
+    mgc('%time psi_n1 = sp.spval_grid((t, z, R))')
+    maxerr = (psi_n - psi_n1).ptp()
+    assert maxerr < 1e-14, maxerr
 
 if test5:
     k = 4

@@ -79,30 +79,6 @@
       END
 
 
-      SUBROUTINE DBUAL (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
-      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, &
-       D, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
-!***FIRST EXECUTABLE STATEMENT  DBUAL
-      IF (K.LE.IDERIV) GO TO 99
-      DO 50 MM=1,M
-        CALL DFINDI (T, N, K, X(MM), INBV(1), I)
-        IP1 = I + 1
-        IP1MK = IP1 - K
-        CALL DBDER (T(IP1), K, IDERIV, X(MM), WORK)
-        DO 20 PP=1,P
-           Y(:,MM,PP) = MATMUL(A(:,IP1MK:I,PP), WORK(1:K))
-   20   CONTINUE
-   50 CONTINUE
-      RETURN
-
-   99 CONTINUE
-      DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
-      RETURN
-      END
-
-
       recursive subroutine nd_dot_product(a, s, b, n, nd, f, res)
       integer s(nd), n(nd), nd, s1, n1, i, j, n1p1, ndm1
       double precision a(*), b(*), res(1), f
@@ -215,6 +191,30 @@
    99 CONTINUE
       DO 100 MM=1,M
   100   Y(MM) = 0.0D0
+      RETURN
+      END
+
+
+      SUBROUTINE DBUAL (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
+      INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, &
+       D, P, PP, M, MM
+      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
+!***FIRST EXECUTABLE STATEMENT  DBUAL
+      IF (K.LE.IDERIV) GO TO 99
+      DO 50 MM=1,M
+        CALL DFINDI (T, N, K, X(MM), INBV(1), I)
+        IP1 = I + 1
+        IP1MK = IP1 - K
+        CALL DBDER (T(IP1), K, IDERIV, X(MM), WORK)
+        DO 20 PP=1,P
+           Y(:,MM,PP) = MATMUL(A(:,IP1MK:I,PP), WORK(1:K))
+   20   CONTINUE
+   50 CONTINUE
+      RETURN
+
+   99 CONTINUE
+      DO 100 I=1,P*M*D
+  100   Y(I,1,1) = 0.0D0
       RETURN
       END
 
