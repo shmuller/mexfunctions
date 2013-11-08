@@ -321,7 +321,7 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
-        subroutine dbualgd(ndim,t,a,n,k,si,sb,sa,sr,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
+        subroutine dbualgd(ndim,t,a,n,k,si,sb,sa,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
             double precision dimension(*) :: t
             double precision dimension(*) :: a
@@ -330,7 +330,6 @@ python module slatec ! in
             integer dimension(ndim),depend(ndim) :: si
             integer dimension(ndim),depend(ndim) :: sb
             integer dimension(ndim),depend(ndim) :: sa
-            integer dimension(ndim),depend(ndim) :: sr
             double precision dimension(*) :: x
             integer dimension(ndim),depend(ndim) :: m
             integer dimension(*) :: i

@@ -195,12 +195,12 @@
       END
 
 
-      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, SA, SR, &
+      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, SA, &
        X, M, I, B, R)
       INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), &
-       SA(NDIM), SR(NDIM), M(NDIM), ND, KD, &
+       SA(NDIM), M(NDIM), ND, KD, &
        D, J, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
-       IX, IY, IZ, LX, LY, LZ
+       IX, IY, IZ, LX, LY, LZ, SBX, SBY, SBZ, IR
       DOUBLE PRECISION T(*), A(*), X(*), XJ, BX, BY, BZ, &
        B(*), R(*), S
 !***FIRST EXECUTABLE STATEMENT  DBUAL
@@ -227,30 +227,36 @@
    15 CONTINUE
 
       SA(NDIM) = 1
-      SR(NDIM) = 1
       DO 16 D=NDIM,2,-1
         SA(D-1) = N(D)*SA(D)
-        SR(D-1) = M(D)*SR(D)
    16 CONTINUE
+      IR = 1
+      SBX = SB(1) - K(1)
       DO 22 JX=1,M(1)
+        IX = SA(1)*(I(SI(1)+JX) - K(1))
+        SBX = SBX + K(1)
+        SBY = SB(2) - K(2)
         DO 21 JY=1,M(2)
+          IY = IX + SA(2)*(I(SI(2)+JY) - K(2))
+          SBY = SBY + K(2)
+          SBZ = SB(3) - K(3)
           DO 20 JZ=1,M(3)
+            IZ = IY + SA(3)*(I(SI(3)+JZ) - K(3))
+            SBZ = SBZ + K(3)
+            
             S = 0.0D0
             DO 19 LX=1,K(1)
+              BX = B(SBX+LX)
               DO 18 LY=1,K(2)
+                BY = BX*B(SBY+LY)
                 DO 17 LZ=1,K(3)
-                  IX = I(SI(1)+JX) - K(1)
-                  IY = I(SI(2)+JY) - K(2)
-                  IZ = I(SI(3)+JZ) - K(3)
-                  BX = B(SB(1)+(JX-1)*K(1)+LX)
-                  BY = B(SB(2)+(JY-1)*K(2)+LY)
-                  BZ = B(SB(3)+(JZ-1)*K(3)+LZ)
-                  S = S &
-                    + A(SA(1)*(IX+LX-1)+SA(2)*(IY+LY-1)+IZ+LZ)*BX*BY*BZ
+                  BZ = BY*B(SBZ+LZ)
+                  S = S + A(IZ+SA(1)*(LX-1)+SA(2)*(LY-1)+LZ)*BZ
    17           CONTINUE
    18         CONTINUE
    19       CONTINUE
-            R(SR(1)*(JX-1)+SR(2)*(JY-1)+JZ) = S
+            R(IR) = S
+            IR = IR + 1
    20     CONTINUE
    21   CONTINUE
    22 CONTINUE
