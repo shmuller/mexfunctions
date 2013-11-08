@@ -214,77 +214,65 @@
       END
 
 
-      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, SA, &
-       X, M, I, B, R)
-      INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), &
-       SA(NDIM), M(NDIM), ND, KD, &
-       D, J, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
-       IX, IY, IZ, LX, LY, LZ, SBX, SBY, SBZ, SSB(3), IR
-      DOUBLE PRECISION T(*), A(*), X(*), XJ, BX, BY, BZ, &
-       B(*), R(*), S, F
+      SUBROUTINE DBUALGD (NDIM, T, A, N, K, S, X, M, I, B, R)
+      INTEGER NDIM, N(NDIM), K(NDIM), S(4*NDIM), M(NDIM), ND, KD, &
+       D, J, I(*), INBV, JT, JB, JI, IR
+      DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      SI(1) = 0
-      SB(1) = 0
-      DO 5 D=1,NDIM-1
-        SI(D+1) = SI(D) + M(D)
-        SB(D+1) = SB(D) + K(D)*M(D)
-    5 CONTINUE
-      INBV = 1
       JT = 1
       JI = 1
       JB = 1
       DO 15 D=1,NDIM
         ND = N(D)
         KD = K(D)
+        INBV = 1
         DO 10 J=1,M(D)
-          CALL DFINDI (T(JT), ND, KD, X(JI), INBV(D), I(JI))
+          CALL DFINDI (T(JT), ND, KD, X(JI), INBV, I(JI))
           CALL DBDER (T(JT+I(JI)), KD, 0, X(JI), B(JB))
           JI = JI + 1
           JB = JB + KD
    10   CONTINUE
         JT = JT + ND + KD
    15 CONTINUE
-
-      SA(NDIM) = 1
-      DO 16 D=NDIM,2,-1
-        SA(D-1) = N(D)*SA(D)
-   16 CONTINUE
+    
+      S(NDIM) = 1
+      DO 20 D=NDIM,2,-1
+        S(D-1) = N(D)*S(D)
+   20 CONTINUE
+      S(NDIM+1) = 0
+      DO 30 D=1,NDIM-1
+        S(NDIM+D+1) = S(NDIM+D) + K(D)*M(D)
+   30 CONTINUE
       IR = 1
-      DO 22 JX=1,M(1)
-        IX = SA(1)*(I(SI(1)+JX) - K(1))
-        DO 21 JY=1,M(2)
-          IY = IX + SA(2)*(I(SI(2)+JY) - K(2))
-          DO 20 JZ=1,M(3)
-            IZ = IY + SA(3)*(I(SI(3)+JZ) - K(3))
+      CALL LOOPGD (A, S, I, B, S(NDIM+1), S(2*NDIM+1), S(3*NDIM+1), &
+                   K, M, NDIM, 1, R, IR)
+      END
 
-            SSB(1) = SB(1) + (JX-1)*K(1)
-            SSB(2) = SB(2) + (JY-1)*K(2)
-            SSB(3) = SB(3) + (JZ-1)*K(3)
 
-            SSB(3) = SSB(3) - SSB(2) + 1
-            SSB(2) = SSB(2) - SSB(1) + 1
-            SSB(1) = SSB(1) + 1
-
-            R(IR) = 0.0D0
-            F = 1.0D0
-            CALL nd_dot_product2(A(IZ+1), SA, B(SSB(1)), SSB(2), &
-                                 K, NDIM, F, R(IR))
-!            S = 0.0D0
-!            DO 19 LX=1,K(1)
-!              BX = B(SSB(1)-1+LX)
-!              DO 18 LY=1,K(2)
-!                BY = BX*B(SSB(1)+SSB(2)-2+LY)
-!                DO 17 LZ=1,K(3)
-!                  BZ = BY*B(SSB(1)+SSB(2)+SSB(3)-3+LZ)
-!                  S = S + A(IZ+SA(1)*(LX-1)+SA(2)*(LY-1)+LZ)*BZ
-!   17           CONTINUE
-!   18         CONTINUE
-!   19       CONTINUE
-!            R(IR) = S
-            IR = IR + 1
-   20     CONTINUE
-   21   CONTINUE
-   22 CONTINUE
+      RECURSIVE SUBROUTINE LOOPGD (A, SA, I, B, SB, SSB, DSB, K, M, &
+       ND, D, R, IR)
+      INTEGER I(*), SA(*), SB(*), SSB(*), DSB(*), K(*), M(*), ND, D, &
+       IR, MD, KD, SAD, J
+      DOUBLE PRECISION A(*), B(*), R(*), F
+      IF (D.LE.ND) THEN
+        MD = M(D)
+        KD = K(D)
+        SAD = SA(D)
+        SSB(D) = SB(D)
+        DO 20 J=1,MD
+          CALL LOOPGD (A(SAD*(I(J)-KD)+1), SA, I(MD+1), B, SB, SSB, &
+                       DSB, K, M, ND, D+1, R, IR)
+          SSB(D) = SSB(D)+KD
+   20   CONTINUE
+      ELSE
+        DO 25 J=1,ND-1
+          DSB(J) = SSB(J+1) - SSB(J) + 1
+   25   CONTINUE
+        F = 1.0D0
+        R(IR) = 0.0D0
+        CALL nd_dot_product2(A, SA, B(SSB(1)+1), DSB, K, ND, F, R(IR))
+        IR = IR + 1
+      END IF
       END
 
 

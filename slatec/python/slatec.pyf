@@ -331,21 +331,34 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
-        subroutine dbualgd(ndim,t,a,n,k,si,sb,sa,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
+        subroutine dbualgd(ndim,t,a,n,k,s,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
             double precision dimension(*) :: t
             double precision dimension(*) :: a
             integer dimension(ndim) :: n
             integer dimension(ndim),depend(ndim) :: k
-            integer dimension(ndim),depend(ndim) :: si
-            integer dimension(ndim),depend(ndim) :: sb
-            integer dimension(ndim),depend(ndim) :: sa
+            integer dimension(4 * ndim),depend(ndim) :: s
             double precision dimension(*) :: x
             integer dimension(ndim),depend(ndim) :: m
             integer dimension(*) :: i
             double precision dimension(*) :: b
             double precision dimension(*) :: r
         end subroutine dbualgd
+        subroutine loopgd(a,sa,i,b,sb,ssb,dsb,k,m,nd,d,r,ir) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: a
+            integer dimension(*) :: sa
+            integer dimension(*) :: i
+            double precision dimension(*) :: b
+            integer dimension(*) :: sb
+            integer dimension(*) :: ssb
+            integer dimension(*) :: dsb
+            integer dimension(*) :: k
+            integer dimension(*) :: m
+            integer :: nd
+            integer :: d
+            double precision dimension(*) :: r
+            integer :: ir
+        end subroutine loopgd
         subroutine dbual3d(ndim,t,a,n,k,si,sb,nx,ny,nz,x,m,mx,my,mz,i,b,ax,axy,r) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
             double precision dimension(*) :: t

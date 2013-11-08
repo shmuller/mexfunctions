@@ -796,15 +796,13 @@ class SplineND(object):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         nx, ny, nz = self.n
         mx, my, mz = x.size, y.size, z.size
-        si = np.zeros(3, 'i')
-        sb = np.zeros(3, 'i')
-        sa = np.zeros(3, 'i')
+        s = np.zeros(4*3, 'i')
         m = np.array((mx, my, mz), 'i')
         i = np.zeros(mx + my + mz, 'i')
         B = np.zeros(k.dot(m))
         Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
 
-        slatec.dbualgd(t, c.ravel(), n, k, si, sb, sa, cat(xyz), m, i, B, R.ravel())
+        slatec.dbualgd(t, c.ravel(), n, k, s, cat(xyz), m, i, B, R.ravel())
         return R
 
 
