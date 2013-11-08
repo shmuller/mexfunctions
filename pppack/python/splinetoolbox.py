@@ -793,6 +793,9 @@ class SplineND(object):
 
     def spval_grid3d(self, xyz, der=0):
         x, y, z = xyz
+        der = np.array(der, np.int32)
+        if der.size == 1:
+            der = der.repeat(3)
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         nx, ny, nz = self.n
         mx, my, mz = x.size, y.size, z.size
@@ -802,7 +805,7 @@ class SplineND(object):
         B = np.zeros(k.dot(m))
         Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
 
-        slatec.dbualgd(t, c.ravel(), n, k, s, cat(xyz), m, i, B, R.ravel())
+        slatec.dbualgd(t, c.ravel(), n, k, s, der, cat(xyz), m, i, B, R.ravel())
         return R
 
 

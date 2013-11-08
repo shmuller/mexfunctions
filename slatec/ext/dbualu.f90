@@ -214,27 +214,12 @@
       END
 
 
-      SUBROUTINE DBUALGD (NDIM, T, A, N, K, S, X, M, I, B, R)
-      INTEGER NDIM, N(NDIM), K(NDIM), S(4*NDIM), M(NDIM), ND, KD, &
-       D, J, I(*), INBV, JT, JB, JI, IR
+      SUBROUTINE DBUALGD (NDIM, T, A, N, K, S, IDERIV, X, M, I, B, R)
+      INTEGER NDIM, N(NDIM), K(NDIM), S(4*NDIM), IDERIV(NDIM), &
+       M(NDIM), D, I(*), IR
       DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      JT = 1
-      JI = 1
-      JB = 1
-      DO 15 D=1,NDIM
-        ND = N(D)
-        KD = K(D)
-        INBV = 1
-        DO 10 J=1,M(D)
-          CALL DFINDI (T(JT), ND, KD, X(JI), INBV, I(JI))
-          CALL DBDER (T(JT+I(JI)), KD, 0, X(JI), B(JB))
-          JI = JI + 1
-          JB = JB + KD
-   10   CONTINUE
-        JT = JT + ND + KD
-   15 CONTINUE
-    
+      CALL DBSPGD (NDIM, T, N, K, IDERIV, X, M, I, B)
       S(NDIM) = 1
       DO 20 D=NDIM,2,-1
         S(D-1) = N(D)*S(D)
@@ -246,6 +231,29 @@
       IR = 1
       CALL LOOPGD (A, S, I, B, S(NDIM+1), S(2*NDIM+1), S(3*NDIM+1), &
                    K, M, NDIM, 1, R, IR)
+      END
+
+
+      SUBROUTINE DBSPGD (NDIM, T, N, K, IDERIV, X, M, I, B)
+      INTEGER NDIM, N(*), K(*), M(*), I(*), IDERIV(*), JT, JI, JB, J, &
+       D, ND, KD, INBV, IDER
+      DOUBLE PRECISION T(*), X(*), B(*)
+      JT = 1
+      JI = 1
+      JB = 1
+      DO 15 D=1,NDIM
+        ND = N(D)
+        KD = K(D)
+        IDER = IDERIV(D)
+        INBV = 1
+        DO 10 J=1,M(D)
+          CALL DFINDI (T(JT), ND, KD, X(JI), INBV, I(JI))
+          CALL DBDER (T(JT+I(JI)), KD, IDER, X(JI), B(JB))
+          JI = JI + 1
+          JB = JB + KD
+   10   CONTINUE
+        JT = JT + ND + KD
+   15 CONTINUE
       END
 
 
