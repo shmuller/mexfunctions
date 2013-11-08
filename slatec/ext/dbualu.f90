@@ -195,6 +195,62 @@
       END
 
 
+      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, NX, NY, NZ, &
+       X, M, MX, MY, MZ, I, B, AX, AXY, R)
+      INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), M(NDIM), &
+       NX, NY, NZ, KX, KY, KZ, ND, KD, &
+       D, J, MX, MY, MZ, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
+       IX, IY, IZ, LX, LY, LZ
+      DOUBLE PRECISION T(*), A(NZ,NY,NX), X(*), XJ, BX, BY, BZ, &
+       B(*), AX(NZ,NY), AXY(NZ), R(MZ,MY,MX), S
+!***FIRST EXECUTABLE STATEMENT  DBUAL
+      SI(1) = 0
+      SB(1) = 0
+      DO 5 D=1,NDIM-1
+        SI(D+1) = SI(D) + M(D)
+        SB(D+1) = SB(D) + K(D)*M(D)
+    5 CONTINUE
+      INBV = 1
+      JT = 1
+      JI = 1
+      JB = 1
+      DO 15 D=1,NDIM
+        ND = N(D)
+        KD = K(D)
+        DO 10 J=1,M(D)
+          CALL DFINDI (T(JT), ND, KD, X(JI), INBV(D), I(JI))
+          CALL DBDER (T(JT+I(JI)), KD, 0, X(JI), B(JB))
+          JI = JI + 1
+          JB = JB + KD
+   10   CONTINUE
+        JT = JT + ND + KD
+   15 CONTINUE
+      KX = K(1)
+      KY = K(2)
+      KZ = K(3)
+      DO 22 JX=1,MX
+        DO 21 JY=1,MY
+          DO 20 JZ=1,MZ
+            S = 0.0D0
+            DO 19 LX=1,KX
+              DO 18 LY=1,KY
+                DO 17 LZ=1,KZ
+                  IX = I(SI(1)+JX) - KX
+                  IY = I(SI(2)+JY) - KY
+                  IZ = I(SI(3)+JZ) - KZ
+                  BX = B(SB(1)+(JX-1)*KX+LX)
+                  BY = B(SB(2)+(JY-1)*KY+LY)
+                  BZ = B(SB(3)+(JZ-1)*KZ+LZ)
+                  S = S + A(IZ+LZ,IY+LY,IX+LX)*BX*BY*BZ
+   17           CONTINUE
+   18         CONTINUE
+   19       CONTINUE
+            R(JZ,JY,JX) = S
+   20     CONTINUE
+   21   CONTINUE
+   22 CONTINUE
+      END
+
 
       SUBROUTINE DBUAL3D (NDIM, T, A, N, K, SI, SB, NX, NY, NZ, &
        X, M, MX, MY, MZ, I, B, AX, AXY, R)

@@ -803,7 +803,7 @@ class SplineND(object):
         B = np.zeros(k.dot(m))
         Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
 
-        slatec.dbual3d(t, c.T, n, k, si, sb, cat(xyz), m, i, B, Ax.T, Axy, R.T)
+        slatec.dbualgd(t, c.T, n, k, si, sb, cat(xyz), m, i, B, Ax.T, Axy, R.T)
         return R
 
 
@@ -975,7 +975,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
