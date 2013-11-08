@@ -79,22 +79,41 @@
       END
 
 
-      recursive subroutine nd_dot_product(a, s, b, n, nd, f, res)
-      integer s(nd), n(nd), nd, s1, n1, i, j, n1p1, ndm1
+      recursive subroutine nd_dot_product(a, sa, b, k, nd, f, res)
+      integer sa(nd), k(nd), nd, sa1, sb1, k1, i, j, ndm1
       double precision a(*), b(*), res(1), f
-      s1 = s(1)
-      n1 = n(1)
-      n1p1 = n1 + 1
-      ndm1 = nd - 1
+      k1 = k(1)
       if (nd.gt.1) then
+        ndm1 = nd - 1
+        sa1 = sa(1)
+        sb1 = k1 + 1
         j = 1
-        do i=1,n1
-          call nd_dot_product(a(j), s(2), &
-                              b(n1p1), n(2), ndm1, f*b(i), res)
-          j = j + s1
+        do i=1,k1
+          call nd_dot_product(a(j), sa(2), &
+                              b(sb1), k(2), ndm1, f*b(i), res)
+          j = j + sa1
         end do
       else
-        res(1) = res(1) + f*dot_product(a(1:n1), b(1:n1))
+        res(1) = res(1) + f*dot_product(a(1:k1), b(1:k1))
+      end if
+      end
+
+      recursive subroutine nd_dot_product2(a, sa, b, sb, k, nd, f, res)
+      integer sa(nd), sb(nd), k(nd), nd, sa1, sb1, k1, i, j, ndm1
+      double precision a(*), b(*), res(1), f
+      k1 = k(1)
+      if (nd.gt.1) then
+        ndm1 = nd - 1
+        sa1 = sa(1)
+        sb1 = sb(1)
+        j = 1
+        do i=1,k1
+          call nd_dot_product2(a(j), sa(2), &
+                               b(sb1), sb(2), k(2), ndm1, f*b(i), res)
+          j = j + sa1
+        end do
+      else
+        res(1) = res(1) + f*dot_product(a(1:k1), b(1:k1))
       end if
       end
 
@@ -200,9 +219,9 @@
       INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), &
        SA(NDIM), M(NDIM), ND, KD, &
        D, J, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
-       IX, IY, IZ, LX, LY, LZ, SBX, SBY, SBZ, IR
+       IX, IY, IZ, LX, LY, LZ, SBX, SBY, SBZ, SSB(3), IR
       DOUBLE PRECISION T(*), A(*), X(*), XJ, BX, BY, BZ, &
-       B(*), R(*), S
+       B(*), R(*), S, F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       SI(1) = 0
       SB(1) = 0
@@ -231,31 +250,37 @@
         SA(D-1) = N(D)*SA(D)
    16 CONTINUE
       IR = 1
-      SBX = SB(1) - K(1)
       DO 22 JX=1,M(1)
         IX = SA(1)*(I(SI(1)+JX) - K(1))
-        SBX = SBX + K(1)
-        SBY = SB(2) - K(2)
         DO 21 JY=1,M(2)
           IY = IX + SA(2)*(I(SI(2)+JY) - K(2))
-          SBY = SBY + K(2)
-          SBZ = SB(3) - K(3)
           DO 20 JZ=1,M(3)
             IZ = IY + SA(3)*(I(SI(3)+JZ) - K(3))
-            SBZ = SBZ + K(3)
-            
-            S = 0.0D0
-            DO 19 LX=1,K(1)
-              BX = B(SBX+LX)
-              DO 18 LY=1,K(2)
-                BY = BX*B(SBY+LY)
-                DO 17 LZ=1,K(3)
-                  BZ = BY*B(SBZ+LZ)
-                  S = S + A(IZ+SA(1)*(LX-1)+SA(2)*(LY-1)+LZ)*BZ
-   17           CONTINUE
-   18         CONTINUE
-   19       CONTINUE
-            R(IR) = S
+
+            SSB(1) = SB(1) + (JX-1)*K(1)
+            SSB(2) = SB(2) + (JY-1)*K(2)
+            SSB(3) = SB(3) + (JZ-1)*K(3)
+
+            SSB(3) = SSB(3) - SSB(2) + 1
+            SSB(2) = SSB(2) - SSB(1) + 1
+            SSB(1) = SSB(1) + 1
+
+            R(IR) = 0.0D0
+            F = 1.0D0
+            CALL nd_dot_product2(A(IZ+1), SA, B(SSB(1)), SSB(2), &
+                                 K, NDIM, F, R(IR))
+!            S = 0.0D0
+!            DO 19 LX=1,K(1)
+!              BX = B(SSB(1)-1+LX)
+!              DO 18 LY=1,K(2)
+!                BY = BX*B(SSB(1)+SSB(2)-2+LY)
+!                DO 17 LZ=1,K(3)
+!                  BZ = BY*B(SSB(1)+SSB(2)+SSB(3)-3+LZ)
+!                  S = S + A(IZ+SA(1)*(LX-1)+SA(2)*(LY-1)+LZ)*BZ
+!   17           CONTINUE
+!   18         CONTINUE
+!   19       CONTINUE
+!            R(IR) = S
             IR = IR + 1
    20     CONTINUE
    21   CONTINUE

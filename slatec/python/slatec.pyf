@@ -284,15 +284,25 @@ python module slatec ! in
             double precision dimension(d,*),depend(d) :: work2
             double precision dimension(d,m,p),depend(d,p) :: y
         end subroutine dbualu2
-        subroutine nd_dot_product(a,s,b,n,nd,f,res) ! in :slatec:../ext/dbualu.f90
+        subroutine nd_dot_product(a,sa,b,k,nd,f,res) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: a
-            integer dimension(nd) :: s
+            integer dimension(nd) :: sa
             double precision dimension(*) :: b
-            integer dimension(nd),depend(nd) :: n
-            integer, optional,check(len(s)>=nd),depend(s) :: nd=len(s)
+            integer dimension(nd),depend(nd) :: k
+            integer, optional,check(len(sa)>=nd),depend(sa) :: nd=len(sa)
             double precision :: f
             double precision dimension(1) :: res
         end subroutine nd_dot_product
+        subroutine nd_dot_product2(a,sa,b,sb,k,nd,f,res) ! in :slatec:../ext/dbualu.f90
+            double precision dimension(*) :: a
+            integer dimension(nd) :: sa
+            double precision dimension(*) :: b
+            integer dimension(nd),depend(nd) :: sb
+            integer dimension(nd),depend(nd) :: k
+            integer, optional,check(len(sa)>=nd),depend(sa) :: nd=len(sa)
+            double precision :: f
+            double precision dimension(1) :: res
+        end subroutine nd_dot_product2
         subroutine dbder(t,k,ideriv,x,vnikx) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
             integer :: k
