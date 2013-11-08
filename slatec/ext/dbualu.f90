@@ -195,14 +195,14 @@
       END
 
 
-      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, NX, NY, NZ, &
-       X, M, MX, MY, MZ, I, B, AX, AXY, R)
-      INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), M(NDIM), &
-       NX, NY, NZ, KX, KY, KZ, ND, KD, &
-       D, J, MX, MY, MZ, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
+      SUBROUTINE DBUALGD (NDIM, T, A, N, K, SI, SB, SA, SR, &
+       X, M, I, B, R)
+      INTEGER NDIM, N(NDIM), K(NDIM), SI(NDIM), SB(NDIM), &
+       SA(NDIM), SR(NDIM), M(NDIM), ND, KD, &
+       D, J, I(*), JX, JY, JZ, INBV(3), JT, JB, JI, &
        IX, IY, IZ, LX, LY, LZ
-      DOUBLE PRECISION T(*), A(NZ,NY,NX), X(*), XJ, BX, BY, BZ, &
-       B(*), AX(NZ,NY), AXY(NZ), R(MZ,MY,MX), S
+      DOUBLE PRECISION T(*), A(*), X(*), XJ, BX, BY, BZ, &
+       B(*), R(*), S
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       SI(1) = 0
       SB(1) = 0
@@ -225,27 +225,32 @@
    10   CONTINUE
         JT = JT + ND + KD
    15 CONTINUE
-      KX = K(1)
-      KY = K(2)
-      KZ = K(3)
-      DO 22 JX=1,MX
-        DO 21 JY=1,MY
-          DO 20 JZ=1,MZ
+
+      SA(NDIM) = 1
+      SR(NDIM) = 1
+      DO 16 D=NDIM,2,-1
+        SA(D-1) = N(D)*SA(D)
+        SR(D-1) = M(D)*SR(D)
+   16 CONTINUE
+      DO 22 JX=1,M(1)
+        DO 21 JY=1,M(2)
+          DO 20 JZ=1,M(3)
             S = 0.0D0
-            DO 19 LX=1,KX
-              DO 18 LY=1,KY
-                DO 17 LZ=1,KZ
-                  IX = I(SI(1)+JX) - KX
-                  IY = I(SI(2)+JY) - KY
-                  IZ = I(SI(3)+JZ) - KZ
-                  BX = B(SB(1)+(JX-1)*KX+LX)
-                  BY = B(SB(2)+(JY-1)*KY+LY)
-                  BZ = B(SB(3)+(JZ-1)*KZ+LZ)
-                  S = S + A(IZ+LZ,IY+LY,IX+LX)*BX*BY*BZ
+            DO 19 LX=1,K(1)
+              DO 18 LY=1,K(2)
+                DO 17 LZ=1,K(3)
+                  IX = I(SI(1)+JX) - K(1)
+                  IY = I(SI(2)+JY) - K(2)
+                  IZ = I(SI(3)+JZ) - K(3)
+                  BX = B(SB(1)+(JX-1)*K(1)+LX)
+                  BY = B(SB(2)+(JY-1)*K(2)+LY)
+                  BZ = B(SB(3)+(JZ-1)*K(3)+LZ)
+                  S = S &
+                    + A(SA(1)*(IX+LX-1)+SA(2)*(IY+LY-1)+IZ+LZ)*BX*BY*BZ
    17           CONTINUE
    18         CONTINUE
    19       CONTINUE
-            R(JZ,JY,JX) = S
+            R(SR(1)*(JX-1)+SR(2)*(JY-1)+JZ) = S
    20     CONTINUE
    21   CONTINUE
    22 CONTINUE
