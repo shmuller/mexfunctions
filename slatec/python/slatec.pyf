@@ -331,20 +331,6 @@ python module slatec ! in
             double precision dimension(*) :: work
             double precision dimension(m),depend(m) :: y
         end subroutine dbualnd
-        subroutine dbualgd(ndim,t,a,n,k,s,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
-            integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
-            double precision dimension(*) :: t
-            double precision dimension(*) :: a
-            integer dimension(ndim) :: n
-            integer dimension(ndim),depend(ndim) :: k
-            integer dimension(4 * ndim),depend(ndim) :: s
-            integer dimension(ndim),depend(ndim) :: ideriv
-            double precision dimension(*) :: x
-            integer dimension(ndim),depend(ndim) :: m
-            integer dimension(*) :: i
-            double precision dimension(*) :: b
-            double precision dimension(*) :: r
-        end subroutine dbualgd
         subroutine dbspgd(ndim,t,n,k,ideriv,x,m,i,b) ! in :slatec:../ext/dbualu.f90
             integer :: ndim
             double precision dimension(*) :: t
@@ -371,27 +357,33 @@ python module slatec ! in
             double precision dimension(*) :: r
             integer :: ir
         end subroutine loopgd
-        subroutine dbual3d(ndim,t,a,n,k,si,sb,nx,ny,nz,x,m,mx,my,mz,i,b,ax,axy,r) ! in :slatec:../ext/dbualu.f90
+        subroutine dbualgd(ndim,t,a,n,k,s,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
             double precision dimension(*) :: t
-            double precision dimension(nz,ny,nx) :: a
+            double precision dimension(*) :: a
             integer dimension(ndim) :: n
             integer dimension(ndim),depend(ndim) :: k
-            integer dimension(ndim),depend(ndim) :: si
-            integer dimension(ndim),depend(ndim) :: sb
-            integer, optional,check(shape(a,2)==nx),depend(a) :: nx=shape(a,2)
-            integer, optional,check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
-            integer, optional,check(shape(a,0)==nz),depend(a) :: nz=shape(a,0)
+            integer dimension(4 * ndim),depend(ndim) :: s
+            integer dimension(ndim),depend(ndim) :: ideriv
             double precision dimension(*) :: x
             integer dimension(ndim),depend(ndim) :: m
-            integer, optional,check(shape(r,2)==mx),depend(r) :: mx=shape(r,2)
-            integer, optional,check(shape(r,1)==my),depend(r) :: my=shape(r,1)
-            integer, optional,check(shape(r,0)==mz),depend(r) :: mz=shape(r,0)
             integer dimension(*) :: i
             double precision dimension(*) :: b
-            double precision dimension(nz,ny),depend(nz,ny) :: ax
-            double precision dimension(nz),depend(nz) :: axy
-            double precision dimension(mz,my,mx) :: r
+            double precision dimension(*) :: r
+        end subroutine dbualgd
+        subroutine dbual3d(ndim,t,a,n,k,s,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
+            integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
+            double precision dimension(*) :: t
+            double precision dimension(*) :: a
+            integer dimension(ndim) :: n
+            integer dimension(ndim),depend(ndim) :: k
+            integer dimension(4 * ndim),depend(ndim) :: s
+            integer dimension(ndim),depend(ndim) :: ideriv
+            double precision dimension(*) :: x
+            integer dimension(ndim),depend(ndim) :: m
+            integer dimension(*) :: i
+            double precision dimension(*) :: b
+            double precision dimension(*) :: r
         end subroutine dbual3d
         subroutine dbual(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
