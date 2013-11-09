@@ -214,22 +214,27 @@
       END
 
 
-      SUBROUTINE DBSPGD (NDIM, T, N, K, IDERIV, X, M, I, B)
-      INTEGER NDIM, N(*), K(*), M(*), I(*), IDERIV(*), JT, JI, JB, J, &
-       D, ND, KD, INBV, IDER
+      SUBROUTINE DBSPGD (NDIM, T, N, K, S, IDERIV, X, M, I, B)
+      INTEGER NDIM, N(*), K(*), S(*), IDERIV(*), M(*), I(*), &
+       JT, JI, JB, J, D, ND, KD, SD, INBV, IDER
       DOUBLE PRECISION T(*), X(*), B(*)
+      S(NDIM) = 1
+      DO 5 D=NDIM,2,-1
+        S(D-1) = N(D)*S(D)
+    5 CONTINUE
       JT = 1
       JI = 1
       JB = 1
       DO 15 D=1,NDIM
         ND = N(D)
         KD = K(D)
+        SD = S(D)
         IDER = IDERIV(D)
         INBV = 1
         DO 10 J=1,M(D)
           CALL DFINDI (T(JT), ND, KD, X(JI), INBV, I(JI))
           CALL DBDER (T(JT+I(JI)), KD, IDER, X(JI), B(JB))
-          I(JI) = I(JI) - KD
+          I(JI) = SD*(I(JI)-KD)
           JI = JI + 1
           JB = JB + KD
    10   CONTINUE
@@ -240,15 +245,14 @@
       RECURSIVE SUBROUTINE LOOPGD (A, SA, I, B, SB, SSB, DSB, K, M, &
        ND, D, R, IR)
       INTEGER I(*), SA(*), SB(*), SSB(*), DSB(*), K(*), M(*), ND, D, &
-       IR, MD, KD, SAD, J
+       IR, MD, KD, J
       DOUBLE PRECISION A(*), B(*), R(*), F
       IF (D.LE.ND) THEN
         MD = M(D)
         KD = K(D)
-        SAD = SA(D)
         SSB(D) = SB(D)
         DO 20 J=1,MD
-          CALL LOOPGD (A(SAD*I(J)+1), SA, I(MD+1), B, SB, SSB, &
+          CALL LOOPGD (A(I(J)+1), SA, I(MD+1), B, SB, SSB, &
                        DSB, K, M, ND, D+1, R, IR)
           SSB(D) = SSB(D)+KD
    20   CONTINUE
@@ -269,11 +273,7 @@
        M(NDIM), D, I(*), IR
       DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      CALL DBSPGD (NDIM, T, N, K, IDERIV, X, M, I, B)
-      S(NDIM) = 1
-      DO 20 D=NDIM,2,-1
-        S(D-1) = N(D)*S(D)
-   20 CONTINUE
+      CALL DBSPGD (NDIM, T, N, K, S, IDERIV, X, M, I, B)
       S(NDIM+1) = 0
       DO 30 D=1,NDIM-1
         S(NDIM+D+1) = S(NDIM+D) + K(D)*M(D)
@@ -285,52 +285,56 @@
 
 
       SUBROUTINE DBUAL3D (T, A, N, K, IDERIV, X, M, I, B, R)
-      INTEGER N(3), K(3), IDERIV(3), M(3), D, I(*), IR, IX, IXY, &
+      INTEGER N(3), K(3), S(3), IDERIV(3), M(3), D, I(*), IR, IX, IXY, &
        JX, JY, JZ, LX, LY, LZ, SBX, SBY, SBZ, I1, I12, &
-       N3, N23, M1, M12, M123, MK1, MK12
-      DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*), BX, BXY, BXYZ, RI
+       KX, KY, KZ, NZ, NYZ, MX, MXY, MXYZ, MKX, MKXY
+      DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*), BX, BXY, RI
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      CALL DBSPGD (3, T, N, K, IDERIV, X, M, I, B)
-      N3 = N(3)
-      N23 = N(2)*N3
-      M1 = M(1)
-      M12 = M1 + M(2)
-      M123 = M12 + M(3)
-      MK1 = M(1)*K(1)
-      MK12 = MK1 + M(2)*K(2)
+      CALL DBSPGD (3, T, N, K, S, IDERIV, X, M, I, B)
+      KX = K(1)
+      KY = K(2)
+      KZ = K(3)
+      NZ = N(3)
+      NYZ = N(2)*NZ
+      MX = M(1)
+      MXY = MX + M(2)
+      MXYZ = MXY + M(3)
+      MKX = MX*KX
+      MKXY = MKX + M(2)*KY
 
       IR = 1
       SBX = 0
-      DO 22 JX=1,M1
-        IX = N23*I(JX)
-        SBY = MK1
-        DO 21 JY=M1+1,M12
-          IXY = IX + N3*I(JY)
-          SBZ = MK12
-          DO 20 JZ=M12+1,M123
+      DO JX=1,MX
+        IX = I(JX)
+        SBY = MKX
+        DO JY=MX+1,MXY
+          IXY = IX + I(JY)
+          SBZ = MKXY
+          DO JZ=MXY+1,MXYZ
+
             RI = 0.0D0
             I1 = IXY + I(JZ)
-            DO 19 LX=1,K(1)
+            DO LX=1,KX
               I12 = I1
               BX = B(SBX+LX)
-              DO 18 LY=1,K(2)
+              DO LY=1,KY
                 BXY = BX*B(SBY+LY)
-                DO 17 LZ=1,K(3)
-                  BXYZ = BXY*B(SBZ+LZ)
-                  RI = RI + A(I12+LZ)*BXYZ
-   17           CONTINUE
-                I12 = I12 + N3
-   18         CONTINUE
-              I1 = I1 + N23
-   19       CONTINUE
+                DO LZ=1,KZ
+                  RI = RI + A(I12+LZ)*BXY*B(SBZ+LZ)
+                END DO
+                I12 = I12 + NZ
+              END DO
+              I1 = I1 + NYZ
+            END DO
             R(IR) = RI
             IR = IR + 1
-            SBZ = SBZ + K(3)
-   20     CONTINUE
-          SBY = SBY + K(2)
-   21   CONTINUE
-        SBX = SBX + K(1)
-   22 CONTINUE
+
+            SBZ = SBZ + KZ
+          END DO
+          SBY = SBY + KY
+        END DO
+        SBX = SBX + KX
+      END DO
       END
 
 
