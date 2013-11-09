@@ -371,16 +371,14 @@ python module slatec ! in
             double precision dimension(*) :: b
             double precision dimension(*) :: r
         end subroutine dbualgd
-        subroutine dbual3d(ndim,t,a,n,k,s,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
-            integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
+        subroutine dbual3d(t,a,n,k,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
             double precision dimension(*) :: t
             double precision dimension(*) :: a
-            integer dimension(ndim) :: n
-            integer dimension(ndim),depend(ndim) :: k
-            integer dimension(4 * ndim),depend(ndim) :: s
-            integer dimension(ndim),depend(ndim) :: ideriv
+            integer dimension(3) :: n
+            integer dimension(3) :: k
+            integer dimension(3) :: ideriv
             double precision dimension(*) :: x
-            integer dimension(ndim),depend(ndim) :: m
+            integer dimension(3) :: m
             integer dimension(*) :: i
             double precision dimension(*) :: b
             double precision dimension(*) :: r

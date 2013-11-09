@@ -284,53 +284,52 @@
       END
 
 
-      SUBROUTINE DBUAL3D (NDIM, T, A, N, K, S, IDERIV, X, M, I, B, R)
-      INTEGER NDIM, N(NDIM), K(NDIM), S(4*NDIM), IDERIV(NDIM), &
-       M(NDIM), D, I(*), IR, IX, IXY, IXYZ, JX, JY, JZ, LX, LY, LZ, &
-       SBX, SBY, SBZ
+      SUBROUTINE DBUAL3D (T, A, N, K, IDERIV, X, M, I, B, R)
+      INTEGER N(3), K(3), IDERIV(3), M(3), D, I(*), IR, IX, IXY, &
+       JX, JY, JZ, LX, LY, LZ, SBX, SBY, SBZ, I1, I12, &
+       N3, N23, M1, M12, M123, MK1, MK12
       DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*), BX, BXY, BXYZ, RI
 !***FIRST EXECUTABLE STATEMENT  DBUAL
-      CALL DBSPGD (NDIM, T, N, K, IDERIV, X, M, I, B)
-      S(NDIM) = 1
-      DO 10 D=NDIM,2,-1
-        S(D-1) = N(D)*S(D)
-   10 CONTINUE
-      S(NDIM+1) = 0
-      S(2*NDIM+1) = 0
-      DO 15 D=1,NDIM-1
-        S(NDIM+D+1) = S(NDIM+D) + K(D)*M(D)
-        S(2*NDIM+D+1) = S(2*NDIM+D) + M(D)
-   15 CONTINUE
+      CALL DBSPGD (3, T, N, K, IDERIV, X, M, I, B)
+      N3 = N(3)
+      N23 = N(2)*N3
+      M1 = M(1)
+      M12 = M1 + M(2)
+      M123 = M12 + M(3)
+      MK1 = M(1)*K(1)
+      MK12 = MK1 + M(2)*K(2)
 
       IR = 1
-      SBX = S(NDIM+1) - K(1)
-      DO 22 JX=1,M(1)
-        IX = S(1)*I(S(2*NDIM+1)+JX)
-        SBX = SBX + K(1)
-        SBY = S(NDIM+2) - K(2)
-        DO 21 JY=1,M(2)
-          IXY = IX + S(2)*I(S(2*NDIM+2)+JY)
-          SBY = SBY + K(2)
-          SBZ = S(NDIM+3) - K(3)
-          DO 20 JZ=1,M(3)
-            IXYZ = IXY + S(3)*I(S(2*NDIM+3)+JZ)
-            SBZ = SBZ + K(3)
-            
+      SBX = 0
+      DO 22 JX=1,M1
+        IX = N23*I(JX)
+        SBY = MK1
+        DO 21 JY=M1+1,M12
+          IXY = IX + N3*I(JY)
+          SBZ = MK12
+          DO 20 JZ=M12+1,M123
             RI = 0.0D0
+            I1 = IXY + I(JZ)
             DO 19 LX=1,K(1)
+              I12 = I1
               BX = B(SBX+LX)
               DO 18 LY=1,K(2)
                 BXY = BX*B(SBY+LY)
                 DO 17 LZ=1,K(3)
                   BXYZ = BXY*B(SBZ+LZ)
-                  RI = RI + A(IXYZ+S(1)*(LX-1)+S(2)*(LY-1)+LZ)*BXYZ
+                  RI = RI + A(I12+LZ)*BXYZ
    17           CONTINUE
+                I12 = I12 + N3
    18         CONTINUE
+              I1 = I1 + N23
    19       CONTINUE
             R(IR) = RI
             IR = IR + 1
+            SBZ = SBZ + K(3)
    20     CONTINUE
+          SBY = SBY + K(2)
    21   CONTINUE
+        SBX = SBX + K(1)
    22 CONTINUE
       END
 

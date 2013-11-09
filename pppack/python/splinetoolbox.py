@@ -805,7 +805,8 @@ class SplineND(object):
         B = np.zeros(k.dot(m))
         Ax, Axy, R = np.zeros((ny,nz)), np.zeros(nz), np.zeros((mx,my,mz))
 
-        slatec.dbual3d(t, c.ravel(), n, k, s, der, cat(xyz), m, i, B, R.ravel())
+        #slatec.dbualgd(t, c.ravel(), n, k, s, der, cat(xyz), m, i, B, R.ravel())
+        slatec.dbual3d(t, c.ravel(), n, k, der, cat(xyz), m, i, B, R.ravel())
         return R
 
 
