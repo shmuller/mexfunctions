@@ -3,7 +3,14 @@
 #include <string.h>   /* memset */
 
 extern void 
+intrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
+
+extern void 
 dintrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
+
+extern void
+bspvn_(double *t, int *jhigh, int *k, int *index, double *x, int *ileft, 
+        double *vnikx, double *work, int *iwork);
 
 extern void
 dbspvn_(double *t, int *jhigh, int *k, int *index, double *x, int *ileft, 
@@ -88,7 +95,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
             if (mm && x[0]==x[-ndim]) {
                 i = inbv[d];
             } else {
-                dintrv_(tt, &np1, x, inbv+d, &i, &mflag);
+                intrv_(tt, &np1, x, inbv+d, &i, &mflag);
                 if (mflag) i = (mflag == 1) ? nd : kd;
                 dbder_(tt+i, &kd, ideriv+d, x, workb);
             }
@@ -146,7 +153,7 @@ static PyObject* dbvali(PyObject *self, PyObject *args)
     np1 = n + 1;
     for (mm=m+1; --mm; ) {
         xm = *x++;
-        dintrv_(t, &np1, &xm, inbv, &i, &mflag);
+        intrv_(t, &np1, &xm, inbv, &i, &mflag);
         if (mflag) i = (mflag == 1) ? n : k;
         ti = t + i;
         ai = a + i - k;

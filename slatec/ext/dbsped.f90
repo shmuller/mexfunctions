@@ -1,11 +1,11 @@
-!DECK DBSPED
-      SUBROUTINE DBSPED (T, AD, N, K, NDERIV, X, INEV, SVALUE, WORK)
-!***BEGIN PROLOGUE  DBSPED
+!DECK BSPED
+      SUBROUTINE BSPED (T, AD, N, K, NDERIV, X, INEV, SVALUE, WORK)
+!***BEGIN PROLOGUE  BSPED
 !***PURPOSE  Calculate the value of the spline and its derivatives from
 !            the B-representation.
 !***LIBRARY   SLATEC
 !***CATEGORY  E3, K6
-!***TYPE      DOUBLE PRECISION (BSPEV-S, DBSPED-D)
+!***TYPE      DOUBLE PRECISION (BSPEV-S, BSPED-D)
 !***KEYWORDS  B-SPLINE, DATA FITTING, INTERPOLATION, SPLINES
 !***AUTHOR  Amos, D. E., (SNLA)
 !***DESCRIPTION
@@ -13,9 +13,9 @@
 !     Written by Carl de Boor and modified by D. E. Amos
 !
 !     Abstract    **** a double precision routine ****
-!         DBSPED is the BSPLEV routine of the reference.
+!         BSPED is the BSPLEV routine of the reference.
 !
-!         DBSPED calculates the value of the spline and its derivatives
+!         BSPED calculates the value of the spline and its derivatives
 !         at X from the B-representation (T,A,N,K) and returns them in
 !         SVALUE(I),I=1,NDERIV, T(K) .LE. X .LE. T(N+1).  AD(I) can be
 !         the B-spline coefficients A(I), I=1,N) if NDERIV=1.  Otherwise
@@ -26,7 +26,7 @@
 !         To compute left derivatives or left limiting values at a
 !         knot T(I), replace N by I-1 and set X=T(I), I=K+1,N+1.
 !
-!         DBSPED calls DINTRV, DBSPVN
+!         BSPED calls DINTRV, DBSPVN
 !
 !     Description of Arguments
 !
@@ -42,7 +42,7 @@
 !                    function value
 !          X       - argument, T(K) .LE. X .LE. T(N+1)
 !          INEV    - an initialization parameter which must be set
-!                    to 1 the first time DBSPED is called.
+!                    to 1 the first time BSPED is called.
 !
 !         Output     SVALUE,WORK are double precision
 !          INEV    - INEV contains information for efficient process-
@@ -68,19 +68,19 @@
 !   891214  Prologue converted to Version 4.0 format.  (BAB)
 !   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
 !   920501  Reformatted the REFERENCES section.  (WRB)
-!***END PROLOGUE  DBSPED
+!***END PROLOGUE  BSPED
 !
       INTEGER I,ID,INEV,IWORK,JJ,K,KP1,KP1MN,L,LEFT,LL,MFLAG, &
        N, NDERIV
-      DOUBLE PRECISION AD, SVALUE, SUM, T, WORK, X
+      REAL AD, SVALUE, SUM, T, WORK, X
 !     DIMENSION T(N+K)
       DIMENSION T(*), AD(*), SVALUE(*), WORK(*), INEV(*)
-!***FIRST EXECUTABLE STATEMENT  DBSPED
+!***FIRST EXECUTABLE STATEMENT  BSPED
       IF(K.LT.1) GO TO 100
       IF(N.LT.K) GO TO 105
       IF(NDERIV.LT.1 .OR. NDERIV.GT.K) GO TO 115
       ID = NDERIV
-      CALL DINTRV(T, N+1, X, INEV(1), I, MFLAG)
+      CALL INTRV(T, N+1, X, INEV(1), I, MFLAG)
       IF (X.LT.T(K)) GO TO 110
       IF (MFLAG.EQ.0) GO TO 30
       IF (X.GT.T(I)) GO TO 110
@@ -92,7 +92,7 @@
 !     (OR .LE. T(I+1), IF T(I) .LT. T(I+1) = T(N+1) ).
    30 KP1 = K + 1
       KP1MN = KP1 - ID
-      CALL DBSPVN(T, KP1MN, K, 1, X, I, WORK(1),WORK(KP1),IWORK)
+      CALL BSPVN(T, KP1MN, K, 1, X, I, WORK(1),WORK(KP1),IWORK)
 !     ADIF(LEFTPL,ID) = AD(LEFTPL-ID+1 + (2*N-ID+2)*(ID-1)/2)
 !     LEFTPL = LEFT + L
       SUM = 0.0D0
@@ -106,23 +106,23 @@
 
 
   100 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBSPED', 'K DOES NOT SATISFY K.GE.1', 2, &
+      CALL XERMSG ('SLATEC', 'BSPED', 'K DOES NOT SATISFY K.GE.1', 2, &
          1)
       RETURN
   105 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBSPED', 'N DOES NOT SATISFY N.GE.K', 2, &
+      CALL XERMSG ('SLATEC', 'BSPED', 'N DOES NOT SATISFY N.GE.K', 2, &
          1)
       RETURN
   110 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBSPED', &
+      CALL XERMSG ('SLATEC', 'BSPED', &
          'X IS NOT IN T(K).LE.X.LE.T(N+1)', 2, 1)
       RETURN
   115 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBSPED', &
+      CALL XERMSG ('SLATEC', 'BSPED', &
          'NDERIV DOES NOT SATISFY 1.LE.NDERIV.LE.K', 2, 1)
       RETURN
   120 CONTINUE
-      CALL XERMSG ('SLATEC', 'DBSPED', &
+      CALL XERMSG ('SLATEC', 'BSPED', &
          'A LEFT LIMITING VALUE CANNOT BE OBTAINED AT T(K)', 2, 1)
       RETURN
       END

@@ -482,7 +482,7 @@ class PPSLA2(PPPGS2):
                 yji = yj[i]
                 inppvi = inppv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.dppval(aj[dd].T, b, l, k, der, xi, inppvi)
+                    yji[dd] = slatec.ppval(aj[dd].T, b, l, k, der, xi, inppvi)
         return y
 
 
@@ -505,7 +505,7 @@ class SplineSLA(SplinePGS):
                 yji = yj[i]
                 inbvi = inbv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.dbvalu(t, cj[dd], n, k, der, xi, inbvi, work)
+                    yji[dd] = slatec.bvalu(t, cj[dd], n, k, der, xi, inbvi, work)
         return y
     
     def evalB(self, x, der=0):
@@ -520,13 +520,13 @@ class SplineSLA(SplinePGS):
         ind = find((t[0] <= x) & (x <= t[-1]))
         if der == 0:
             for i in ind:
-                slatec.dbspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
+                slatec.bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
         else:
             a = np.zeros((k, k))
             dbiatx = np.zeros((der+1, k))
             work = np.zeros((k+1)*(k+2)/2)
             for i in ind:
-                slatec.dbspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
+                slatec.bspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
                 B[i] = dbiatx[der]
         return left, B
 
@@ -543,7 +543,7 @@ class SplineSLA(SplinePGS):
             cj = c[j]
             cjnew = cnew[j]
             for dd in xrange(d):
-                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
+                slatec.bspdr(t, cj[dd], n, k, nderiv, ad)
                 cjnew[:,dd] = ad[dorder-n:]
         t = t[dorder:n+k-dorder]
         return self.from_knots_coefs(t, cnew)
@@ -568,9 +568,9 @@ class SplineSLA(SplinePGS):
             yj = y[j]
             cj = c[j]
             for dd in xrange(d):
-                slatec.dbspdr(t, cj[dd], n, k, nderiv, ad)
+                slatec.bspdr(t, cj[dd], n, k, nderiv, ad)
                 for i in ind:
-                    slatec.dbsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
+                    slatec.bsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
         return y
 
     def to_pp2(self):
@@ -588,7 +588,7 @@ class SplineSLA(SplinePGS):
             cj = c[j]
             aj = a[j]
             for i in xrange(d):
-                slatec.dbsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
+                slatec.bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
         a = np.ascontiguousarray(a.transpose((0, 2, 3, 1)))
         return PPSLA2(b, a)
 

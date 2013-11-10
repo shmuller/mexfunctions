@@ -13,8 +13,8 @@ else()
     set(real8_flag "-r8")
 endif()
 
-#set(cflags "${real8_flag} -fPIC")
-set(cflags "-fPIC")
+set(cflags "${real8_flag} -fPIC")
+#set(cflags "-fPIC")
 set(lflags "-undefined dynamic_lookup")
 
 file(GLOB slatec_SRC "src/*.f")

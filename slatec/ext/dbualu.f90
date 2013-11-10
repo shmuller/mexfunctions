@@ -2,7 +2,7 @@
       SUBROUTINE DBUALU (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N, &
        I1, I2, I3, D, DD, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
+      REAL T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
@@ -34,7 +34,7 @@
 
    99 CONTINUE
       DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
+  100   Y(I,1,1) = 0.0
       RETURN
       END
 
@@ -43,7 +43,7 @@
        WORK2, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N, &
        I1, I2, I3, D, DD, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), WORK2(D,*), X(*), &
+      REAL T(*), A(D,N,P), WORK(*), WORK2(D,*), X(*), &
        Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUALU
       KMIDER = K - IDERIV
@@ -74,14 +74,14 @@
 
    99 CONTINUE
       DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
+  100   Y(I,1,1) = 0.0
       RETURN
       END
 
 
       recursive subroutine nd_dot_product(a, sa, b, k, nd, f, res)
       integer sa(nd), k(nd), nd, sa1, sb1, k1, i, j, ndm1
-      double precision a(*), b(*), res(1), f
+      real a(*), b(*), res(1), f
       k1 = k(1)
       if (nd.gt.1) then
         ndm1 = nd - 1
@@ -100,7 +100,7 @@
 
       recursive subroutine nd_dot_product2(a, sa, b, sb, k, nd, f, res)
       integer sa(nd), sb(nd), k(nd), nd, sa1, sb1, k1, i, j, ndm1
-      double precision a(*), b(*), res(1), f
+      real a(*), b(*), res(1), f
       k1 = k(1)
       if (nd.gt.1) then
         ndm1 = nd - 1
@@ -120,11 +120,11 @@
 
       SUBROUTINE DBDER(T, K, IDERIV, X, VNIKX)
       INTEGER K, IDERIV, KMIDER, L, J
-      DOUBLE PRECISION T(*), X, VNIKX(*), VM, VMPREV, FKMJ, DL, DR
+      REAL T(*), X, VNIKX(*), VM, VMPREV, FKMJ, DL, DR
       KMIDER = K - IDERIV
-      VNIKX(1) = 1.0D0
+      VNIKX(1) = 1.0
       DO 20 J=1,KMIDER-1
-        VMPREV = 0.0D0
+        VMPREV = 0.0
         DO 10 L=1,J
           DR = T(L) - X
           DL = X - T(L-J)
@@ -136,7 +136,7 @@
    20 CONTINUE
       DO 40 J=KMIDER,K-1
         FKMJ = J
-        VMPREV = 0.0D0
+        VMPREV = 0.0
         DO 30 L=1,J
           VM = VNIKX(L)/(T(L)-T(L-J))*FKMJ
           VNIKX(L) = VMPREV - VM
@@ -149,15 +149,15 @@
 
       SUBROUTINE DBSPVN2 (T, K, X, VNIKX, WORK)
       INTEGER JP1, JP1ML, K, J, L
-      DOUBLE PRECISION T(*), VM, VMPREV, VNIKX(*), WORK(*), X
+      REAL T(*), VM, VMPREV, VNIKX(*), WORK(*), X
 !     CONTENT OF J, DELTAM, DELTAP IS EXPECTED UNCHANGED BETWEEN CALLS.
 !     WORK(I) = DELTAP(I), WORK(K+I) = DELTAM(I), I = 1,K
 !***FIRST EXECUTABLE STATEMENT  DBSPVN2
-      VNIKX(1) = 1.0D0
+      VNIKX(1) = 1.0
       DO 40 J=1,K-1
         WORK(J) = T(J) - X
         WORK(K+J) = X - T(1-J)
-        VMPREV = 0.0D0
+        VMPREV = 0.0
         JP1 = J + 1
         DO 30 L=1,J
           JP1ML = JP1 - L
@@ -174,7 +174,7 @@
        WORK, Y)
       INTEGER NDIM, N(NDIM), K(NDIM), S(NDIM), IDERIV(NDIM), &
        INBV(NDIM), I, OFFS, D, ND, KD, JT, JB, M, MM
-      DOUBLE PRECISION T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
+      REAL T(*), A(*), WORK(*), X(NDIM,M), Y(M), F
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       if (ANY(K.LE.IDERIV)) GO TO 99
 
@@ -209,7 +209,7 @@
 
    99 CONTINUE
       DO 100 MM=1,M
-  100   Y(MM) = 0.0D0
+  100   Y(MM) = 0.0
       RETURN
       END
 
@@ -217,7 +217,7 @@
       SUBROUTINE DBSPGD (NDIM, T, N, K, S, IDERIV, X, M, I, B)
       INTEGER NDIM, N(*), K(*), S(*), IDERIV(*), M(*), I(*), &
        JT, JI, JB, J, D, ND, KD, SD, INBV, IDER
-      DOUBLE PRECISION T(*), X(*), B(*)
+      REAL T(*), X(*), B(*)
       S(NDIM) = 1
       DO 5 D=NDIM,2,-1
         S(D-1) = N(D)*S(D)
@@ -246,7 +246,7 @@
        ND, D, R, IR)
       INTEGER I(*), SA(*), SB(*), SSB(*), DSB(*), K(*), M(*), ND, D, &
        IR, MD, KD, J
-      DOUBLE PRECISION A(*), B(*), R(*), F
+      REAL A(*), B(*), R(*), F
       IF (D.LE.ND) THEN
         MD = M(D)
         KD = K(D)
@@ -260,8 +260,8 @@
         DO 25 J=1,ND-1
           DSB(J) = SSB(J+1) - SSB(J) + 1
    25   CONTINUE
-        F = 1.0D0
-        R(IR) = 0.0D0
+        F = 1.0
+        R(IR) = 0.0
         CALL nd_dot_product2(A, SA, B(SSB(1)+1), DSB, K, ND, F, R(IR))
         IR = IR + 1
       END IF
@@ -271,7 +271,7 @@
       SUBROUTINE DBUALGD (NDIM, T, A, N, K, S, IDERIV, X, M, I, B, R)
       INTEGER NDIM, N(NDIM), K(NDIM), S(4*NDIM), IDERIV(NDIM), &
        M(NDIM), D, I(*), IR
-      DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*)
+      REAL T(*), A(*), X(*), B(*), R(*)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       CALL DBSPGD (NDIM, T, N, K, S, IDERIV, X, M, I, B)
       S(NDIM+1) = 0
@@ -288,7 +288,7 @@
       INTEGER N(3), K(3), S(3), IDERIV(3), M(3), D, I(*), IR, IX, IXY, &
        JX, JY, JZ, LX, LY, LZ, SBX, SBY, SBZ, I1, I12, &
        KX, KY, KZ, NZ, NYZ, MX, MXY, MXYZ, MKX, MKXY
-      DOUBLE PRECISION T(*), A(*), X(*), B(*), R(*), BX, BXY, RI
+      REAL T(*), A(*), X(*), B(*), R(*), BX, BXY, RI
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       CALL DBSPGD (3, T, N, K, S, IDERIV, X, M, I, B)
       KX = K(1)
@@ -341,7 +341,7 @@
       SUBROUTINE DBUAL (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, &
        D, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
+      REAL T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       IF (K.LE.IDERIV) GO TO 99
       DO 50 MM=1,M
@@ -357,7 +357,7 @@
 
    99 CONTINUE
       DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
+  100   Y(I,1,1) = 0.0
       RETURN
       END
 
@@ -365,10 +365,10 @@
       SUBROUTINE DBUAL2 (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), K, IMK, J, N, &
        D, P, PP, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
+      REAL T(*), A(D,N,P), WORK(*), X(*), Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       IF (K.LE.IDERIV) GO TO 99
-      Y = 0.0D0
+      Y = 0.0
       DO 50 MM=1,M
         CALL DFINDI (T, N, K, X(MM), INBV(1), I)
         IMK = I - K
@@ -383,7 +383,7 @@
 
    99 CONTINUE
       DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
+  100   Y(I,1,1) = 0.0
       RETURN
       END
 
@@ -391,7 +391,7 @@
       SUBROUTINE DBUAL3 (T, A, N, K, D, P, IDERIV, X, M, INBV, WORK, &
        WORK2, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, D, P, M, MM
-      DOUBLE PRECISION T(*), A(D,N,P), WORK(*), WORK2(D,P,*), X(*), &
+      REAL T(*), A(D,N,P), WORK(*), WORK2(D,P,*), X(*), &
        Y(D,M,P)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       IF (K.LE.IDERIV) GO TO 99
@@ -411,14 +411,14 @@
 
    99 CONTINUE
       DO 100 I=1,P*M*D
-  100   Y(I,1,1) = 0.0D0
+  100   Y(I,1,1) = 0.0
       RETURN
       END
 
 
       SUBROUTINE DBUAL4 (T, A, N, K, D, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, N, D, M, MM
-      DOUBLE PRECISION T(*), A(D,N), WORK(*), X(*), Y(D,M)
+      REAL T(*), A(D,N), WORK(*), X(*), Y(D,M)
 !***FIRST EXECUTABLE STATEMENT  DBUAL
       IF (K.LE.IDERIV) GO TO 99
       DO 50 MM=1,M
@@ -432,7 +432,7 @@
 
    99 CONTINUE
       DO 100 I=1,M*D
-  100   Y(I,1) = 0.0D0
+  100   Y(I,1) = 0.0
       RETURN
       END
 
@@ -440,7 +440,7 @@
       SUBROUTINE DBVAL1 (T, A, N, K, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), IP1, K, IP1MK, KMIDER, KM1, N, &
        I1, I2, I3, M, MM
-      DOUBLE PRECISION T(*), A(N), WORK(*), X(*), Y(M)
+      REAL T(*), A(N), WORK(*), X(*), Y(M)
 !***FIRST EXECUTABLE STATEMENT  DBVAL1
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
@@ -464,7 +464,7 @@
 
    99 CONTINUE
       DO 100 I=1,M
-  100   Y(I) = 0.0D0
+  100   Y(I) = 0.0
       RETURN
       END
 
@@ -472,14 +472,14 @@
       SUBROUTINE DBVALI (T, A, N, K, IDERIV, X, M, INBV, WORK, Y)
       INTEGER I, IDERIV, INBV(*), K, KMIDER, KM1, N, NP1, &
        M, MM, MFLAG, KK, J, IMK, IPJ
-      DOUBLE PRECISION T(*), A(N), WORK(*), X(*), Y(M), F1, F2, FKMJ
+      REAL T(*), A(N), WORK(*), X(*), Y(M), F1, F2, FKMJ
 !***FIRST EXECUTABLE STATEMENT  DBVAL1
       KMIDER = K - IDERIV
       IF (KMIDER.LE.0) GO TO 99
       KM1 = K - 1
       NP1 = N + 1
       DO 50 MM=1,M
-        CALL DINTRV(T, NP1, X(MM), INBV(1), I, MFLAG)
+        CALL INTRV(T, NP1, X(MM), INBV(1), I, MFLAG)
         IF (MFLAG.NE.0) THEN
           IF (MFLAG.EQ.1) THEN
             I = N
@@ -512,7 +512,7 @@
 
    99 CONTINUE
       DO 100 I=1,M
-  100   Y(I) = 0.0D0
+  100   Y(I) = 0.0
       RETURN
       END
 
@@ -521,8 +521,8 @@
 ! *** FIND *I* IN (K,N) SUCH THAT T(I) .LE. X .LT. T(I+1)
 !     (OR, .LE. T(I+1) IF T(I) .LT. T(I+1) = T(N+1)).
       INTEGER N, K, INBV, I, MFLAG
-      DOUBLE PRECISION T(*), X
-      CALL DINTRV(T, N+1, X, INBV, I, MFLAG)
+      REAL T(*), X
+      CALL INTRV(T, N+1, X, INBV, I, MFLAG)
       IF (MFLAG.NE.0) THEN
         IF (MFLAG.EQ.1) THEN
           I = N
@@ -534,7 +534,7 @@
 
       SUBROUTINE DINITX (T, X, K, TX)
       INTEGER K, KK
-      DOUBLE PRECISION T(*), TX(*), X
+      REAL T(*), TX(*), X
       DO 5 KK=1-K,K
         TX(KK) = T(KK) - X
     5 CONTINUE
@@ -542,7 +542,7 @@
 
       SUBROUTINE DINIT2 (TX, KM1, KMIDER, F)
       INTEGER KM1, KMIDER, KK, J, I
-      DOUBLE PRECISION TX(*), F(*), FACT
+      REAL TX(*), F(*), FACT
       I = 0
       DO 20 KK=KM1,KMIDER,-1
         FACT = KK
@@ -561,7 +561,7 @@
 
       SUBROUTINE DINIT3 (TX, KM1, KMIDER, F)
       INTEGER KM1, KMIDER, KK, J, I
-      DOUBLE PRECISION TX(*), F(*), ONE, FACT, TMP
+      REAL TX(*), F(*), ONE, FACT, TMP
       ONE = 1
       I = 0
       DO 20 KK=KM1,KMIDER,-1
@@ -588,7 +588,7 @@
 
       SUBROUTINE DINIT (A, K, AJ, D, DD)
       INTEGER K, J, D, DD
-      DOUBLE PRECISION AJ(*), A(D,*)
+      REAL AJ(*), A(D,*)
       DO 5 J=1,K
         AJ(J) = A(DD,J)
     5 CONTINUE
@@ -596,7 +596,7 @@
 
       SUBROUTINE DEVAL2 (KM1, KMIDER, F, AJ)
       INTEGER KM1, KMIDER, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), ONE, F1
+      REAL F(*), AJ(*), ONE, F1
       ONE = 1
       I = 0
       DO 20 KK=KM1,KMIDER,-1
@@ -617,7 +617,7 @@
 
       SUBROUTINE DEVAL3 (KM1, F, AJ)
       INTEGER KM1, KK, J, I
-      DOUBLE PRECISION F(*), AJ(*), F1, F2
+      REAL F(*), AJ(*), F1, F2
       I = 0
       DO 20 KK=KM1,1,-1
         DO 10 J=1,KK
@@ -632,7 +632,7 @@
 
       SUBROUTINE DEVAL3V (KM1, F, AJ, D)
       INTEGER KM1, KK, J, I, D
-      DOUBLE PRECISION F(*), AJ(D,*), F1, F2
+      REAL F(*), AJ(D,*), F1, F2
       I = 0
       DO 20 KK=KM1,1,-1
         DO 10 J=1,KK
@@ -648,7 +648,7 @@
 
       SUBROUTINE DDERIV (T, KM1, KMIDER, AJ)
       INTEGER KM1, KMIDER, KMJ, J
-      DOUBLE PRECISION T(*), AJ(*), FKMJ
+      REAL T(*), AJ(*), FKMJ
       DO 20 KMJ=KM1,KMIDER,-1
         FKMJ = KMJ
         DO 10 J=1,KMJ
@@ -659,7 +659,7 @@
 
       SUBROUTINE DEVAL (T, X, K, TX, AJ)
       INTEGER K, KK, J, ILO
-      DOUBLE PRECISION T(*), TX(*), AJ(*), X
+      REAL T(*), TX(*), AJ(*), X
       DO 5 KK=1-K,K
         TX(KK) = T(KK) - X
     5 CONTINUE

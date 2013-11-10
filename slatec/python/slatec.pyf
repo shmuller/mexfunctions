@@ -256,97 +256,98 @@ python module slatec ! in
             integer :: iwork
         end subroutine dbspvn
         subroutine dbualu(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
+            real dimension(*) :: t
+            real dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,m,p),depend(d,p) :: y
+            real dimension(*) :: work
+            real dimension(d,m,p),depend(d,p) :: y
         end subroutine dbualu
         subroutine dbualu2(t,a,n,k,d,p,ideriv,x,m,inbv,work,work2,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
+            real dimension(*) :: t
+            real dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,*),depend(d) :: work2
-            double precision dimension(d,m,p),depend(d,p) :: y
+            real dimension(*) :: work
+            real dimension(d,*),depend(d) :: work2
+            real dimension(d,m,p),depend(d,p) :: y
         end subroutine dbualu2
         subroutine nd_dot_product(a,sa,b,k,nd,f,res) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: a
+            real dimension(*) :: a
             integer dimension(nd) :: sa
-            double precision dimension(*) :: b
+            real dimension(*) :: b
             integer dimension(nd),depend(nd) :: k
             integer, optional,check(len(sa)>=nd),depend(sa) :: nd=len(sa)
-            double precision :: f
-            double precision dimension(1) :: res
+            real :: f
+            real dimension(1) :: res
         end subroutine nd_dot_product
         subroutine nd_dot_product2(a,sa,b,sb,k,nd,f,res) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: a
+            real dimension(*) :: a
             integer dimension(nd) :: sa
-            double precision dimension(*) :: b
+            real dimension(*) :: b
             integer dimension(nd),depend(nd) :: sb
             integer dimension(nd),depend(nd) :: k
             integer, optional,check(len(sa)>=nd),depend(sa) :: nd=len(sa)
-            double precision :: f
-            double precision dimension(1) :: res
+            real :: f
+            real dimension(1) :: res
         end subroutine nd_dot_product2
         subroutine dbder(t,k,ideriv,x,vnikx) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
+            real dimension(*) :: t
             integer :: k
             integer :: ideriv
-            double precision :: x
-            double precision dimension(*) :: vnikx
+            real :: x
+            real dimension(*) :: vnikx
         end subroutine dbder
         subroutine dbspvn2(t,k,x,vnikx,work) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
+            real dimension(*) :: t
             integer :: k
-            double precision :: x
-            double precision dimension(*) :: vnikx
-            double precision dimension(*) :: work
+            real :: x
+            real dimension(*) :: vnikx
+            real dimension(*) :: work
         end subroutine dbspvn2
         subroutine dbualnd(ndim,t,a,n,k,s,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
-            double precision dimension(*) :: t
-            double precision dimension(*) :: a
+            real dimension(*) :: t
+            real dimension(*) :: a
             integer dimension(ndim) :: n
             integer dimension(ndim),depend(ndim) :: k
             integer dimension(ndim),depend(ndim) :: s
             integer dimension(ndim),depend(ndim) :: ideriv
-            double precision dimension(ndim,m),depend(ndim) :: x
+            real dimension(ndim,m),depend(ndim) :: x
             integer, optional,check(shape(x,1)==m),depend(x) :: m=shape(x,1)
             integer dimension(ndim),depend(ndim) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(m),depend(m) :: y
+            real dimension(*) :: work
+            real dimension(m),depend(m) :: y
         end subroutine dbualnd
-        subroutine dbspgd(ndim,t,n,k,ideriv,x,m,i,b) ! in :slatec:../ext/dbualu.f90
+        subroutine dbspgd(ndim,t,n,k,s,ideriv,x,m,i,b) ! in :slatec:../ext/dbualu.f90
             integer :: ndim
-            double precision dimension(*) :: t
+            real dimension(*) :: t
             integer dimension(*) :: n
             integer dimension(*) :: k
+            integer dimension(*) :: s
             integer dimension(*) :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer dimension(*) :: m
             integer dimension(*) :: i
-            double precision dimension(*) :: b
+            real dimension(*) :: b
         end subroutine dbspgd
         subroutine loopgd(a,sa,i,b,sb,ssb,dsb,k,m,nd,d,r,ir) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: a
+            real dimension(*) :: a
             integer dimension(*) :: sa
             integer dimension(*) :: i
-            double precision dimension(*) :: b
+            real dimension(*) :: b
             integer dimension(*) :: sb
             integer dimension(*) :: ssb
             integer dimension(*) :: dsb
@@ -354,189 +355,189 @@ python module slatec ! in
             integer dimension(*) :: m
             integer :: nd
             integer :: d
-            double precision dimension(*) :: r
+            real dimension(*) :: r
             integer :: ir
         end subroutine loopgd
         subroutine dbualgd(ndim,t,a,n,k,s,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
             integer, optional,check(len(n)>=ndim),depend(n) :: ndim=len(n)
-            double precision dimension(*) :: t
-            double precision dimension(*) :: a
+            real dimension(*) :: t
+            real dimension(*) :: a
             integer dimension(ndim) :: n
             integer dimension(ndim),depend(ndim) :: k
             integer dimension(4 * ndim),depend(ndim) :: s
             integer dimension(ndim),depend(ndim) :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer dimension(ndim),depend(ndim) :: m
             integer dimension(*) :: i
-            double precision dimension(*) :: b
-            double precision dimension(*) :: r
+            real dimension(*) :: b
+            real dimension(*) :: r
         end subroutine dbualgd
         subroutine dbual3d(t,a,n,k,ideriv,x,m,i,b,r) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(*) :: a
+            real dimension(*) :: t
+            real dimension(*) :: a
             integer dimension(3) :: n
             integer dimension(3) :: k
             integer dimension(3) :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer dimension(3) :: m
             integer dimension(*) :: i
-            double precision dimension(*) :: b
-            double precision dimension(*) :: r
+            real dimension(*) :: b
+            real dimension(*) :: r
         end subroutine dbual3d
         subroutine dbual(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
+            real dimension(*) :: t
+            real dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,m,p),depend(d,p) :: y
+            real dimension(*) :: work
+            real dimension(d,m,p),depend(d,p) :: y
         end subroutine dbual
         subroutine dbual2(t,a,n,k,d,p,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
+            real dimension(*) :: t
+            real dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,m,p),depend(d,p) :: y
+            real dimension(*) :: work
+            real dimension(d,m,p),depend(d,p) :: y
         end subroutine dbual2
         subroutine dbual3(t,a,n,k,d,p,ideriv,x,m,inbv,work,work2,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n,p) :: a
+            real dimension(*) :: t
+            real dimension(d,n,p) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer, optional,check(shape(a,2)==p),depend(a) :: p=shape(a,2)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,p,*),depend(d,p) :: work2
-            double precision dimension(d,m,p),depend(d,p) :: y
+            real dimension(*) :: work
+            real dimension(d,p,*),depend(d,p) :: work2
+            real dimension(d,m,p),depend(d,p) :: y
         end subroutine dbual3
         subroutine dbual4(t,a,n,k,d,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(d,n) :: a
+            real dimension(*) :: t
+            real dimension(d,n) :: a
             integer, optional,check(shape(a,1)==n),depend(a) :: n=shape(a,1)
             integer :: k
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(shape(y,1)==m),depend(y) :: m=shape(y,1)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(d,m),depend(d) :: y
+            real dimension(*) :: work
+            real dimension(d,m),depend(d) :: y
         end subroutine dbual4
         subroutine dbval1(t,a,n,k,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(n) :: a
+            real dimension(*) :: t
+            real dimension(n) :: a
             integer, optional,check(len(a)>=n),depend(a) :: n=len(a)
             integer :: k
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(len(y)>=m),depend(y) :: m=len(y)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(m) :: y
+            real dimension(*) :: work
+            real dimension(m) :: y
         end subroutine dbval1
         subroutine dbvali(t,a,n,k,ideriv,x,m,inbv,work,y) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision dimension(n) :: a
+            real dimension(*) :: t
+            real dimension(n) :: a
             integer, optional,check(len(a)>=n),depend(a) :: n=len(a)
             integer :: k
             integer :: ideriv
-            double precision dimension(*) :: x
+            real dimension(*) :: x
             integer, optional,check(len(y)>=m),depend(y) :: m=len(y)
             integer dimension(*) :: inbv
-            double precision dimension(*) :: work
-            double precision dimension(m) :: y
+            real dimension(*) :: work
+            real dimension(m) :: y
         end subroutine dbvali
         subroutine dfindi(t,n,k,x,inbv,i) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
+            real dimension(*) :: t
             integer :: n
             integer :: k
-            double precision :: x
+            real :: x
             integer :: inbv
             integer :: i
         end subroutine dfindi
         subroutine dinitx(t,x,k,tx) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision :: x
+            real dimension(*) :: t
+            real :: x
             integer :: k
-            double precision dimension(*) :: tx
+            real dimension(*) :: tx
         end subroutine dinitx
         subroutine dinit2(tx,km1,kmider,f) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: tx
+            real dimension(*) :: tx
             integer :: km1
             integer :: kmider
-            double precision dimension(*) :: f
+            real dimension(*) :: f
         end subroutine dinit2
         subroutine dinit3(tx,km1,kmider,f) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: tx
+            real dimension(*) :: tx
             integer :: km1
             integer :: kmider
-            double precision dimension(*) :: f
+            real dimension(*) :: f
         end subroutine dinit3
         subroutine dinit(a,k,aj,d,dd) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(d,*) :: a
+            real dimension(d,*) :: a
             integer :: k
-            double precision dimension(*) :: aj
+            real dimension(*) :: aj
             integer, optional,check(shape(a,0)==d),depend(a) :: d=shape(a,0)
             integer :: dd
         end subroutine dinit
         subroutine deval2(km1,kmider,f,aj) ! in :slatec:../ext/dbualu.f90
             integer :: km1
             integer :: kmider
-            double precision dimension(*) :: f
-            double precision dimension(*) :: aj
+            real dimension(*) :: f
+            real dimension(*) :: aj
         end subroutine deval2
         subroutine deval3(km1,f,aj) ! in :slatec:../ext/dbualu.f90
             integer :: km1
-            double precision dimension(*) :: f
-            double precision dimension(*) :: aj
+            real dimension(*) :: f
+            real dimension(*) :: aj
         end subroutine deval3
         subroutine deval3v(km1,f,aj,d) ! in :slatec:../ext/dbualu.f90
             integer :: km1
-            double precision dimension(*) :: f
-            double precision dimension(d,*) :: aj
+            real dimension(*) :: f
+            real dimension(d,*) :: aj
             integer, optional,check(shape(aj,0)==d),depend(aj) :: d=shape(aj,0)
         end subroutine deval3v
         subroutine dderiv(t,km1,kmider,aj) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
+            real dimension(*) :: t
             integer :: km1
             integer :: kmider
-            double precision dimension(*) :: aj
+            real dimension(*) :: aj
         end subroutine dderiv
         subroutine deval(t,x,k,tx,aj) ! in :slatec:../ext/dbualu.f90
-            double precision dimension(*) :: t
-            double precision :: x
+            real dimension(*) :: t
+            real :: x
             integer :: k
-            double precision dimension(*) :: tx
-            double precision dimension(*) :: aj
+            real dimension(*) :: tx
+            real dimension(*) :: aj
         end subroutine deval
-        subroutine dbsped(t,ad,n,k,nderiv,x,inev,svalue,work) ! in :slatec:../ext/dbsped.f90
-            double precision dimension(*) :: t
-            double precision dimension(*) :: ad
+        subroutine bsped(t,ad,n,k,nderiv,x,inev,svalue,work) ! in :slatec:../ext/dbsped.f90
+            real dimension(*) :: t
+            real dimension(*) :: ad
             integer :: n
             integer :: k
             integer :: nderiv
-            double precision :: x
+            real :: x
             integer dimension(*) :: inev
-            double precision dimension(*) :: svalue
-            double precision dimension(*) :: work
-        end subroutine dbsped
+            real dimension(*) :: svalue
+            real dimension(*) :: work
+        end subroutine bsped
     end interface 
 end python module slatec
 
