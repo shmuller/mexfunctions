@@ -2,6 +2,18 @@ import numpy as np
 diff, find, cat, zeros, ones = \
         np.diff, np.flatnonzero, np.concatenate, np.zeros, np.ones
 
+from matplotlib.pyplot import figure, show
+from mpl_toolkits.mplot3d import Axes3D
+
+def surf(x, y, Z, ax=None, cmap='jet'):
+    if ax is None:
+        fig = figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap=cmap)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    return ax
+
 def searchsorted(meshsites, sites):
     # need stable sorting algorithm to work properly
     index = cat((meshsites, sites)).argsort(kind='mergesort')
@@ -772,42 +784,69 @@ class SplineND(object):
         self.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         return y
 
-    def spval_grid(self, x, der=0):
-        t, c, SplineClass = self.t, self.c, self.SplineClass
+    def spval_dims(self, x, dims=None, der=0):
+        t, c, n, SplineClass = self.t, self.c, self.n.copy(), self.SplineClass
         nd = len(t)
-        n = np.array(c.shape)
+        if not hasattr(x, "__iter__"):
+            x = [x]
+        x = [np.atleast_1d(np.ascontiguousarray(xi, np.float64)) for xi in x]
+
         m = np.array(map(len, x))
+        if dims is None:
+            dims = np.arange(len(x))
         # process dimensions in order of max reduction of points
-        perm = (m-n).argsort()
+        perm = (m-n[dims]).argsort()
+        der = np.array(der, np.int32)
+        if der.size == 1:
+            der = der.repeat(len(x))
+        for i in perm:
+            d = dims[i]
+            c = c.reshape((n[:d].prod(), n[d], n[d+1:].prod()))
+            sp = SplineClass.from_knots_coefs(t[d], c)
+            c = sp.spval(x[i], der[i])
+            n[d] = m[i]
+        c = c.reshape(n)
+        if nd == len(dims):
+            return c
+        else:
+            t = [t[i] for i in xrange(nd) if i not in dims]
+            return self.from_knots_coefs(t, c.squeeze())
+
+    def spval_grid(self, x, der=0, fast=True):
+        t, c, n, k = cat(self.t), self.c, self.n, self.k
+        nd = c.ndim
+        m = np.array(map(len, x), np.int32)
         der = np.array(der, np.int32)
         if der.size == 1:
             der = der.repeat(nd)
-        for d in perm:
-            c = c.reshape((n[:d].prod(), n[d], n[d+1:].prod()))
-            print c.shape
-            sp = SplineClass.from_knots_coefs(t[d], c)
-            xd = np.ascontiguousarray(x[d], np.float64)
-            c = sp.spval(xd, der[d])
-            n[d] = m[d]
-        return c.reshape(m)
 
-    def spval_grid3d(self, xyz, der=0):
-        x, y, z = xyz
-        der = np.array(der, np.int32)
-        if der.size == 1:
-            der = der.repeat(3)
-        t, c, n, k = cat(self.t), self.c, self.n, self.k
-        nx, ny, nz = self.n
-        mx, my, mz = x.size, y.size, z.size
-        s = np.zeros(4*3, 'i')
-        m = np.array((mx, my, mz), 'i')
-        i = np.zeros(mx + my + mz, 'i')
+        i = np.zeros(m.sum(), np.int32)
         B = np.zeros(k.dot(m))
-        R = np.zeros((mx,my,mz))
+        y = np.zeros(m)
 
-        #slatec.dbualgd(t, c.ravel(), n, k, s, der, cat(xyz), m, i, B, R.ravel())
-        slatec.dbual3d(t, c.ravel(), n, k, der, cat(xyz), m, i, B, R.ravel())
-        return R
+        if fast and nd == 3:
+            slatec.dbual3d(t, c.ravel(), n, k, der, cat(x), m, i, B, y.ravel())
+        else:
+            s = np.zeros(4*nd, np.int32)
+            slatec.dbualgd(t, c.ravel(), n, k, s, der, cat(x), m, i, B, y.ravel())
+        return y
+
+    def plot(self):
+        t = self.t
+        nd = len(t)
+        if nd == 1:
+            t = t[0]
+            x = np.linspace(t[0], t[-1], 200)
+            y = self(x[:,None])
+            plot(x, y)
+        elif nd == 2:
+            tx, ty = t
+            x = np.linspace(tx[0], tx[-1], 20)
+            y = np.linspace(ty[0], ty[-1], 20)
+            z = self.spval_grid((x, y))
+            surf(x, y, z)
+        else:
+            raise NotImplementedError("cannot plot more than 2 dimensions")
 
 
 mgc = get_ipython().magic
@@ -920,17 +959,6 @@ if test2:
 
     print 'Z1 check:', (Z1 - Z2).ptp()
 
-    def surf(x, y, Z, ax=None, cmap='jet'):
-        from matplotlib.pyplot import figure, show
-        from mpl_toolkits.mplot3d import Axes3D
-        if ax is None:
-            fig = figure()
-            ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(x[:,None], y[None,:], Z, rstride=1, cstride=1, cmap=cmap)
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        return ax
-
     ax = surf(x, y, Z1, cmap='jet')
     #ax = surf(x, y, Z, ax=ax, cmap='hot')
     show()
@@ -978,7 +1006,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     t, psi_n = psi_n.t, psi_n.x
     
@@ -995,7 +1023,7 @@ if test4:
     n = (t.size, z.size, R.size)
     m = np.prod(n)
     print "Evaluating at %d grid positions..." % m
-    mgc('%time psi_n1 = sp.spval_grid3d((t, z, R))')
+    mgc('%time psi_n1 = sp.spval_grid((t, z, R))')
     maxerr = (psi_n1 - psi_n).ptp()
     assert maxerr < 1e-14, maxerr
 
