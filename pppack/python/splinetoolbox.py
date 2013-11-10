@@ -462,7 +462,7 @@ class SplinePGS(Spline):
         return PPPGS2(b, a)
 
 
-import slatec
+import dslatec
 
 class PPSLA2(PPPGS2):
     def ppual(self, x, der=0):
@@ -482,7 +482,7 @@ class PPSLA2(PPPGS2):
                 yji = yj[i]
                 inppvi = inppv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.ppval(aj[dd].T, b, l, k, der, xi, inppvi)
+                    yji[dd] = dslatec.ppval(aj[dd].T, b, l, k, der, xi, inppvi)
         return y
 
 
@@ -505,7 +505,7 @@ class SplineSLA(SplinePGS):
                 yji = yj[i]
                 inbvi = inbv[i]
                 for dd in xrange(d):
-                    yji[dd] = slatec.bvalu(t, cj[dd], n, k, der, xi, inbvi, work)
+                    yji[dd] = dslatec.bvalu(t, cj[dd], n, k, der, xi, inbvi, work)
         return y
     
     def evalB(self, x, der=0):
@@ -520,13 +520,13 @@ class SplineSLA(SplinePGS):
         ind = find((t[0] <= x) & (x <= t[-1]))
         if der == 0:
             for i in ind:
-                slatec.bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
+                dslatec.bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
         else:
             a = np.zeros((k, k))
             dbiatx = np.zeros((der+1, k))
             work = np.zeros((k+1)*(k+2)/2)
             for i in ind:
-                slatec.bspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
+                dslatec.bspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
                 B[i] = dbiatx[der]
         return left, B
 
@@ -543,7 +543,7 @@ class SplineSLA(SplinePGS):
             cj = c[j]
             cjnew = cnew[j]
             for dd in xrange(d):
-                slatec.bspdr(t, cj[dd], n, k, nderiv, ad)
+                dslatec.bspdr(t, cj[dd], n, k, nderiv, ad)
                 cjnew[:,dd] = ad[dorder-n:]
         t = t[dorder:n+k-dorder]
         return self.from_knots_coefs(t, cnew)
@@ -568,9 +568,9 @@ class SplineSLA(SplinePGS):
             yj = y[j]
             cj = c[j]
             for dd in xrange(d):
-                slatec.bspdr(t, cj[dd], n, k, nderiv, ad)
+                dslatec.bspdr(t, cj[dd], n, k, nderiv, ad)
                 for i in ind:
-                    slatec.bsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
+                    dslatec.bsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
         return y
 
     def to_pp2(self):
@@ -588,13 +588,13 @@ class SplineSLA(SplinePGS):
             cj = c[j]
             aj = a[j]
             for i in xrange(d):
-                slatec.bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
+                dslatec.bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
         a = np.ascontiguousarray(a.transpose((0, 2, 3, 1)))
         return PPSLA2(b, a)
 
 
 class SplineSLA1(SplineSLA):
-    dbval = slatec.dbval1
+    dbval = dslatec.dbval1
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -606,7 +606,7 @@ class SplineSLA1(SplineSLA):
 
 
 class SplineSLAI(SplineSLA1):
-    dbval = slatec.dbvali
+    dbval = dslatec.dbvali
 
 import _slatec
 
@@ -615,7 +615,7 @@ class SplineSLAIC(SplineSLAI):
 
 
 class SplineSLA2(SplineSLA):
-    dbual = slatec.dbualu
+    dbual = dslatec.dbualu
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -627,7 +627,7 @@ class SplineSLA2(SplineSLA):
 
 
 class SplineSLA3(SplineSLA):
-    dbual = slatec.dbualu2
+    dbual = dslatec.dbualu2
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -640,7 +640,7 @@ class SplineSLA3(SplineSLA):
 
 
 class SplineSLA4(SplineSLA):
-    dbual = slatec.dbual
+    dbual = dslatec.dbual
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -651,11 +651,11 @@ class SplineSLA4(SplineSLA):
         return y
 
 class SplineSLA5(SplineSLA4):
-    dbual = slatec.dbual2
+    dbual = dslatec.dbual2
 
 
 class SplineSLA6(SplineSLA):
-    dbual = slatec.dbual3
+    dbual = dslatec.dbual3
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -680,7 +680,7 @@ class SplineSLA7(SplineSLA4):
 
 
 class SplineSLA8(SplineSLA):
-    dbual = slatec.dbual4
+    dbual = dslatec.dbual4
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         m = x.size
@@ -693,7 +693,7 @@ class SplineSLA8(SplineSLA):
 
 
 class SplineSLA9(SplineSLA):
-    dbual = slatec.dbualnd
+    dbual = dslatec.dbualnd
     #dbual = _slatec.dbualnd
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
@@ -726,7 +726,7 @@ class SplineDie(SplinePGS):
 
 class SplineND(object):
     SplineClass = SplineSLA4
-    dbualnd = slatec.dbualnd
+    dbualnd = dslatec.dbualnd
     #dbualnd = _slatec.dbualnd
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
@@ -825,10 +825,10 @@ class SplineND(object):
         y = np.zeros(m)
 
         if fast and nd == 3:
-            slatec.dbual3d(t, c.ravel(), n, k, der, cat(x), m, i, B, y.ravel())
+            dslatec.dbual3d(t, c.ravel(), n, k, der, cat(x), m, i, B, y.ravel())
         else:
             s = np.zeros(4*nd, np.int32)
-            slatec.dbualgd(t, c.ravel(), n, k, s, der, cat(x), m, i, B, y.ravel())
+            dslatec.dbualgd(t, c.ravel(), n, k, s, der, cat(x), m, i, B, y.ravel())
         return y
 
     def plot(self):
