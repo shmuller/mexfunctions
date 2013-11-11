@@ -942,7 +942,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test2 = True
     #bench = True
 
 if test1:

@@ -6,4 +6,6 @@ add_custom_command(
     DEPENDS mdsclient/mdsclientmodule.c
     COMMENT "Building Python extension")
 
-add_custom_target(python DEPENDS mdsclientmodule_command)
+add_custom_target(mdsclientmodule DEPENDS mdsclientmodule_command)
+
+add_dependencies(python mdsclientmodule)

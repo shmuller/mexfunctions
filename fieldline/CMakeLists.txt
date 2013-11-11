@@ -9,12 +9,12 @@ set(fieldline_SRC fieldline.c)
 include_directories(../odepack ../dierckx)
 
 add_library(fieldline SHARED ${fieldline_SRC})
-target_link_libraries(fieldline odepack dierckx)
+target_link_libraries(fieldline odepack ddierckx)
 
 add_library(fieldline_static STATIC ${fieldline_SRC})
 set_target_properties(fieldline_static PROPERTIES OUTPUT_NAME fieldline)
 set_target_properties(fieldline_static PROPERTIES COMPILE_FLAGS "-fPIC")
-target_link_libraries(fieldline_static odepack dierckx)
+target_link_libraries(fieldline_static odepack ddierckx)
 
 add_subdirectory(python)
 

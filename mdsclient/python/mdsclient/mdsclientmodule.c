@@ -30,6 +30,8 @@ PyObject *PyArray_SimpleNewFromDataOwning(
 
 #include <mdsclient.h>
 
+static PyObject *PyExc_NoConnection;
+
 #define ERROR(t,m) PyErr_SetString(t,m); return NULL
 
 void mds2py_type(w_dtype_t w_dtype, int *typenum)
@@ -147,8 +149,8 @@ static PyObject* mdsconnect(PyObject *self, PyObject *args)
         case -1:
         case -2:
         case -3:
-        case -4: ERROR(PyExc_Exception, "Could not connect to server");
-        case -5: ERROR(PyExc_Exception, "Could not authenticate user");
+        case -4: ERROR(PyExc_NoConnection, "Could not connect to server");
+        case -5: ERROR(PyExc_NoConnection, "Could not authenticate user");
     }
     return Py_BuildValue("i", sock);
 }
@@ -199,11 +201,16 @@ static PyMethodDef methods[] = {
     {"mdsvalue", mdsvalue, METH_VARARGS, USAGE_MDSVALUE},
     {NULL, NULL, 0, NULL}
 };
- 
+
 PyMODINIT_FUNC
 init_mdsclient(void)
 {
-    Py_InitModule("_mdsclient", methods);
+    PyObject *m = Py_InitModule("_mdsclient", methods);
+    
+    PyExc_NoConnection = PyErr_NewException("_mdsclient.MdsConnectError", NULL, NULL);
+
+    PyModule_AddObject(m, "MdsConnectError", PyExc_NoConnection);
+
     import_array();
 }
 

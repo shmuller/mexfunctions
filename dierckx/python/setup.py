@@ -22,7 +22,7 @@ def configuration(parent_package='', top_path=None):
                          #sources = ['dierckx.pyf'],
                          #f2py_options = ['--no-wrap-functions'],
                          sources = ['dierckxmodule.c', 'fortranobject.c'],
-                         libraries = ['dierckx'])
+                         libraries = ['ddierckx'])
     return config
 
 if __name__ == "__main__":
