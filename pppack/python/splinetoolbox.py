@@ -155,7 +155,7 @@ class Spline(object):
         return self
 
     def spmak(self, t, c):
-        self.t, self.c = np.ascontiguousarray(t, c.dtype), c
+        self.t, self.c = t, c
         self.p, self.n, self.d = c.shape
         self.k = t.size - self.n
 
@@ -196,7 +196,7 @@ class Spline(object):
     def zeros(self):
         t, c, k, p, n, d = self.spbrk()
         t = t[k-1:n+1]
-        c = zeros((p, n-k+1, d))
+        c = zeros((p, n-k+1, d), c.dtype)
         return self.from_knots_coefs(t, c)
 
     def _deriv(self, dorder):
@@ -310,7 +310,8 @@ import pppack
 
 class PPPGS(PP):
     def ppmak(self, b, a):
-        self.b, self.a = b, a
+        self.b = np.ascontiguousarray(b, np.float64)
+        self.a = np.ascontiguousarray(a, np.float64)
         self.p, self.l, self.k, self.d = a.shape
 
     def zeros(self):
@@ -330,7 +331,7 @@ class PPPGS(PP):
   
     def ppual(self, x, der=0, fast=True):
         b, a, p, l, k, d = self.ppbrk()
-
+        x = np.atleast_1d(np.ascontiguousarray(x, np.float64))
         m = x.size
         y = np.zeros((p, m, d))
         if der == 0 and fast:
@@ -378,6 +379,12 @@ class SplinePGS(Spline):
                 cj[:,dd] = bcoef
         self.spmak(t, c)
 
+    def spmak(self, t, c):
+        self.t = np.ascontiguousarray(t, np.float64)
+        self.c = np.ascontiguousarray(c, np.float64)
+        self.p, self.n, self.d = c.shape
+        self.k = t.size - self.n
+
     def spval(self, x, der=0, fast=True, y=None):
         t, c, k, p, n, d = self.spbrk()
         x = np.ascontiguousarray(x, np.float64)
@@ -407,10 +414,11 @@ class SplinePGS(Spline):
         return left, B
 
     def spval2(self, x, der=0):
+        t, c, k, p, n, d = self.spbrk()
         left, B = self.evalB(x, der)
-        c, k, m = self.c, self.k, x.size
+        m = x.size
         B = B[:,None,:,None]
-        y = np.zeros((self.p, m, self.d))
+        y = np.zeros((p, m, d), c.dtype)
         for i in xrange(m):
             y[:,i,:] = (c[:,left[i]-k:left[i],:] * B[i]).sum(axis=1)
         return y
@@ -430,6 +438,8 @@ class SplinePGS(Spline):
 
     def to_pp(self):
         t, c, k, p, n, d = self.spbrk()
+        t = np.ascontiguousarray(t, np.float64)
+        c = np.ascontiguousarray(c, np.float64)
         l = len(np.unique(t)) - 1
 
         b = np.zeros(l+1)
@@ -465,15 +475,26 @@ class SplinePGS(Spline):
 import slatec, dslatec
 
 class PPSLA2(PPPGS2):
+    def ppmak(self, b, a):
+        self.b, self.a = np.ascontiguousarray(b, a.dtype), a
+        self.p, self.l, self.k, self.d = a.shape
+        if a.dtype == np.float64:
+            self.slatec = dslatec
+        else:
+            self.slatec = slatec
+
     def ppual(self, x, der=0):
         # this uses the PGS normalization
         b, a, p, l, k, d = self.ppbrk()
+        dtype = c.dtype 
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         if der >= k:
             return y
         a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
         inppv = self.get_index(x) + 1
+        ppval = self.slatec.ppval
         for j in xrange(p):
             yj = y[j]
             aj = a[j]
@@ -482,7 +503,7 @@ class PPSLA2(PPPGS2):
                 yji = yj[i]
                 inppvi = inppv[i]
                 for dd in xrange(d):
-                    yji[dd] = dslatec.ppval(aj[dd].T, b, l, k, der, xi, inppvi)
+                    yji[dd] = ppval(aj[dd].T, b, l, k, der, xi, inppvi)
         return y
 
 
@@ -492,7 +513,9 @@ class SplineSLA(SplinePGS):
         SplinePGS.__init__(self, x, y, *args, **kw)
 
     def spmak(self, t, c):
-        SplinePGS.spmak(self, t, c)
+        self.t, self.c = np.ascontiguousarray(t, c.dtype), c
+        self.p, self.n, self.d = c.shape
+        self.k = t.size - self.n
         if c.dtype == np.float64:
             self.slatec = dslatec
         else:
@@ -523,23 +546,27 @@ class SplineSLA(SplinePGS):
     
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
-        left = self.get_left(x)
+        dtype = c.dtype 
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        B = np.zeros((m, k))
+        left = self.get_left(x)
+        B = np.zeros((m, k), dtype)
         if der >= k:
             return left, B
-        work = np.zeros(2*k)
-        iwork = np.zeros(1, 'i')
         ind = find((t[0] <= x) & (x <= t[-1]))
         if der == 0:
+            bspvn = self.slatec.bspvn
+            work = np.zeros(2*k, dtype)
+            iwork = np.zeros(1, 'i')
             for i in ind:
-                dslatec.bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
+                bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
         else:
-            a = np.zeros((k, k))
-            dbiatx = np.zeros((der+1, k))
-            work = np.zeros((k+1)*(k+2)/2)
+            bspvd = self.slatec.bspvd
+            a = np.zeros((k, k), dtype)
+            dbiatx = np.zeros((der+1, k), dtype)
+            work = np.zeros((k+1)*(k+2)/2, dtype)
             for i in ind:
-                dslatec.bspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
+                bspvd(t, k, der+1, x[i], left[i], dbiatx.T, work)
                 B[i] = dbiatx[der]
         return left, B
 
@@ -547,16 +574,18 @@ class SplineSLA(SplinePGS):
         # This is a memory-wasting approach to spline differentiation, since
         # all the temporary derivatives are kept in 'ad'.
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
         nderiv = dorder+1
-        cnew = np.zeros((p, n-dorder, d))
-        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
+        cnew = np.zeros((p, n-dorder, d), dtype)
+        ad = np.zeros((2*n-nderiv+1)*nderiv/2, dtype)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        bspdr = self.slatec.bspdr
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
             cjnew = cnew[j]
             for dd in xrange(d):
-                dslatec.bspdr(t, cj[dd], n, k, nderiv, ad)
+                bspdr(t, cj[dd], n, k, nderiv, ad)
                 cjnew[:,dd] = ad[dorder-n:]
         t = t[dorder:n+k-dorder]
         return self.from_knots_coefs(t, cnew)
@@ -567,49 +596,58 @@ class SplineSLA(SplinePGS):
         # where 'dbsped' retrieves them from the correct location. Then 'dbsped' 
         # evaluates the spline using the approach of spval2().
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype 
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         if der >= k:
             return y
         nderiv = der+1
         inev = np.ones(1, 'i')
-        work = np.zeros(3*k)
-        ad = np.zeros((2*n-nderiv+1)*nderiv/2)
+        work = np.zeros(3*k, dtype)
+        ad = np.zeros((2*n-nderiv+1)*nderiv/2, dtype)
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
         ind = find((t[0] <= x) & (x <= t[-1]))
+        bspdr = self.slatec.bspdr
+        bsped = self.slatec.bsped
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
             for dd in xrange(d):
-                dslatec.bspdr(t, cj[dd], n, k, nderiv, ad)
+                bspdr(t, cj[dd], n, k, nderiv, ad)
                 for i in ind:
-                    dslatec.bsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
+                    bsped(t, ad, n, k, nderiv, x[i], inev, yj[i,dd:dd+1], work)
         return y
 
     def to_pp2(self):
         # this uses the PGS normalization
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
         l = len(np.unique(t)) - 1
-
-        b = np.zeros(l+1)
-        scrtch = np.zeros((d, k, k))
-        a = np.zeros((p, d, l, k))
-        work = np.zeros(k*(n+3))
+        b = np.zeros(l+1, dtype)
+        scrtch = np.zeros((d, k, k), dtype)
+        a = np.zeros((p, d, l, k), dtype)
+        work = np.zeros(k*(n+3), dtype)
 
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        bsppp = self.slatec.bsppp
         for j in xrange(p):
             cj = c[j]
             aj = a[j]
             for i in xrange(d):
-                dslatec.bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
+                bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
         a = np.ascontiguousarray(a.transpose((0, 2, 3, 1)))
         return PPSLA2(b, a)
 
 
 class SplineSLA1(SplineSLA):
-    dbval = dslatec.dbval1
+    def dbval(self, *args):
+        return self.slatec.dbval1(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
         y = np.zeros(m)
         inbv = np.ones(1, 'i')
@@ -619,7 +657,8 @@ class SplineSLA1(SplineSLA):
 
 
 class SplineSLAI(SplineSLA1):
-    dbval = dslatec.dbvali
+    def dbval(self, *args):
+        return self.slatec.dbvali(*args)
 
 import _slatec
 
@@ -772,7 +811,6 @@ class SplineND(object):
         self.t = [np.ascontiguousarray(t, c.dtype) for t in self.t]
         self.n = np.array(c.shape, np.int32)
         self.k = np.array([t.size for t in self.t], np.int32) - self.n
-
         if c.dtype == np.float64:
             self.slatec = dslatec
         else:
@@ -877,14 +915,14 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test1 = True
     #bench = True
 
 if test1:
     p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
-    c = np.random.rand(p, n, d)
+    c = np.asarray(np.random.rand(p, n, d), np.float32)
 
     #knots = np.sort(np.random.rand(n-k+2.))
     knots = np.arange(n-k+2.)
@@ -902,7 +940,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLA9.from_knots_coefs(t, c)
+    sp_pgs = SplineSLA.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -1030,7 +1068,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     # do not convert to double
     t = psi_n.t
