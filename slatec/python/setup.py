@@ -25,9 +25,9 @@ def configuration(from_pyf=True, name='dslatec'):
                          f2py_options = ['--no-wrap-functions'],
                          libraries = [name])
     
-    config.add_extension('_slatec',
-                         sources = ['_slatecmodule.c'],
-                         libraries = ['dslatec'])
+    config.add_extension('_' + name,
+                         sources = ['_' + name + 'module.c'],
+                         libraries = [name])
     return config
 
 

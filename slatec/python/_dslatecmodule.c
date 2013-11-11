@@ -3,32 +3,32 @@
 #include <string.h>   /* memset */
 
 extern void 
-intrv_(float *t, int *np1, float *x, int *inbv, int *i, int *mflag);
+intrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
 
 extern void 
-dintrv_(float *t, int *np1, float *x, int *inbv, int *i, int *mflag);
+dintrv_(double *t, int *np1, double *x, int *inbv, int *i, int *mflag);
 
 extern void
-bspvn_(float *t, int *jhigh, int *k, int *index, float *x, int *ileft, 
-        float *vnikx, float *work, int *iwork);
+bspvn_(double *t, int *jhigh, int *k, int *index, double *x, int *ileft, 
+        double *vnikx, double *work, int *iwork);
 
 extern void
-dbspvn_(float *t, int *jhigh, int *k, int *index, float *x, int *ileft, 
-        float *vnikx, float *work, int *iwork);
+dbspvn_(double *t, int *jhigh, int *k, int *index, double *x, int *ileft, 
+        double *vnikx, double *work, int *iwork);
 
 extern void
-dbder_(float *t, int *k, int *ideriv, float *x, float *vnikx);
+dbder_(double *t, int *k, int *ideriv, double *x, double *vnikx);
 
 extern void
-nd_dot_product_(float *a, int *s, float *b, int *n, int *nd, 
-                float *f, float *res);
+nd_dot_product_(double *a, int *s, double *b, int *n, int *nd, 
+                double *f, double *res);
 
 
-void nd_dot_product(float *a, int *s, float *b, int *n, int nd, 
-                    float f, float *res)
+void nd_dot_product(double *a, int *s, double *b, int *n, int nd, 
+                    double f, double *res)
 {
     int s0, n0, ndm1, i;
-    float *bnext, tmp;
+    double *bnext, tmp;
     n0 = *n++;
     if (nd > 1) {
         s0 = *s++;
@@ -48,7 +48,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
 {
     int ndim, *n, *k, *s, *ideriv, m, *inbv, i, mflag, d, mm,
         offs, nd, kd, np1;
-    float *t, *a, *x, *work, *y, f, *tt, *workb;
+    double *t, *a, *x, *work, *y, f, *tt, *workb;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
     t = PyArray_DATA(obj);
@@ -117,7 +117,7 @@ static PyObject* dbualnd(PyObject *self, PyObject *args)
 static PyObject* dbvali(PyObject *self, PyObject *args)
 {
     int n, k, ideriv, m, *inbv, np1, i, mflag, mm, kmider, kk, j;
-    float *t, *a, *x, *work, *y, *ti, *ai, f1, f2, fkmj, xm;
+    double *t, *a, *x, *work, *y, *ti, *ai, f1, f2, fkmj, xm;
     PyObject *obj;
     obj = PyTuple_GET_ITEM(args, 0);
     t = PyArray_DATA(obj);
@@ -187,9 +187,9 @@ static PyMethodDef methods[] = {
 };
 
 PyMODINIT_FUNC
-init_slatec(void)
+init_dslatec(void)
 {
-    Py_InitModule("_slatec", methods);
+    Py_InitModule("_dslatec", methods);
     import_array();
 }
 

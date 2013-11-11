@@ -1,6 +1,6 @@
 import numpy as np
-diff, find, cat, zeros, ones = \
-        np.diff, np.flatnonzero, np.concatenate, np.zeros, np.ones
+find, cat, cont = np.flatnonzero, np.concatenate, np.ascontiguousarray
+diff, zeros, ones = np.diff, np.zeros, np.ones
 
 from matplotlib.pyplot import figure, show
 from mpl_toolkits.mplot3d import Axes3D
@@ -39,7 +39,7 @@ def augknt(knots, k, mults=np.array(1), with_addl=False):
     addl = k - j[0]
     interior = np.arange(j[0]+1, j[-1]+1)
 
-    mults = np.atleast_1d(mults)
+    mults = cont(mults)
     if mults.size != interior.size:
         mults = mults[0].repeat(interior.size)
 
@@ -68,7 +68,7 @@ def optknt(x, k=4):
     return t
 
 def get_left(t, k, n, x):
-    x = np.atleast_1d(x)
+    x = cont(x)
     left = t.searchsorted(x, 'right')
     left[left == 0] = k
     left[left == n+k] = n
@@ -137,7 +137,7 @@ class PP:
 
     def to_pp_pgs(self):
         b, a, p, l, k, d = self.ppbrk()
-        anew = np.ascontiguousarray(a[:,::-1].reshape((p, k, l, d)).transpose((0, 2, 1, 3)))
+        anew = cont(a[:,::-1].reshape((p, k, l, d)).transpose((0, 2, 1, 3)))
         return PPPGS(b, anew)
 
 
@@ -310,8 +310,7 @@ import pppack
 
 class PPPGS(PP):
     def ppmak(self, b, a):
-        self.b = np.ascontiguousarray(b, np.float64)
-        self.a = np.ascontiguousarray(a, np.float64)
+        self.b, self.a = cont(b, np.float64), cont(a, np.float64)
         self.p, self.l, self.k, self.d = a.shape
 
     def zeros(self):
@@ -331,7 +330,7 @@ class PPPGS(PP):
   
     def ppual(self, x, der=0, fast=True):
         b, a, p, l, k, d = self.ppbrk()
-        x = np.atleast_1d(np.ascontiguousarray(x, np.float64))
+        x = cont(x, np.float64)
         m = x.size
         y = np.zeros((p, m, d))
         if der == 0 and fast:
@@ -348,7 +347,7 @@ class PPPGS2(PPPGS):
         b, a, p, l, k, d = self.ppbrk()
         m = x.size
         y = np.zeros((p, m, d))
-        a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
+        a = cont(a.transpose((0, 3, 1, 2)))
         for j in xrange(p):
             yj = y[j]
             aj = a[j]
@@ -362,7 +361,7 @@ class PPPGS2(PPPGS):
 
 class SplinePGS(Spline):
     def __init__(self, x, y, k=4, c=None, getknt=aptknt, dtype=np.float64):
-        x = np.ascontiguousarray(x, np.float64)
+        x = cont(x, np.float64)
         p, n, d = y.shape
         t = getknt(x, k)
         q = np.zeros((2*k-1)*n)
@@ -380,14 +379,13 @@ class SplinePGS(Spline):
         self.spmak(t, c)
 
     def spmak(self, t, c):
-        self.t = np.ascontiguousarray(t, np.float64)
-        self.c = np.ascontiguousarray(c, np.float64)
+        self.t, self.c = cont(t, np.float64), cont(c, np.float64)
         self.p, self.n, self.d = c.shape
         self.k = t.size - self.n
 
     def spval(self, x, der=0, fast=True, y=None):
         t, c, k, p, n, d = self.spbrk()
-        x = np.ascontiguousarray(x, np.float64)
+        x = cont(x, np.float64)
         m = x.size
         if y is None:
             y = np.zeros((p, m, d))
@@ -438,8 +436,7 @@ class SplinePGS(Spline):
 
     def to_pp(self):
         t, c, k, p, n, d = self.spbrk()
-        t = np.ascontiguousarray(t, np.float64)
-        c = np.ascontiguousarray(c, np.float64)
+        t, c = cont(t, np.float64), cont(c, np.float64)
         l = len(np.unique(t)) - 1
 
         b = np.zeros(l+1)
@@ -476,7 +473,7 @@ import slatec, dslatec
 
 class PPSLA2(PPPGS2):
     def ppmak(self, b, a):
-        self.b, self.a = np.ascontiguousarray(b, a.dtype), a
+        self.b, self.a = cont(b, a.dtype), a
         self.p, self.l, self.k, self.d = a.shape
         if a.dtype == np.float64:
             self.slatec = dslatec
@@ -487,12 +484,12 @@ class PPSLA2(PPPGS2):
         # this uses the PGS normalization
         b, a, p, l, k, d = self.ppbrk()
         dtype = c.dtype 
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         if der >= k:
             return y
-        a = np.ascontiguousarray(a.transpose((0, 3, 1, 2)))
+        a = cont(a.transpose((0, 3, 1, 2)))
         inppv = self.get_index(x) + 1
         ppval = self.slatec.ppval
         for j in xrange(p):
@@ -513,7 +510,7 @@ class SplineSLA(SplinePGS):
         SplinePGS.__init__(self, x, y, *args, **kw)
 
     def spmak(self, t, c):
-        self.t, self.c = np.ascontiguousarray(t, c.dtype), c
+        self.t, self.c = cont(t, c.dtype), c
         self.p, self.n, self.d = c.shape
         self.k = t.size - self.n
         if c.dtype == np.float64:
@@ -531,7 +528,7 @@ class SplineSLA(SplinePGS):
         inbv = self.get_left(x).astype('i')
         work = np.zeros(3*k, dtype)
         ind = find((t[0] <= x) & (x <= t[-1]))
-        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        c = cont(c.transpose((0, 2, 1)))
         bvalu = self.slatec.bvalu
         for j in xrange(p):
             yj = y[j]
@@ -547,7 +544,7 @@ class SplineSLA(SplinePGS):
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype 
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         left = self.get_left(x)
         B = np.zeros((m, k), dtype)
@@ -578,7 +575,7 @@ class SplineSLA(SplinePGS):
         nderiv = dorder+1
         cnew = np.zeros((p, n-dorder, d), dtype)
         ad = np.zeros((2*n-nderiv+1)*nderiv/2, dtype)
-        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        c = cont(c.transpose((0, 2, 1)))
         bspdr = self.slatec.bspdr
         for j in xrange(p):
             yj = y[j]
@@ -597,7 +594,7 @@ class SplineSLA(SplinePGS):
         # evaluates the spline using the approach of spval2().
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype 
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         if der >= k:
@@ -606,7 +603,7 @@ class SplineSLA(SplinePGS):
         inev = np.ones(1, 'i')
         work = np.zeros(3*k, dtype)
         ad = np.zeros((2*n-nderiv+1)*nderiv/2, dtype)
-        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        c = cont(c.transpose((0, 2, 1)))
         ind = find((t[0] <= x) & (x <= t[-1]))
         bspdr = self.slatec.bspdr
         bsped = self.slatec.bsped
@@ -629,14 +626,14 @@ class SplineSLA(SplinePGS):
         a = np.zeros((p, d, l, k), dtype)
         work = np.zeros(k*(n+3), dtype)
 
-        c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        c = cont(c.transpose((0, 2, 1)))
         bsppp = self.slatec.bsppp
         for j in xrange(p):
             cj = c[j]
             aj = a[j]
             for i in xrange(d):
                 bsppp(t, cj[i], n, k, aj[i].T, b, l+1, work)
-        a = np.ascontiguousarray(a.transpose((0, 2, 3, 1)))
+        a = cont(a.transpose((0, 2, 3, 1)))
         return PPSLA2(b, a)
 
 
@@ -647,7 +644,7 @@ class SplineSLA1(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros(m, dtype)
         inbv = np.ones(1, 'i')
@@ -660,10 +657,14 @@ class SplineSLAI(SplineSLA1):
     def dbval(self, *args):
         return self.slatec.dbvali(*args)
 
-import _slatec
+import _slatec, _dslatec
 
 class SplineSLAIC(SplineSLAI):
-    dbval = _slatec.dbvali
+    def dbval(self, t, c, *args):
+        if c.dtype == np.float64:
+            return _dslatec.dbvali(t, c, *args)
+        else:
+            return _slatec.dbvali(t, c, *args)
 
 
 class SplineSLA2(SplineSLA):
@@ -673,7 +674,7 @@ class SplineSLA2(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
@@ -689,7 +690,7 @@ class SplineSLA3(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
@@ -706,7 +707,7 @@ class SplineSLA4(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
@@ -726,7 +727,7 @@ class SplineSLA6(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
@@ -740,14 +741,14 @@ class SplineSLA7(SplineSLA4):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((1, m, p*d), dtype)
         inbv = np.ones(1, 'i')
         work = np.zeros(3*k, dtype)
-        c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((1, n, p*d)))
+        c = cont(c.transpose((1, 0, 2)).reshape((1, n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
-        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
+        return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineSLA8(SplineSLA):
@@ -757,14 +758,14 @@ class SplineSLA8(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((m, p*d), dtype)
         inbv = np.ones(1, 'i')
         work = np.zeros(3*k, dtype)
-        c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((n, p*d)))
+        c = cont(c.transpose((1, 0, 2)).reshape((n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
-        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
+        return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineSLA9(SplineSLA):
@@ -774,7 +775,7 @@ class SplineSLA9(SplineSLA):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
         dtype = c.dtype
-        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
+        x = cont(x, dtype)
         m = x.size
         y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
@@ -799,7 +800,7 @@ class SplineDie(SplinePGS):
         c = c.transpose((0, 2, 1)).ravel()
         ier = 0
         dierckx.splevv(t, c, k-1, x, y, pd, ier)
-        return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
+        return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineND(object):
@@ -834,7 +835,7 @@ class SplineND(object):
 
     def spmak(self, t, c):
         self.t, self.c = t, c
-        self.t = [np.ascontiguousarray(t, c.dtype) for t in self.t]
+        self.t = [cont(t, c.dtype) for t in self.t]
         self.n = np.array(c.shape, np.int32)
         self.k = np.array([t.size for t in self.t], np.int32) - self.n
         if c.dtype == np.float64:
@@ -848,12 +849,12 @@ class SplineND(object):
         i = self.get_left(x)
         t = [t[d][i[d]-k[d]:i[d]+k[d]] for d in xrange(nd)]
         s = [slice(i[d]-k[d], i[d]) for d in xrange(nd)]
-        return self.from_knots_coefs(t, np.ascontiguousarray(self.c[s]))
+        return self.from_knots_coefs(t, cont(self.c[s]))
 
     def spval(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         dtype = self.c.dtype
-        x = np.ascontiguousarray(x, dtype)
+        x = cont(x, dtype)
         m, nd = x.shape
         der = np.array(der, np.int32)
         if der.size == 1:
@@ -871,7 +872,7 @@ class SplineND(object):
         nd, dtype = c.ndim, c.dtype
         if not hasattr(x, "__iter__"):
             x = [x]
-        x = [np.atleast_1d(np.ascontiguousarray(xi, dtype)) for xi in x]
+        x = [cont(xi, dtype) for xi in x]
 
         m = np.array(map(len, x))
         if dims is None:
@@ -941,14 +942,14 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    #test1 = True
-    bench = True
+    test4 = True
+    #bench = True
 
 if test1:
     p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
     #c = np.zeros((p, n, d))
     #for i in xrange(d): c[:,n-1-i,i] = 1.
-    c = np.asarray(np.random.rand(p, n, d), np.float32)
+    c = cont(np.random.rand(p, n, d), np.float32)
 
     #knots = np.sort(np.random.rand(n-k+2.))
     knots = np.arange(n-k+2.)
@@ -966,7 +967,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineDie.from_knots_coefs(t, c)
+    sp_pgs = SplineSLAIC.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -999,7 +1000,7 @@ if test1:
 
 if bench:
     p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 0
-    c = np.asarray(np.random.rand(p, n, d), np.float64)
+    c = cont(np.random.rand(p, n, d), np.float32)
 
     knots = np.arange(n-k+2.)
     t = augknt(knots, k)
@@ -1025,7 +1026,7 @@ if test2:
 
     kx = ky = 4
     x0, y0 = np.arange(5.), np.arange(6.)
-    Z0 = f(x0, y0)    
+    Z0 = cont(f(x0, y0), np.float32)
     
     sp = SplineND((x0, y0), Z0, k=4)
     tx, ty = sp.t
@@ -1042,7 +1043,8 @@ if test2:
     Z1 = sp.spval_grid((x, y), der=der)
 
     from pytokamak.utils import splines
-    sp2 = splines.Spline2D(data=dict(tck=(ty, tx, coefs.T.ravel()), degrees=(3, 3)))
+    tck = (cont(ty, 'd'), cont(tx, 'd'), cont(coefs.T.ravel(), 'd'))
+    sp2 = splines.Spline2D(data=dict(tck=tck, degrees=(3, 3)))
     Z2 = sp2.deriv(der[1], der[0])(y, x).T
 
     print 'Z1 check:', (Z1 - Z2).ptp()
@@ -1064,7 +1066,7 @@ if test3:
     tx = augknt(np.arange(nx-kx+2.), kx)
     ty = augknt(np.arange(ny-ky+2.), ky)
 
-    c = np.random.rand(nx, ny)
+    c = cont(np.random.rand(nx, ny), np.float32)
 
     sp = SplineND.from_knots_coefs((tx, ty), c)
 
@@ -1074,7 +1076,8 @@ if test3:
     Z = sp.spval_grid((x, y))
 
     from pytokamak.utils import splines
-    sp2 = splines.Spline2D(data=dict(tck=(ty, tx, c.T.ravel()), degrees=(ky-1, kx-1)))
+    tck = (cont(ty, 'd'), cont(tx, 'd'), cont(c.T.ravel(), 'd'))
+    sp2 = splines.Spline2D(data=dict(tck=tck, degrees=(ky-1, kx-1)))
     Z2 = sp2(y, x).T
 
     print (Z - Z2).ptp()
@@ -1088,7 +1091,7 @@ if test3:
     i = y.size / 2
 
     from matplotlib.pyplot import plot, show
-    plot(x, Z[:,i], x, Z3[:,i])
+    plot(x, Z[:,i], x, Z2[:,i], x, Z3[:,i])
     show()
 
 if test4:
@@ -1098,7 +1101,7 @@ if test4:
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     # do not convert to double
     t = psi_n.t
-    psi_n = np.ascontiguousarray(psi_n.amp(psi_n._x), np.float32)
+    psi_n = cont(psi_n.amp(psi_n._x), np.float32)
 
     mgc('%time sp = SplineND((t, z, R), psi_n, k=(2, 4, 4))')
     #"""
@@ -1136,7 +1139,7 @@ if test5:
     
     #c = np.zeros(knots.size - 2 + k)
     #c[4] = 1
-    c = np.random.rand(knots.size - 2 + k)
+    c = cont(np.random.rand(knots.size - 2 + k), np.float32)
 
     sp = SplineND.from_knots_coefs([augknt(knots, k)], c)
 
