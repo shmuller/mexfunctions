@@ -649,9 +649,9 @@ class SplineSLA1(SplineSLA):
         dtype = c.dtype
         x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros(m)
+        y = np.zeros(m, dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
         self.dbval(t, c.ravel(), k, der, x, inbv, work, y)
         return y.reshape((1, m, 1))
 
@@ -667,54 +667,71 @@ class SplineSLAIC(SplineSLAI):
 
 
 class SplineSLA2(SplineSLA):
-    dbual = dslatec.dbualu
+    def dbual(self, *args):
+        return self.slatec.dbualu(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(k*(k+2))
+        work = np.zeros(k*(k+2), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return y
 
 
 class SplineSLA3(SplineSLA):
-    dbual = dslatec.dbualu2
+    def dbual(self, *args):
+        return self.slatec.dbualu2(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(k*(k+1))
-        work2 = np.zeros((k, d))
+        work = np.zeros(k*(k+1), dtype)
+        work2 = np.zeros((k, d), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
         return y
 
 
 class SplineSLA4(SplineSLA):
-    dbual = dslatec.dbual
+    def dbual(self, *args):
+        return self.slatec.dbual(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return y
 
 class SplineSLA5(SplineSLA4):
-    dbual = dslatec.dbual2
+    def dbual(self, *args):
+        return self.slatec.dbual2(*args)
 
 
 class SplineSLA6(SplineSLA):
-    dbual = dslatec.dbual3
+    def dbual(self, *args):
+        return self.slatec.dbual3(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
-        work2 = np.zeros((k, p, d))
+        work = np.zeros(3*k, dtype)
+        work2 = np.zeros((k, p, d), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
         return y
 
@@ -722,37 +739,46 @@ class SplineSLA6(SplineSLA):
 class SplineSLA7(SplineSLA4):
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((1, m, p*d))
+        y = np.zeros((1, m, p*d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
         c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((1, n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineSLA8(SplineSLA):
-    dbual = dslatec.dbual4
+    def dbual(self, *args):
+        return self.slatec.dbual4(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((m, p*d))
+        y = np.zeros((m, p*d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
         c = np.ascontiguousarray(c.transpose((1, 0, 2)).reshape((n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return np.ascontiguousarray(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineSLA9(SplineSLA):
-    dbual = dslatec.dbualnd
-    #dbual = _slatec.dbualnd
+    def dbual(self, *args):
+        return self.slatec.dbualnd(*args)
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = np.atleast_1d(np.ascontiguousarray(x, dtype))
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         inbv = np.ones(1, 'i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
 
         n = np.array([n], 'i')
         k = np.array([k], 'i')
@@ -915,8 +941,8 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test1 = True
-    #bench = True
+    #test1 = True
+    bench = True
 
 if test1:
     p, n, d, k, m, der = 1, 16, 1, 4, 101, 1
@@ -940,7 +966,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLA.from_knots_coefs(t, c)
+    sp_pgs = SplineDie.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -964,7 +990,7 @@ if test1:
     pp_pgsb = pp.to_pp_pgs()
     y8 = pp_pgsb.ppual(x, der=der)
 
-    assert np.allclose(pp_pgs.a, pp_pgsb.a)
+    assert np.allclose(pp_pgs.a, pp_pgsb.a, atol=1e-6)
 
     s = 0
     from matplotlib.pyplot import plot, show
@@ -972,8 +998,8 @@ if test1:
     show()
 
 if bench:
-    p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 1
-    c = np.random.rand(p, n, d)
+    p, n, d, k, m, der = 1, 1000, 1, 4, 1000000, 0
+    c = np.asarray(np.random.rand(p, n, d), np.float64)
 
     knots = np.arange(n-k+2.)
     t = augknt(knots, k)
