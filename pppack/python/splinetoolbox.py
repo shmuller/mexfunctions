@@ -155,7 +155,7 @@ class Spline(object):
         return self
 
     def spmak(self, t, c):
-        self.t, self.c = t, c
+        self.t, self.c = np.ascontiguousarray(t, c.dtype), c
         self.p, self.n, self.d = c.shape
         self.k = t.size - self.n
 
@@ -360,7 +360,7 @@ class PPPGS2(PPPGS):
 
 
 class SplinePGS(Spline):
-    def __init__(self, x, y, k=4, c=None, getknt=aptknt):
+    def __init__(self, x, y, k=4, c=None, getknt=aptknt, dtype=np.float64):
         x = np.ascontiguousarray(x, np.float64)
         p, n, d = y.shape
         t = getknt(x, k)
@@ -368,7 +368,7 @@ class SplinePGS(Spline):
         g = np.zeros(n)
         bcoef = np.zeros(n)
         if c is None:
-            c = np.zeros((p, n, d))
+            c = np.zeros((p, n, d), dtype)
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
@@ -376,7 +376,7 @@ class SplinePGS(Spline):
                 g[:] = yj[:,dd]
                 iflag = pppack.splint(x, g, t, k, q, bcoef)
                 cj[:,dd] = bcoef
-        self.spmak(t, c)    
+        self.spmak(t, c)
 
     def spval(self, x, der=0, fast=True, y=None):
         t, c, k, p, n, d = self.spbrk()
@@ -462,7 +462,7 @@ class SplinePGS(Spline):
         return PPPGS2(b, a)
 
 
-import dslatec
+import slatec, dslatec
 
 class PPSLA2(PPPGS2):
     def ppual(self, x, der=0):
@@ -487,16 +487,29 @@ class PPSLA2(PPPGS2):
 
 
 class SplineSLA(SplinePGS):
+    def __init__(self, x, y, *args, **kw):
+        kw.setdefault('dtype', y.dtype)
+        SplinePGS.__init__(self, x, y, *args, **kw)
+
+    def spmak(self, t, c):
+        SplinePGS.spmak(self, t, c)
+        if c.dtype == np.float64:
+            self.slatec = dslatec
+        else:
+            self.slatec = slatec
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         if der >= k:
             return y
         inbv = self.get_left(x).astype('i')
-        work = np.zeros(3*k)
+        work = np.zeros(3*k, dtype)
         ind = find((t[0] <= x) & (x <= t[-1]))
         c = np.ascontiguousarray(c.transpose((0, 2, 1)))
+        bvalu = self.slatec.bvalu
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
@@ -505,7 +518,7 @@ class SplineSLA(SplinePGS):
                 yji = yj[i]
                 inbvi = inbv[i]
                 for dd in xrange(d):
-                    yji[dd] = dslatec.bvalu(t, cj[dd], n, k, der, xi, inbvi, work)
+                    yji[dd] = bvalu(t, cj[dd], n, k, der, xi, inbvi, work)
         return y
     
     def evalB(self, x, der=0):
@@ -725,14 +738,12 @@ class SplineDie(SplinePGS):
 
 
 class SplineND(object):
-    SplineClass = SplineSLA4
-    dbualnd = dslatec.dbualnd
-    #dbualnd = _slatec.dbualnd
+    SplineClass = SplineSLA
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
         n = np.array(y.shape, np.int32)
         c = y.copy()
-        nd = len(x)
+        nd = c.ndim
         t = []
         k = np.array(k, np.int32)
         if k.size == 1:
@@ -758,8 +769,14 @@ class SplineND(object):
 
     def spmak(self, t, c):
         self.t, self.c = t, c
+        self.t = [np.ascontiguousarray(t, c.dtype) for t in self.t]
         self.n = np.array(c.shape, np.int32)
         self.k = np.array([t.size for t in self.t], np.int32) - self.n
+
+        if c.dtype == np.float64:
+            self.slatec = dslatec
+        else:
+            self.slatec = slatec
 
     def reduce1(self, x):
         t, k = self.t, self.k
@@ -771,25 +788,26 @@ class SplineND(object):
 
     def spval(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
-        x = np.ascontiguousarray(x, np.float64)
+        dtype = self.c.dtype
+        x = np.ascontiguousarray(x, dtype)
         m, nd = x.shape
         der = np.array(der, np.int32)
         if der.size == 1:
             der = der.repeat(nd)
 
-        y = np.zeros(m)
-        s = np.zeros(nd, 'i')
-        inbv = np.ones(nd, 'i')
-        work = np.zeros(k.sum())
-        self.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
+        y = np.zeros(m, dtype)
+        s = np.zeros(nd, np.int32)
+        inbv = np.ones(nd, np.int32)
+        work = np.zeros(k.sum(), dtype)
+        self.slatec.dbualnd(t, c.ravel(), n, k, s, der, x.T, inbv, work, y)
         return y
 
     def spval_dims(self, x, dims=None, der=0):
         t, c, n, SplineClass = self.t, self.c, self.n.copy(), self.SplineClass
-        nd = len(t)
+        nd, dtype = c.ndim, c.dtype
         if not hasattr(x, "__iter__"):
             x = [x]
-        x = [np.atleast_1d(np.ascontiguousarray(xi, np.float64)) for xi in x]
+        x = [np.atleast_1d(np.ascontiguousarray(xi, dtype)) for xi in x]
 
         m = np.array(map(len, x))
         if dims is None:
@@ -814,21 +832,27 @@ class SplineND(object):
 
     def spval_grid(self, x, der=0, fast=True):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
-        nd = c.ndim
+        nd, dtype = c.ndim, c.dtype
         m = np.array(map(len, x), np.int32)
+        X = np.zeros(m.sum(), dtype)
+        j = 0
+        for i in xrange(m.size):
+            X[j:j+m[i]] = x[i]
+            j += m[i]
+
         der = np.array(der, np.int32)
         if der.size == 1:
             der = der.repeat(nd)
 
         i = np.zeros(m.sum(), np.int32)
-        B = np.zeros(k.dot(m))
-        y = np.zeros(m)
+        B = np.zeros(k.dot(m), dtype)
+        y = np.zeros(m, dtype)
 
         if fast and nd == 3:
-            dslatec.dbual3d(t, c.ravel(), n, k, der, cat(x), m, i, B, y.ravel())
+            self.slatec.dbual3d(t, c.ravel(), n, k, der, X, m, i, B, y.ravel())
         else:
             s = np.zeros(4*nd, np.int32)
-            dslatec.dbualgd(t, c.ravel(), n, k, s, der, cat(x), m, i, B, y.ravel())
+            self.slatec.dbualgd(t, c.ravel(), n, k, s, der, X, m, i, B, y.ravel())
         return y
 
     def plot(self):
@@ -1006,10 +1030,12 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
-    t, psi_n = psi_n.t, psi_n.x
-    
+    # do not convert to double
+    t = psi_n.t
+    psi_n = np.ascontiguousarray(psi_n.amp(psi_n._x), np.float32)
+
     mgc('%time sp = SplineND((t, z, R), psi_n, k=(2, 4, 4))')
     #"""
     pos = AUG.XPR.pos.t_gt(1.).compressed()
@@ -1019,13 +1045,13 @@ if test4:
     mgc('%time y = sp(tzR, der=(0,0,0))')
     plot(pos.t, y)
     show()
-
+    
     n = (t.size, z.size, R.size)
     m = np.prod(n)
     print "Evaluating at %d grid positions..." % m
     mgc('%time psi_n1 = sp.spval_grid((t, z, R))')
     maxerr = (psi_n1 - psi_n).ptp()
-    assert maxerr < 1e-14, maxerr
+    assert maxerr < 1e-5, maxerr
 
     """
     TZR = np.zeros(n + (3,))
