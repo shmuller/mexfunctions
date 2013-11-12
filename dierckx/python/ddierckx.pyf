@@ -3,15 +3,15 @@
 
 python module polar__user__routines 
     interface polar_user_interface 
-        function rad(v_i_) result (r) ! in :dierckx:../polar.f:polar:unknown_interface
+        function rad(v_i_) result (r) ! in :ddierckx:../polar.f:polar:unknown_interface
             real :: v_i_
             real :: r
         end function rad
     end interface polar_user_interface
 end python module polar__user__routines
-python module dierckx ! in 
-    interface  ! in :dierckx
-        subroutine bispeu(tx,nx,ty,ny,c,kx,ky,x,y,z,m,wrk,lwrk,ier) ! in :dierckx:../bispeu.f
+python module ddierckx ! in 
+    interface  ! in :ddierckx
+        subroutine bispeu(tx,nx,ty,ny,c,kx,ky,x,y,z,m,wrk,lwrk,ier) ! in :ddierckx:../bispeu.f
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
             real dimension(ny) :: ty
@@ -27,7 +27,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine bispeu
-        subroutine bispev(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../bispev.f
+        subroutine bispev(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../bispev.f
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
             real dimension(ny) :: ty
@@ -46,7 +46,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine bispev
-        subroutine clocur(iopt,ipar,idim,m,u,mx,x,w,k,s,nest,n,t,nc,c,fp,wrk,lwrk,iwrk,ier) ! in :dierckx:../clocur.f
+        subroutine clocur(iopt,ipar,idim,m,u,mx,x,w,k,s,nest,n,t,nc,c,fp,wrk,lwrk,iwrk,ier) ! in :ddierckx:../clocur.f
             integer :: iopt
             integer :: ipar
             integer :: idim
@@ -68,7 +68,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: iwrk
             integer :: ier
         end subroutine clocur
-        subroutine cocosp(m,x,y,w,n,t,e,maxtr,maxbin,c,sq,sx,bind,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../cocosp.f
+        subroutine cocosp(m,x,y,w,n,t,e,maxtr,maxbin,c,sq,sx,bind,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../cocosp.f
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
             real dimension(m),depend(m) :: y
@@ -88,7 +88,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine cocosp
-        subroutine concon(iopt,m,x,y,w,v,s,nest,maxtr,maxbin,n,t,c,sq,sx,bind,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../concon.f
+        subroutine concon(iopt,m,x,y,w,v,s,nest,maxtr,maxbin,n,t,c,sq,sx,bind,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../concon.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -111,7 +111,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine concon
-        subroutine concur(iopt,idim,m,u,mx,x,xx,w,ib,db,nb,ie,de,ne,k,s,nest,n,t,nc,c,np,cp,fp,wrk,lwrk,iwrk,ier) ! in :dierckx:../concur.f
+        subroutine concur(iopt,idim,m,u,mx,x,xx,w,ib,db,nb,ie,de,ne,k,s,nest,n,t,nc,c,np,cp,fp,wrk,lwrk,iwrk,ier) ! in :ddierckx:../concur.f
             integer :: iopt
             integer :: idim
             integer, optional,check(len(u)>=m),depend(u) :: m=len(u)
@@ -141,7 +141,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: iwrk
             integer :: ier
         end subroutine concur
-        subroutine cualde(idim,t,n,c,nc,k1,u,d,nd,ier) ! in :dierckx:../cualde.f
+        subroutine cualde(idim,t,n,c,nc,k1,u,d,nd,ier) ! in :ddierckx:../cualde.f
             integer :: idim
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
@@ -153,7 +153,7 @@ python module dierckx ! in
             integer, optional,check(len(d)>=nd),depend(d) :: nd=len(d)
             integer :: ier
         end subroutine cualde
-        subroutine curev(idim,t,n,c,nc,k,u,m,x,mx,ier) ! in :dierckx:../curev.f
+        subroutine curev(idim,t,n,c,nc,k,u,m,x,mx,ier) ! in :ddierckx:../curev.f
             integer :: idim
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
@@ -166,7 +166,7 @@ python module dierckx ! in
             integer, optional,check(len(x)>=mx),depend(x) :: mx=len(x)
             integer :: ier
         end subroutine curev
-        subroutine curfit(iopt,m,x,y,w,xb,xe,k,s,nest,n,t,c,fp,wrk,lwrk,iwrk,ier) ! in :dierckx:../curfit.f
+        subroutine curfit(iopt,m,x,y,w,xb,xe,k,s,nest,n,t,c,fp,wrk,lwrk,iwrk,ier) ! in :ddierckx:../curfit.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -186,7 +186,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: iwrk
             integer intent(out) :: ier
         end subroutine curfit
-        function dblint(tx,nx,ty,ny,c,kx,ky,xb,xe,yb,ye,wrk) ! in :dierckx:../dblint.f
+        function dblint(tx,nx,ty,ny,c,kx,ky,xb,xe,yb,ye,wrk) ! in :ddierckx:../dblint.f
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
             real dimension(ny) :: ty
@@ -201,7 +201,7 @@ python module dierckx ! in
             real dimension(nx+ny-kx-ky-2),depend(nx,ny,kx,ky) :: wrk
             real :: dblint
         end function dblint
-        function evapol(tu,nu,tv,nv,c,rad,x,y) ! in :dierckx:../evapol.f
+        function evapol(tu,nu,tv,nv,c,rad,x,y) ! in :ddierckx:../evapol.f
             real dimension(nu) :: tu
             integer, optional,check(len(tu)>=nu),depend(tu) :: nu=len(tu)
             real dimension(nv) :: tv
@@ -212,7 +212,7 @@ python module dierckx ! in
             real :: y
             real :: evapol
         end function evapol
-        subroutine fourco(t,n,c,alfa,m,ress,resc,wrk1,wrk2,ier) ! in :dierckx:../fourco.f
+        subroutine fourco(t,n,c,alfa,m,ress,resc,wrk1,wrk2,ier) ! in :ddierckx:../fourco.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n),depend(n) :: c
@@ -224,7 +224,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: wrk2
             integer :: ier
         end subroutine fourco
-        subroutine fpader(t,n,c,k1,x,l,d) ! in :dierckx:../fpader.f
+        subroutine fpader(t,n,c,k1,x,l,d) ! in :ddierckx:../fpader.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n-k1),depend(n,k1) :: c
@@ -233,7 +233,7 @@ python module dierckx ! in
             integer :: l
             real dimension(k1) :: d
         end subroutine fpader
-        subroutine fpadno(maxtr,up,left,right,info,count,merk,jbind,n1,ier) ! in :dierckx:../fpadno.f
+        subroutine fpadno(maxtr,up,left,right,info,count,merk,jbind,n1,ier) ! in :ddierckx:../fpadno.f
             integer, optional,check(len(up)>=maxtr),depend(up) :: maxtr=len(up)
             integer dimension(maxtr) :: up
             integer dimension(maxtr),depend(maxtr) :: left
@@ -245,7 +245,7 @@ python module dierckx ! in
             integer, optional,check(len(jbind)>=n1),depend(jbind) :: n1=len(jbind)
             integer :: ier
         end subroutine fpadno
-        subroutine fpadpo(idim,t,n,c,nc,k,cp,np,cc,t1,t2) ! in :dierckx:../fpadpo.f
+        subroutine fpadpo(idim,t,n,c,nc,k,cp,np,cc,t1,t2) ! in :ddierckx:../fpadpo.f
             integer :: idim
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
@@ -258,7 +258,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: t1
             real dimension(n),depend(n) :: t2
         end subroutine fpadpo
-        subroutine fpback(a,z,n,k,c,nest) ! in :dierckx:../fpback.f
+        subroutine fpback(a,z,n,k,c,nest) ! in :ddierckx:../fpback.f
             real dimension(nest,k) :: a
             real dimension(n) :: z
             integer, optional,check(len(z)>=n),depend(z) :: n=len(z)
@@ -266,7 +266,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: c
             integer, optional,check(shape(a,0)==nest),depend(a) :: nest=shape(a,0)
         end subroutine fpback
-        subroutine fpbacp(a,b,z,n,k,c,k1,nest) ! in :dierckx:../fpbacp.f
+        subroutine fpbacp(a,b,z,n,k,c,k1,nest) ! in :ddierckx:../fpbacp.f
             real dimension(nest,k1) :: a
             real dimension(nest,k),depend(nest) :: b
             real dimension(n) :: z
@@ -276,14 +276,14 @@ python module dierckx ! in
             integer, optional,check(shape(a,1)==k1),depend(a) :: k1=shape(a,1)
             integer, optional,check(shape(a,0)==nest),depend(a) :: nest=shape(a,0)
         end subroutine fpbacp
-        subroutine fpbfou(t,n,par,ress,resc) ! in :dierckx:../fpbfout.f
+        subroutine fpbfou(t,n,par,ress,resc) ! in :ddierckx:../fpbfout.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real :: par
             real dimension(n),depend(n) :: ress
             real dimension(n),depend(n) :: resc
         end subroutine fpbfou
-        subroutine fpbisp(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wx,wy,lx,ly) ! in :dierckx:../fpbisp.f
+        subroutine fpbisp(tx,nx,ty,ny,c,kx,ky,x,mx,y,my,z,wx,wy,lx,ly) ! in :ddierckx:../fpbisp.f
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
             real dimension(ny) :: ty
@@ -301,7 +301,7 @@ python module dierckx ! in
             integer dimension(mx),depend(mx) :: lx
             integer dimension(my),depend(my) :: ly
         end subroutine fpbisp
-        subroutine fpbspl(t,n,k,x,l,h) ! in :dierckx:../fpbspl.f
+        subroutine fpbspl(t,n,k,x,l,h) ! in :ddierckx:../fpbspl.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             integer :: k
@@ -309,7 +309,7 @@ python module dierckx ! in
             integer :: l
             real dimension(6) :: h
         end subroutine fpbspl
-        subroutine fpchec(x,m,t,n,k,ier) ! in :dierckx:../fpchec.f
+        subroutine fpchec(x,m,t,n,k,ier) ! in :ddierckx:../fpchec.f
             real dimension(m) :: x
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(n) :: t
@@ -317,7 +317,7 @@ python module dierckx ! in
             integer :: k
             integer :: ier
         end subroutine fpchec
-        subroutine fpched(x,m,t,n,k,ib,ie,ier) ! in :dierckx:../fpched.f
+        subroutine fpched(x,m,t,n,k,ib,ie,ier) ! in :ddierckx:../fpched.f
             real dimension(m) :: x
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(n) :: t
@@ -327,7 +327,7 @@ python module dierckx ! in
             integer :: ie
             integer :: ier
         end subroutine fpched
-        subroutine fpchep(x,m,t,n,k,ier) ! in :dierckx:../fpchep.f
+        subroutine fpchep(x,m,t,n,k,ier) ! in :ddierckx:../fpchep.f
             real dimension(m) :: x
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(n) :: t
@@ -335,7 +335,7 @@ python module dierckx ! in
             integer :: k
             integer :: ier
         end subroutine fpchep
-        subroutine fpclos(iopt,idim,m,u,mx,x,w,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier) ! in :dierckx:../fpclos.f
+        subroutine fpclos(iopt,idim,m,u,mx,x,w,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier) ! in :ddierckx:../fpclos.f
             integer :: iopt
             integer :: idim
             integer, optional,check(len(u)>=m),depend(u) :: m=len(u)
@@ -366,7 +366,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: nrdata
             integer :: ier
         end subroutine fpclos
-        subroutine fpcoco(iopt,m,x,y,w,v,s,nest,maxtr,maxbin,n,t,c,sq,sx,bind,e,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../fpcoco.f
+        subroutine fpcoco(iopt,m,x,y,w,v,s,nest,maxtr,maxbin,n,t,c,sq,sx,bind,e,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../fpcoco.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -390,7 +390,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine fpcoco
-        subroutine fpcons(iopt,idim,m,u,mx,x,w,ib,ie,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :dierckx:../fpcons.f
+        subroutine fpcons(iopt,idim,m,u,mx,x,w,ib,ie,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :ddierckx:../fpcons.f
             integer :: iopt
             integer :: idim
             integer, optional,check(len(u)>=m),depend(u) :: m=len(u)
@@ -421,7 +421,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: nrdata
             integer :: ier
         end subroutine fpcons
-        subroutine fpcosp(m,x,y,w,n,t,e,maxtr,maxbin,c,sq,sx,bind,nm,mb,a,b,const_bn,z,zz,u,q,info,up,left,right,jbind,ibind,ier) ! in :dierckx:../fpcosp.f
+        subroutine fpcosp(m,x,y,w,n,t,e,maxtr,maxbin,c,sq,sx,bind,nm,mb,a,b,const_bn,z,zz,u,q,info,up,left,right,jbind,ibind,ier) ! in :ddierckx:../fpcosp.f
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
             real dimension(m),depend(m) :: y
@@ -452,7 +452,7 @@ python module dierckx ! in
             integer dimension(mb),depend(mb) :: ibind
             integer :: ier
         end subroutine fpcosp
-        subroutine fpcsin(a,b,par,sia,coa,sib,cob,ress,resc) ! in :dierckx:../fpcsin.f
+        subroutine fpcsin(a,b,par,sia,coa,sib,cob,ress,resc) ! in :ddierckx:../fpcsin.f
             real :: a
             real :: b
             real :: par
@@ -463,7 +463,7 @@ python module dierckx ! in
             real :: ress
             real :: resc
         end subroutine fpcsin
-        subroutine fpcurf(iopt,x,y,w,m,xb,xe,k,s,nest,tol,maxit,k1,k2,n,t,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :dierckx:../fpcurf.f
+        subroutine fpcurf(iopt,x,y,w,m,xb,xe,k,s,nest,tol,maxit,k1,k2,n,t,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :ddierckx:../fpcurf.f
             integer :: iopt
             real dimension(m) :: x
             real dimension(m),depend(m) :: y
@@ -491,7 +491,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: nrdata
             integer :: ier
         end subroutine fpcurf
-        subroutine fpcuro(a,b,c,d,x,n) ! in :dierckx:../fpcuro.f
+        subroutine fpcuro(a,b,c,d,x,n) ! in :ddierckx:../fpcuro.f
             real :: a
             real :: b
             real :: c
@@ -499,19 +499,19 @@ python module dierckx ! in
             real dimension(3) :: x
             integer :: n
         end subroutine fpcuro
-        subroutine fpcyt1(a,n,nn) ! in :dierckx:../fpcyt1.f
+        subroutine fpcyt1(a,n,nn) ! in :ddierckx:../fpcyt1.f
             real dimension(nn,6) :: a
             integer :: n
             integer, optional,check(shape(a,0)==nn),depend(a) :: nn=shape(a,0)
         end subroutine fpcyt1
-        subroutine fpcyt2(a,n,b,c,nn) ! in :dierckx:../fpcyt2.f
+        subroutine fpcyt2(a,n,b,c,nn) ! in :ddierckx:../fpcyt2.f
             real dimension(nn,6) :: a
             integer, optional,check(len(b)>=n),depend(b) :: n=len(b)
             real dimension(n) :: b
             real dimension(n),depend(n) :: c
             integer, optional,check(shape(a,0)==nn),depend(a) :: nn=shape(a,0)
         end subroutine fpcyt2
-        subroutine fpdeno(maxtr,up,left,right,nbind,merk) ! in :dierckx:../fpdeno.f
+        subroutine fpdeno(maxtr,up,left,right,nbind,merk) ! in :ddierckx:../fpdeno.f
             integer, optional,check(len(up)>=maxtr),depend(up) :: maxtr=len(up)
             integer dimension(maxtr) :: up
             integer dimension(maxtr),depend(maxtr) :: left
@@ -519,14 +519,14 @@ python module dierckx ! in
             integer :: nbind
             integer :: merk
         end subroutine fpdeno
-        subroutine fpdisc(t,n,k2,b,nest) ! in :dierckx:../fpdisc.f
+        subroutine fpdisc(t,n,k2,b,nest) ! in :ddierckx:../fpdisc.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             integer, optional,check(shape(b,1)==k2),depend(b) :: k2=shape(b,1)
             real dimension(nest,k2) :: b
             integer, optional,check(shape(b,0)==nest),depend(b) :: nest=shape(b,0)
         end subroutine fpdisc
-        subroutine fpfrno(maxtr,up,left,right,info,point,merk,n1,count,ier) ! in :dierckx:../fpfrno.f
+        subroutine fpfrno(maxtr,up,left,right,info,point,merk,n1,count,ier) ! in :ddierckx:../fpfrno.f
             integer, optional,check(len(up)>=maxtr),depend(up) :: maxtr=len(up)
             integer dimension(maxtr) :: up
             integer dimension(maxtr),depend(maxtr) :: left
@@ -538,13 +538,13 @@ python module dierckx ! in
             integer :: count
             integer :: ier
         end subroutine fpfrno
-        subroutine fpgivs(piv,ww,cos,sin) ! in :dierckx:../fpgivs.f
+        subroutine fpgivs(piv,ww,cos,sin) ! in :ddierckx:../fpgivs.f
             real :: piv
             real :: ww
             real :: cos
             real :: sin
         end subroutine fpgivs
-        subroutine fpgrdi(ifsu,ifsv,ifbu,ifbv,iback,u,mu,v,mv,z,mz,dz,iop0,iop1,tu,nu,tv,nv,p,c,nc,sq,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,av1,av2,bu,bv,aa,bb,cc,cosi,nru,nrv) ! in :dierckx:../fpgrdi.f
+        subroutine fpgrdi(ifsu,ifsv,ifbu,ifbv,iback,u,mu,v,mv,z,mz,dz,iop0,iop1,tu,nu,tv,nv,p,c,nc,sq,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,av1,av2,bu,bv,aa,bb,cc,cosi,nru,nrv) ! in :ddierckx:../fpgrdi.f
             integer :: ifsu
             integer :: ifsv
             integer :: ifbu
@@ -588,7 +588,7 @@ python module dierckx ! in
             integer dimension(mu),depend(mu) :: nru
             integer dimension(mv),depend(mv) :: nrv
         end subroutine fpgrdi
-        subroutine fpgrpa(ifsu,ifsv,ifbu,ifbv,idim,ipar,u,mu,v,mv,z,mz,tu,nu,tv,nv,p,c,nc,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,au1,av,av1,bu,bv,nru,nrv) ! in :dierckx:../fpgrpa.f
+        subroutine fpgrpa(ifsu,ifsv,ifbu,ifbv,idim,ipar,u,mu,v,mv,z,mz,tu,nu,tv,nv,p,c,nc,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,au1,av,av1,bu,bv,nru,nrv) ! in :ddierckx:../fpgrpa.f
             integer :: ifsu
             integer :: ifsv
             integer :: ifbu
@@ -626,7 +626,7 @@ python module dierckx ! in
             integer dimension(mu),depend(mu) :: nru
             integer dimension(mv),depend(mv) :: nrv
         end subroutine fpgrpa
-        subroutine fpgrre(ifsx,ifsy,ifbx,ifby,x,mx,y,my,z,mz,kx,ky,tx,nx,ty,ny,p,c,nc,fp,fpx,fpy,mm,mynx,kx1,kx2,ky1,ky2,spx,spy,right,q,ax,ay,bx,by,nrx,nry) ! in :dierckx:../fpgrre.f
+        subroutine fpgrre(ifsx,ifsy,ifbx,ifby,x,mx,y,my,z,mz,kx,ky,tx,nx,ty,ny,p,c,nc,fp,fpx,fpy,mm,mynx,kx1,kx2,ky1,ky2,spx,spy,right,q,ax,ay,bx,by,nrx,nry) ! in :ddierckx:../fpgrre.f
             integer :: ifsx
             integer :: ifsy
             integer :: ifbx
@@ -666,7 +666,7 @@ python module dierckx ! in
             integer dimension(mx),depend(mx) :: nrx
             integer dimension(my),depend(my) :: nry
         end subroutine fpgrre
-        subroutine fpgrsp(ifsu,ifsv,ifbu,ifbv,iback,u,mu,v,mv,r,mr,dr,iop0,iop1,tu,nu,tv,nv,p,c,nc,sq,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,av1,av2,bu,bv,a0,a1,b0,b1,c0,c1,cosi,nru,nrv) ! in :dierckx:../fpgrsp.f
+        subroutine fpgrsp(ifsu,ifsv,ifbu,ifbv,iback,u,mu,v,mv,r,mr,dr,iop0,iop1,tu,nu,tv,nv,p,c,nc,sq,fp,fpu,fpv,mm,mvnu,spu,spv,right,q,au,av1,av2,bu,bv,a0,a1,b0,b1,c0,c1,cosi,nru,nrv) ! in :ddierckx:../fpgrsp.f
             integer :: ifsu
             integer :: ifsv
             integer :: ifbu
@@ -713,7 +713,7 @@ python module dierckx ! in
             integer dimension(mu),depend(mu) :: nru
             integer dimension(mv),depend(mv) :: nrv
         end subroutine fpgrsp
-        subroutine fpinst(iopt,t,n,c,k,x,l,tt,nn,cc,nest) ! in :dierckx:../fpinst.f
+        subroutine fpinst(iopt,t,n,c,k,x,l,tt,nn,cc,nest) ! in :ddierckx:../fpinst.f
             integer :: iopt
             real dimension(nest) :: t
             integer :: n
@@ -726,7 +726,7 @@ python module dierckx ! in
             real dimension(nest),depend(nest) :: cc
             integer, optional,check(len(t)>=nest),depend(t) :: nest=len(t)
         end subroutine fpinst
-        subroutine fpintb(t,n,bint,nk1,x,y) ! in :dierckx:../fpintb.f
+        subroutine fpintb(t,n,bint,nk1,x,y) ! in :ddierckx:../fpintb.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(nk1) :: bint
@@ -734,7 +734,7 @@ python module dierckx ! in
             real :: x
             real :: y
         end subroutine fpintb
-        subroutine fpknot(x,m,t,n,fpint,nrdata,nrint,nest,istart) ! in :dierckx:../fpknot.f
+        subroutine fpknot(x,m,t,n,fpint,nrdata,nrint,nest,istart) ! in :ddierckx:../fpknot.f
             real dimension(m) :: x
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(nest) :: t
@@ -745,7 +745,7 @@ python module dierckx ! in
             integer, optional,check(len(t)>=nest),depend(t) :: nest=len(t)
             integer :: istart
         end subroutine fpknot
-        subroutine fpopdi(ifsu,ifsv,ifbu,ifbv,u,mu,v,mv,z,mz,z0,dz,iopt,ider,tu,nu,tv,nv,nuest,nvest,p,step,c,nc,fp,fpu,fpv,nru,nrv,wrk,lwrk) ! in :dierckx:../fpopdi.f
+        subroutine fpopdi(ifsu,ifsv,ifbu,ifbv,u,mu,v,mv,z,mz,z0,dz,iopt,ider,tu,nu,tv,nv,nuest,nvest,p,step,c,nc,fp,fpu,fpv,nru,nrv,wrk,lwrk) ! in :ddierckx:../fpopdi.f
             integer :: ifsu
             integer :: ifsv
             integer :: ifbu
@@ -778,7 +778,7 @@ python module dierckx ! in
             real dimension(lwrk) :: wrk
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
         end subroutine fpopdi
-        subroutine fpopsp(ifsu,ifsv,ifbu,ifbv,u,mu,v,mv,r,mr,r0,r1,dr,iopt,ider,tu,nu,tv,nv,nuest,nvest,p,step,c,nc,fp,fpu,fpv,nru,nrv,wrk,lwrk) ! in :dierckx:../fpopsp.f
+        subroutine fpopsp(ifsu,ifsv,ifbu,ifbv,u,mu,v,mv,r,mr,r0,r1,dr,iopt,ider,tu,nu,tv,nv,nuest,nvest,p,step,c,nc,fp,fpu,fpv,nru,nrv,wrk,lwrk) ! in :ddierckx:../fpopsp.f
             integer :: ifsu
             integer :: ifsv
             integer :: ifbu
@@ -812,7 +812,7 @@ python module dierckx ! in
             real dimension(lwrk) :: wrk
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
         end subroutine fpopsp
-        subroutine fporde(x,y,m,kx,ky,tx,nx,ty,ny,nummer,index_bn,nreg) ! in :dierckx:../fporde.f
+        subroutine fporde(x,y,m,kx,ky,tx,nx,ty,ny,nummer,index_bn,nreg) ! in :ddierckx:../fporde.f
             real dimension(m) :: x
             real dimension(m),depend(m) :: y
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
@@ -826,7 +826,7 @@ python module dierckx ! in
             integer dimension(nreg) :: index_bn
             integer, optional,check(len(index_bn)>=nreg),depend(index_bn) :: nreg=len(index_bn)
         end subroutine fporde
-        subroutine fppara(iopt,idim,m,u,mx,x,w,ub,ue,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :dierckx:../fppara.f
+        subroutine fppara(iopt,idim,m,u,mx,x,w,ub,ue,k,s,nest,tol,maxit,k1,k2,n,t,nc,c,fp,fpint,z,a,b,g,q,nrdata,ier) ! in :ddierckx:../fppara.f
             integer :: iopt
             integer :: idim
             integer, optional,check(len(u)>=m),depend(u) :: m=len(u)
@@ -857,7 +857,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: nrdata
             integer :: ier
         end subroutine fppara
-        subroutine fppasu(iopt,ipar,idim,u,mu,v,mv,z,mz,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,lastdi,nplusu,nplusv,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :dierckx:../fppasu.f
+        subroutine fppasu(iopt,ipar,idim,u,mu,v,mv,z,mz,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,lastdi,nplusu,nplusv,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :ddierckx:../fppasu.f
             integer :: iopt
             integer dimension(2) :: ipar
             integer :: idim
@@ -896,7 +896,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fppasu
-        subroutine fpperi(iopt,x,y,w,m,k,s,nest,tol,maxit,k1,k2,n,t,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier) ! in :dierckx:../fpperi.f
+        subroutine fpperi(iopt,x,y,w,m,k,s,nest,tol,maxit,k1,k2,n,t,c,fp,fpint,z,a1,a2,b,g1,g2,q,nrdata,ier) ! in :ddierckx:../fpperi.f
             integer :: iopt
             real dimension(m) :: x
             real dimension(m),depend(m) :: y
@@ -924,7 +924,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: nrdata
             integer :: ier
         end subroutine fpperi
-        subroutine fppocu(idim,k,a,b,ib,db,nb,ie,de,ne,cp,np) ! in :dierckx:../fppocu.f
+        subroutine fppocu(idim,k,a,b,ib,db,nb,ie,de,ne,cp,np) ! in :ddierckx:../fppocu.f
             integer :: idim
             integer :: k
             real :: a
@@ -938,7 +938,7 @@ python module dierckx ! in
             real dimension(np) :: cp
             integer, optional,check(len(cp)>=np),depend(cp) :: np=len(cp)
         end subroutine fppocu
-        subroutine fppogr(iopt,ider,u,mu,v,mv,z,mz,z0,r,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,dz,step,lastdi,nplusu,nplusv,lasttu,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :dierckx:../fppogr.f
+        subroutine fppogr(iopt,ider,u,mu,v,mv,z,mz,z0,r,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,dz,step,lastdi,nplusu,nplusv,lasttu,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :ddierckx:../fppogr.f
             integer dimension(3) :: iopt
             integer dimension(2) :: ider
             real dimension(mu) :: u
@@ -981,7 +981,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fppogr
-        subroutine fppola(iopt1,iopt2,iopt3,m,u,v,z,w,rad,s,nuest,nvest,eta,tol,maxit,ib1,ib3,nc,ncc,intest,nrest,nu,tu,nv,tv,c,fp,sup,fpint,coord,f,ff,row,cs,cosi,a,q,bu,bv,spu,spv,h,index_bn,nummer,wrk,lwrk,ier) ! in :dierckx:../fppola.f
+        subroutine fppola(iopt1,iopt2,iopt3,m,u,v,z,w,rad,s,nuest,nvest,eta,tol,maxit,ib1,ib3,nc,ncc,intest,nrest,nu,tu,nv,tv,c,fp,sup,fpint,coord,f,ff,row,cs,cosi,a,q,bu,bv,spu,spv,h,index_bn,nummer,wrk,lwrk,ier) ! in :ddierckx:../fppola.f
             integer :: iopt1
             integer :: iopt2
             integer :: iopt3
@@ -1030,7 +1030,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fppola
-        subroutine fprank(a,f,n,m,na,tol,c,sq,rank_bn,aa,ff,h) ! in :dierckx:../fprank.f
+        subroutine fprank(a,f,n,m,na,tol,c,sq,rank_bn,aa,ff,h) ! in :ddierckx:../fprank.f
             real dimension(na,m) :: a
             real dimension(n) :: f
             integer, optional,check(len(f)>=n),depend(f) :: n=len(f)
@@ -1044,7 +1044,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: ff
             real dimension(m),depend(m) :: h
         end subroutine fprank
-        function fprati(p1,f1,p2,f2,p3,f3) ! in :dierckx:../fprati.f
+        function fprati(p1,f1,p2,f2,p3,f3) ! in :ddierckx:../fprati.f
             real :: p1
             real :: f1
             real :: p2
@@ -1053,7 +1053,7 @@ python module dierckx ! in
             real :: f3
             real :: fprati
         end function fprati
-        subroutine fpregr(iopt,x,mx,y,my,z,mz,xb,xe,yb,ye,kx,ky,s,nxest,nyest,tol,maxit,nc,nx,tx,ny,ty,c,fp,fp0,fpold,reducx,reducy,fpintx,fpinty,lastdi,nplusx,nplusy,nrx,nry,nrdatx,nrdaty,wrk,lwrk,ier) ! in :dierckx:../fpregr.f
+        subroutine fpregr(iopt,x,mx,y,my,z,mz,xb,xe,yb,ye,kx,ky,s,nxest,nyest,tol,maxit,nc,nx,tx,ny,ty,c,fp,fp0,fpold,reducx,reducy,fpintx,fpinty,lastdi,nplusx,nplusy,nrx,nry,nrdatx,nrdaty,wrk,lwrk,ier) ! in :ddierckx:../fpregr.f
             integer :: iopt
             real dimension(mx) :: x
             integer, optional,check(len(x)>=mx),depend(x) :: mx=len(x)
@@ -1096,13 +1096,13 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fpregr
-        subroutine fprota(cos,sin,a,b) ! in :dierckx:../fprota.f
+        subroutine fprota(cos,sin,a,b) ! in :ddierckx:../fprota.f
             real :: cos
             real :: sin
             real :: a
             real :: b
         end subroutine fprota
-        subroutine fprppo(nu,nv,if1,if2,cosi,ratio,c,f,ncoff) ! in :dierckx:../fprppo.f
+        subroutine fprppo(nu,nv,if1,if2,cosi,ratio,c,f,ncoff) ! in :ddierckx:../fprppo.f
             integer :: nu
             integer, optional,check(shape(cosi,1)==nv),depend(cosi) :: nv=shape(cosi,1)
             integer :: if1
@@ -1113,7 +1113,7 @@ python module dierckx ! in
             real dimension(ncoff),depend(ncoff) :: f
             integer, optional,check(len(c)>=ncoff),depend(c) :: ncoff=len(c)
         end subroutine fprppo
-        subroutine fprpsp(nt,np,co,si,c,f,ncoff) ! in :dierckx:../fprpsp.f
+        subroutine fprpsp(nt,np,co,si,c,f,ncoff) ! in :ddierckx:../fprpsp.f
             integer :: nt
             integer, optional,check(len(co)>=np),depend(co) :: np=len(co)
             real dimension(np) :: co
@@ -1122,7 +1122,7 @@ python module dierckx ! in
             real dimension(ncoff),depend(ncoff) :: f
             integer, optional,check(len(c)>=ncoff),depend(c) :: ncoff=len(c)
         end subroutine fprpsp
-        subroutine fpseno(maxtr,up,left,right,info,merk,ibind,nbind) ! in :dierckx:../fpseno.f
+        subroutine fpseno(maxtr,up,left,right,info,merk,ibind,nbind) ! in :ddierckx:../fpseno.f
             integer, optional,check(len(up)>=maxtr),depend(up) :: maxtr=len(up)
             integer dimension(maxtr) :: up
             integer dimension(maxtr),depend(maxtr) :: left
@@ -1132,7 +1132,7 @@ python module dierckx ! in
             integer dimension(nbind) :: ibind
             integer, optional,check(len(ibind)>=nbind),depend(ibind) :: nbind=len(ibind)
         end subroutine fpseno
-        subroutine fpspgr(iopt,ider,u,mu,v,mv,r,mr,r0,r1,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,dr,step,lastdi,nplusu,nplusv,lastu0,lastu1,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :dierckx:../fpspgr.f
+        subroutine fpspgr(iopt,ider,u,mu,v,mv,r,mr,r0,r1,s,nuest,nvest,tol,maxit,nc,nu,tu,nv,tv,c,fp,fp0,fpold,reducu,reducv,fpintu,fpintv,dr,step,lastdi,nplusu,nplusv,lastu0,lastu1,nru,nrv,nrdatu,nrdatv,wrk,lwrk,ier) ! in :ddierckx:../fpspgr.f
             integer dimension(3) :: iopt
             integer dimension(4) :: ider
             real dimension(mu) :: u
@@ -1176,7 +1176,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fpspgr
-        subroutine fpsphe(iopt,m,teta,phi,r,w,s,ntest,npest,eta,tol,maxit,ib1,ib3,nc,ncc,intest,nrest,nt,tt,np,tp,c,fp,sup,fpint,coord,f,ff,row,coco,cosi,a,q,bt,bp,spt,spp,h,index_bn,nummer,wrk,lwrk,ier) ! in :dierckx:../fpsphe.f
+        subroutine fpsphe(iopt,m,teta,phi,r,w,s,ntest,npest,eta,tol,maxit,ib1,ib3,nc,ncc,intest,nrest,nt,tt,np,tp,c,fp,sup,fpint,coord,f,ff,row,coco,cosi,a,q,bt,bp,spt,spp,h,index_bn,nummer,wrk,lwrk,ier) ! in :ddierckx:../fpsphe.f
             integer :: iopt
             integer, optional,check(len(teta)>=m),depend(teta) :: m=len(teta)
             real dimension(m) :: teta
@@ -1222,7 +1222,7 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fpsphe
-        subroutine fpsuev(idim,tu,nu,tv,nv,c,u,mu,v,mv,f,wu,wv,lu,lv) ! in :dierckx:../fpsuev.f
+        subroutine fpsuev(idim,tu,nu,tv,nv,c,u,mu,v,mv,f,wu,wv,lu,lv) ! in :ddierckx:../fpsuev.f
             integer :: idim
             real dimension(nu) :: tu
             integer, optional,check(len(tu)>=nu),depend(tu) :: nu=len(tu)
@@ -1239,7 +1239,7 @@ python module dierckx ! in
             integer dimension(mu),depend(mu) :: lu
             integer dimension(mv),depend(mv) :: lv
         end subroutine fpsuev
-        subroutine fpsurf(iopt,m,x,y,z,w,xb,xe,yb,ye,kxx,kyy,s,nxest,nyest,eta,tol,maxit,nmax,km1,km2,ib1,ib3,nc,intest,nrest,nx0,tx,ny0,ty,c,fp,fp0,fpint,coord,f,ff,a,q,bx,by,spx,spy,h,index_bn,nummer,wrk,lwrk,ier) ! in :dierckx:../fpsurf.f
+        subroutine fpsurf(iopt,m,x,y,z,w,xb,xe,yb,ye,kxx,kyy,s,nxest,nyest,eta,tol,maxit,nmax,km1,km2,ib1,ib3,nc,intest,nrest,nx0,tx,ny0,ty,c,fp,fp0,fpint,coord,f,ff,a,q,bx,by,spx,spy,h,index_bn,nummer,wrk,lwrk,ier) ! in :ddierckx:../fpsurf.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -1290,12 +1290,12 @@ python module dierckx ! in
             integer, optional,check(len(wrk)>=lwrk),depend(wrk) :: lwrk=len(wrk)
             integer :: ier
         end subroutine fpsurf
-        subroutine fpsysy(a,n,g) ! in :dierckx:../fpsysy.f
+        subroutine fpsysy(a,n,g) ! in :ddierckx:../fpsysy.f
             real dimension(6,6) :: a
             integer :: n
             real dimension(6) :: g
         end subroutine fpsysy
-        subroutine fptrnp(m,mm,idim,n,nr,sp,p,b,z,a,q,right) ! in :dierckx:../fptrnp.f
+        subroutine fptrnp(m,mm,idim,n,nr,sp,p,b,z,a,q,right) ! in :ddierckx:../fptrnp.f
             integer, optional,check(len(nr)>=m),depend(nr) :: m=len(nr)
             integer :: mm
             integer :: idim
@@ -1309,7 +1309,7 @@ python module dierckx ! in
             real dimension((n-4)*mm*idim),depend(mm,idim,n) :: q
             real dimension(mm*idim),depend(mm,idim) :: right
         end subroutine fptrnp
-        subroutine fptrpe(m,mm,idim,n,nr,sp,p,b,z,a,aa,q,right) ! in :dierckx:../fptrpe.f
+        subroutine fptrpe(m,mm,idim,n,nr,sp,p,b,z,a,aa,q,right) ! in :ddierckx:../fptrpe.f
             integer, optional,check(len(nr)>=m),depend(nr) :: m=len(nr)
             integer :: mm
             integer :: idim
@@ -1324,7 +1324,7 @@ python module dierckx ! in
             real dimension((n-7)*mm*idim),depend(mm,idim,n) :: q
             real dimension(mm*idim),depend(mm,idim) :: right
         end subroutine fptrpe
-        subroutine insert(iopt,t,n,c,k,x,tt,nn,cc,nest,ier) ! in :dierckx:../insert.f
+        subroutine insert(iopt,t,n,c,k,x,tt,nn,cc,nest,ier) ! in :ddierckx:../insert.f
             integer :: iopt
             real dimension(nest) :: t
             integer :: n
@@ -1337,7 +1337,7 @@ python module dierckx ! in
             integer, optional,check(len(t)>=nest),depend(t) :: nest=len(t)
             integer :: ier
         end subroutine insert
-        subroutine parcur(iopt,ipar,idim,m,u,mx,x,w,ub,ue,k,s,nest,n,t,nc,c,fp,wrk,lwrk,iwrk,ier) ! in :dierckx:../parcur.f
+        subroutine parcur(iopt,ipar,idim,m,u,mx,x,w,ub,ue,k,s,nest,n,t,nc,c,fp,wrk,lwrk,iwrk,ier) ! in :ddierckx:../parcur.f
             integer :: iopt
             integer :: ipar
             integer :: idim
@@ -1361,7 +1361,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: iwrk
             integer :: ier
         end subroutine parcur
-        subroutine parder(tx,nx,ty,ny,c,kx,ky,nux,nuy,x,mx,y,my,z,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../parder.f
+        subroutine parder(tx,nx,ty,ny,c,kx,ky,nux,nuy,x,mx,y,my,z,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../parder.f
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
             real dimension(ny) :: ty
@@ -1382,7 +1382,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine parder
-        subroutine parsur(iopt,ipar,idim,mu,u,mv,v,f,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../parsur.f
+        subroutine parsur(iopt,ipar,idim,mu,u,mv,v,f,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../parsur.f
             integer :: iopt
             integer dimension(2) :: ipar
             integer :: idim
@@ -1406,7 +1406,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine parsur
-        subroutine percur(iopt,m,x,y,w,k,s,nest,n,t,c,fp,wrk,lwrk,iwrk,ier) ! in :dierckx:../percur.f
+        subroutine percur(iopt,m,x,y,w,k,s,nest,n,t,c,fp,wrk,lwrk,iwrk,ier) ! in :ddierckx:../percur.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -1424,7 +1424,7 @@ python module dierckx ! in
             integer dimension(nest),depend(nest) :: iwrk
             integer :: ier
         end subroutine percur
-        subroutine pogrid(iopt,ider,mu,u,mv,v,z,z0,r,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../pogrid.f
+        subroutine pogrid(iopt,ider,mu,u,mv,v,z,z0,r,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../pogrid.f
             integer dimension(3) :: iopt
             integer dimension(2) :: ider
             integer, optional,check(len(u)>=mu),depend(u) :: mu=len(u)
@@ -1449,7 +1449,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine pogrid
-        subroutine polar(iopt,m,x,y,z,w,rad,s,nuest,nvest,eps,nu,tu,nv,tv,u,v,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :dierckx:../polar.f
+        subroutine polar(iopt,m,x,y,z,w,rad,s,nuest,nvest,eps,nu,tu,nv,tv,u,v,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :ddierckx:../polar.f
             use polar__user__routines
             integer dimension(3) :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
@@ -1478,7 +1478,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine polar
-        subroutine profil(iopt,tx,nx,ty,ny,c,kx,ky,u,nu,cu,ier) ! in :dierckx:../profil.f
+        subroutine profil(iopt,tx,nx,ty,ny,c,kx,ky,u,nu,cu,ier) ! in :ddierckx:../profil.f
             integer :: iopt
             real dimension(nx) :: tx
             integer, optional,check(len(tx)>=nx),depend(tx) :: nx=len(tx)
@@ -1492,7 +1492,7 @@ python module dierckx ! in
             real dimension(nu) :: cu
             integer :: ier
         end subroutine profil
-        subroutine regrid(iopt,mx,x,my,y,z,xb,xe,yb,ye,kx,ky,s,nxest,nyest,nx,tx,ny,ty,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../regrid.f
+        subroutine regrid(iopt,mx,x,my,y,z,xb,xe,yb,ye,kx,ky,s,nxest,nyest,nx,tx,ny,ty,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../regrid.f
             integer :: iopt
             integer, optional,check(len(x)>=mx),depend(x) :: mx=len(x)
             real dimension(mx) :: x
@@ -1520,7 +1520,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine regrid
-        subroutine spalde(t,n,c,k1,x,d,ier) ! in :dierckx:../spalde.f
+        subroutine spalde(t,n,c,k1,x,d,ier) ! in :ddierckx:../spalde.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n-k1),depend(n,k1) :: c
@@ -1529,7 +1529,7 @@ python module dierckx ! in
             real dimension(k1) :: d
             integer :: ier
         end subroutine spalde
-        subroutine spgrid(iopt,ider,mu,u,mv,v,r,r0,r1,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../spgrid.f
+        subroutine spgrid(iopt,ider,mu,u,mv,v,r,r0,r1,s,nuest,nvest,nu,tu,nv,tv,c,fp,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../spgrid.f
             integer dimension(3) :: iopt
             integer dimension(4) :: ider
             integer, optional,check(len(u)>=mu),depend(u) :: mu=len(u)
@@ -1554,7 +1554,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine spgrid
-        subroutine sphere(iopt,m,teta,phi,r,w,s,ntest,npest,eps,nt,tt,np,tp,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :dierckx:../sphere.f
+        subroutine sphere(iopt,m,teta,phi,r,w,s,ntest,npest,eps,nt,tt,np,tp,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :ddierckx:../sphere.f
             integer :: iopt
             integer, optional,check(len(teta)>=m),depend(teta) :: m=len(teta)
             real dimension(m) :: teta
@@ -1579,7 +1579,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine sphere
-        subroutine splder(t,n,c,k,nu,x,y,m,wrk,ier) ! in :dierckx:../splder.f
+        subroutine splder(t,n,c,k,nu,x,y,m,wrk,ier) ! in :ddierckx:../splder.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n-k-1),depend(n,k) :: c
@@ -1591,7 +1591,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: wrk
             integer :: ier
         end subroutine splder
-        subroutine splev(t,n,c,k,x,y,m,ier) ! in :dierckx:../splev.f
+        subroutine splev(t,n,c,k,x,y,m,ier) ! in :ddierckx:../splev.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n-k-1),depend(n,k) :: c
@@ -1601,7 +1601,7 @@ python module dierckx ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             integer :: ier
         end subroutine splev
-        subroutine splevv(t,n,c,k,x,y,m,p,ier) ! in :dierckx:../splevv.f
+        subroutine splevv(t,n,c,k,x,y,m,p,ier) ! in :ddierckx:../splevv.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension((n-k-1)*p),depend(n,k,p) :: c
@@ -1612,7 +1612,7 @@ python module dierckx ! in
             integer :: p
             integer :: ier
         end subroutine splevv
-        function splint(t,n,c,k,a,b,wrk) ! in :dierckx:../splint.f
+        function splint(t,n,c,k,a,b,wrk) ! in :ddierckx:../splint.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n-k-1),depend(n,k) :: c
@@ -1622,7 +1622,7 @@ python module dierckx ! in
             real dimension(n),depend(n) :: wrk
             real :: splint
         end function splint
-        subroutine sproot(t,n,c,zero,mest,m,ier) ! in :dierckx:../sproot.f
+        subroutine sproot(t,n,c,zero,mest,m,ier) ! in :ddierckx:../sproot.f
             real dimension(n) :: t
             integer, optional,check(len(t)>=n),depend(t) :: n=len(t)
             real dimension(n - 4),depend(n) :: c
@@ -1631,7 +1631,7 @@ python module dierckx ! in
             integer intent(out) :: m
             integer :: ier
         end subroutine sproot
-        subroutine surev(idim,tu,nu,tv,nv,c,u,mu,v,mv,f,mf,wrk,lwrk,iwrk,kwrk,ier) ! in :dierckx:../surev.f
+        subroutine surev(idim,tu,nu,tv,nv,c,u,mu,v,mv,f,mf,wrk,lwrk,iwrk,kwrk,ier) ! in :ddierckx:../surev.f
             integer :: idim
             real dimension(nu) :: tu
             integer, optional,check(len(tu)>=nu),depend(tu) :: nu=len(tu)
@@ -1650,7 +1650,7 @@ python module dierckx ! in
             integer, optional,check(len(iwrk)>=kwrk),depend(iwrk) :: kwrk=len(iwrk)
             integer :: ier
         end subroutine surev
-        subroutine surfit(iopt,m,x,y,z,w,xb,xe,yb,ye,kx,ky,s,nxest,nyest,nmax,eps,nx,tx,ny,ty,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :dierckx:../surfit.f
+        subroutine surfit(iopt,m,x,y,z,w,xb,xe,yb,ye,kx,ky,s,nxest,nyest,nmax,eps,nx,tx,ny,ty,c,fp,wrk1,lwrk1,wrk2,lwrk2,iwrk,kwrk,ier) ! in :ddierckx:../surfit.f
             integer :: iopt
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m) :: x
@@ -1683,7 +1683,7 @@ python module dierckx ! in
             integer :: ier
         end subroutine surfit
     end interface 
-end python module dierckx
+end python module ddierckx
 
 ! This file was auto-generated with f2py (version:2).
 ! See http://cens.ioc.ee/projects/f2py2e/

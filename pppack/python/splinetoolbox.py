@@ -60,11 +60,11 @@ def aptknt(x, k=4):
     return augknt(cat((x[:1], aveknt(x, k), x[-1:])), k)
 
 def optknt(x, k=4):
-    import pppack
+    import dpppack
     n = x.size
     t = np.zeros(n+k)
     scrtch = np.zeros((n-k)*(2*k+3) + 5*k + 3)
-    iflag = pppack.splopt(x, k, scrtch, t)
+    iflag = dpppack.splopt(x, k, scrtch, t)
     return t
 
 def get_left(t, k, n, x):
@@ -306,16 +306,20 @@ class Spline(object):
             b[:] = b[::-1]
 
 
-import pppack
+import pppack, dpppack
 
 class PPPGS(PP):
     def ppmak(self, b, a):
-        self.b, self.a = cont(b, np.float64), cont(a, np.float64)
+        self.b, self.a = cont(b, a.dtype), a
         self.p, self.l, self.k, self.d = a.shape
+        if a.dtype == np.float64:
+            self.pppack = dpppack
+        else:
+            self.pppack = pppack
 
     def zeros(self):
         b, a, p, l, k, d = self.ppbrk()
-        anew = np.zeros((p, l, 1, d))
+        anew = np.zeros((p, l, 1, d), a.dtype)
         return self.__class__(b, anew)
 
     def _deriv(self, dorder):
@@ -330,14 +334,16 @@ class PPPGS(PP):
   
     def ppual(self, x, der=0, fast=True):
         b, a, p, l, k, d = self.ppbrk()
-        x = cont(x, np.float64)
+        dtype = a.dtype
+        x = cont(x, dtype)
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         if der == 0 and fast:
-            pppack.ppual(b, a.T, x, y.T)
+            self.pppack.ppual(b, a.T, x, y.T)
         else:
+            ppualder = self.pppack.ppualder
             for j in xrange(p):
-                pppack.ppualder(b, a[j].T, x, der, y[j].T)
+                ppualder(b, a[j].T, x, der, y[j].T)
         return y
 
 
@@ -345,9 +351,12 @@ class PPPGS2(PPPGS):
     def ppual(self, x, der=0):
         # this uses the PGS normalization
         b, a, p, l, k, d = self.ppbrk()
+        dtype = a.dtype
+        x = cont(x, dtype)
         m = x.size
-        y = np.zeros((p, m, d))
+        y = np.zeros((p, m, d), dtype)
         a = cont(a.transpose((0, 3, 1, 2)))
+        ppvalu = self.pppack.ppvalu
         for j in xrange(p):
             yj = y[j]
             aj = a[j]
@@ -355,59 +364,72 @@ class PPPGS2(PPPGS):
                 xi = x[i]
                 yji = yj[i]
                 for dd in xrange(d):
-                    yji[dd] = pppack.ppvalu(b, aj[dd].T, xi, der)
+                    yji[dd] = ppvalu(b, aj[dd].T, xi, der)
         return y
 
 
 class SplinePGS(Spline):
-    def __init__(self, x, y, k=4, c=None, getknt=aptknt, dtype=np.float64):
-        x = cont(x, np.float64)
+    def __init__(self, x, y, k=4, c=None, getknt=aptknt):
+        dtype = y.dtype
+        x = cont(x, dtype)
         p, n, d = y.shape
         t = getknt(x, k)
-        q = np.zeros((2*k-1)*n)
-        g = np.zeros(n)
-        bcoef = np.zeros(n)
+        q = np.zeros((2*k-1)*n, dtype)
+        g = np.zeros(n, dtype)
+        bcoef = np.zeros(n, dtype)
         if c is None:
             c = np.zeros((p, n, d), dtype)
+        if dtype == np.float64:
+            splint = dpppack.splint
+        else:
+            splint = pppack.splint
         for j in xrange(p):
             yj = y[j]
             cj = c[j]
             for dd in xrange(d):
                 g[:] = yj[:,dd]
-                iflag = pppack.splint(x, g, t, k, q, bcoef)
+                iflag = splint(x, g, t, k, q, bcoef)
                 cj[:,dd] = bcoef
         self.spmak(t, c)
 
     def spmak(self, t, c):
-        self.t, self.c = cont(t, np.float64), cont(c, np.float64)
+        self.t, self.c = cont(t, c.dtype), c
         self.p, self.n, self.d = c.shape
         self.k = t.size - self.n
+        if c.dtype == np.float64:
+            self.pppack = dpppack
+        else:
+            self.pppack = pppack
 
     def spval(self, x, der=0, fast=True, y=None):
         t, c, k, p, n, d = self.spbrk()
-        x = cont(x, np.float64)
+        dtype = c.dtype
+        x = cont(x, dtype)
         m = x.size
         if y is None:
-            y = np.zeros((p, m, d))
+            y = np.zeros((p, m, d), dtype)
         if der == 0 and fast:
-            pppack.spual(t, c.T, k, x, y.T)
+            self.pppack.spual(t, c.T, k, x, y.T)
         else:
-            pppack.spualder(t, c.T, k, x, y.T, der)
+            self.pppack.spualder(t, c.T, k, x, y.T, der)
         return y
 
     def evalB(self, x, der=0):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
         left = self.get_left(x)
         m = x.size
-        B = np.zeros((m, k))
+        B = np.zeros((m, k), dtype)
         if der == 0:
+            bsplvb = self.pppack.bsplvb
             for i in xrange(m):
-                pppack.bsplvb(t[:1], 1, x[i], left[i], B[i])
+                bsplvb(t[:1], 1, x[i], left[i], B[i])
         else:
-            a = np.zeros((k, k))
-            dbiatx = np.zeros((der+1, k))
+            a = np.zeros((k, k), dtype)
+            dbiatx = np.zeros((der+1, k), dtype)
+            bsplvd = self.pppack.bsplvd
             for i in xrange(m):
-                pppack.bsplvd(t[:1], x[i], left[i], a.T, dbiatx.T)
+                bsplvd(t[:1], x[i], left[i], a.T, dbiatx.T)
                 B[i] = dbiatx[der]
         return left, B
 
@@ -426,7 +448,7 @@ class SplinePGS(Spline):
     def _deriv(self, dorder):
         t, c, k, p, n, d = self.spbrk()
         cnew = c.copy()
-        pppack.spder(t, cnew.T, k, dorder)
+        self.pppack.spder(t, cnew.T, k, dorder)
         if p == 1:
             cnew.resize((1, n-dorder, d))
         else:
@@ -436,14 +458,14 @@ class SplinePGS(Spline):
 
     def to_pp(self):
         t, c, k, p, n, d = self.spbrk()
-        t, c = cont(t, np.float64), cont(c, np.float64)
+        dtype = c.dtype
         l = len(np.unique(t)) - 1
 
-        b = np.zeros(l+1)
-        scrtch = np.zeros((k, k, p, d))
-        a = np.zeros((p, l, k, d))
+        b = np.zeros(l+1, dtype)
+        scrtch = np.zeros((k, k, p, d), dtype)
+        a = np.zeros((p, l, k, d), dtype)
 
-        pppack.bsplppd(t, c.T, scrtch.T, b, a.T)
+        self.pppack.bsplppd(t, c.T, scrtch.T, b, a.T)
         return PPPGS(b, a)
 
     def to_pp2(self):
@@ -457,7 +479,7 @@ class SplinePGS(Spline):
 
         for j in xrange(p):
             cj = c[j].T.copy()
-            pppack.bspp2d(t, cj.T, scrtch.T, b, a[j].T)
+            dpppack.bspp2d(t, cj.T, scrtch.T, b, a[j].T)
 
         l = len(np.unique(t)) - 1
         if l < n+1-k:
@@ -505,14 +527,8 @@ class PPSLA2(PPPGS2):
 
 
 class SplineSLA(SplinePGS):
-    def __init__(self, x, y, *args, **kw):
-        kw.setdefault('dtype', y.dtype)
-        SplinePGS.__init__(self, x, y, *args, **kw)
-
     def spmak(self, t, c):
-        self.t, self.c = cont(t, c.dtype), c
-        self.p, self.n, self.d = c.shape
-        self.k = t.size - self.n
+        SplinePGS.spmak(self, t, c)
         if c.dtype == np.float64:
             self.slatec = dslatec
         else:
@@ -789,22 +805,31 @@ class SplineSLA9(SplineSLA):
         return y
 
 
-import dierckx
+import dierckx, ddierckx
 
 class SplineDie(SplinePGS):
+    def spmak(self, t, c):
+        SplinePGS.spmak(self, t, c)
+        if c.dtype == np.float64:
+            self.dierckx = ddierckx
+        else:
+            self.dierckx = dierckx
+
     def spval(self, x, der=0, fast=True):
         t, c, k, p, n, d = self.spbrk()
+        dtype = c.dtype
+        x = cont(x, dtype)
         m = x.size
         pd = p*d
-        y = np.zeros(m*pd)
+        y = np.zeros(m*pd, dtype)
         c = c.transpose((0, 2, 1)).ravel()
         ier = 0
-        dierckx.splevv(t, c, k-1, x, y, pd, ier)
+        self.dierckx.splevv(t, c, k-1, x, y, pd, ier)
         return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
 
 
 class SplineND(object):
-    SplineClass = SplineSLA
+    SplineClass = SplineSLA4
     def __init__(self, x, y, k=4):
         SplineClass = self.SplineClass
         n = np.array(y.shape, np.int32)
@@ -942,7 +967,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test2 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -967,7 +992,7 @@ if test1:
     dpp = pp.deriv(der)
     y2 = dpp.ppual(x)
 
-    sp_pgs = SplineSLAIC.from_knots_coefs(t, c)
+    sp_pgs = SplinePGS.from_knots_coefs(t, c)
 
     y3 = sp_pgs.spval(x, der=der)
     y3b = sp_pgs.spval2(x, der=der)
@@ -1097,7 +1122,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     # do not convert to double
     t = psi_n.t

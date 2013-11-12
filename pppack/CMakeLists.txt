@@ -12,7 +12,7 @@ else()
     set(real8_flag "-r8")
 endif()
 
-set(cflags "${real8_flag} -fimplicit-none")
+set(cflags "-fimplicit-none -fPIC")
 
 set(pppack_SRC
     netlib/banfac.f
@@ -88,15 +88,25 @@ set_target_properties(pppack PROPERTIES COMPILE_FLAGS ${cflags})
 
 add_library(pppack_static STATIC ${pppack_SRC})
 set_target_properties(pppack_static PROPERTIES OUTPUT_NAME pppack)
-set_target_properties(pppack_static PROPERTIES COMPILE_FLAGS "${cflags} -fPIC")
+set_target_properties(pppack_static PROPERTIES COMPILE_FLAGS ${cflags})
+
+set(dcflags "${dflags} ${real8_flag}")
+
+add_library(dpppack SHARED ${pppack_SRC})
+set_target_properties(dpppack PROPERTIES COMPILE_FLAGS ${dcflags})
+
+add_library(dpppack_static STATIC ${pppack_SRC})
+set_target_properties(dpppack_static PROPERTIES OUTPUT_NAME dpppack)
+set_target_properties(dpppack_static PROPERTIES COMPILE_FLAGS ${dcflags})
+
 
 add_executable(l2main netlib/l2main.f)
-set_target_properties(l2main PROPERTIES COMPILE_FLAGS ${cflags})
+set_target_properties(l2main PROPERTIES COMPILE_FLAGS ${dcflags})
 target_link_libraries(l2main pppack)
 
 add_subdirectory(python)
 
-install(TARGETS pppack pppack_static l2main
+install(TARGETS pppack pppack_static dpppack dpppack_static l2main
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib

@@ -1,9 +1,9 @@
 !    -*- f90 -*-
 ! Note: the context of this file is case sensitive.
 
-python module pppack ! in 
-    interface  ! in :pppack
-        subroutine banfac(w,nroww,nrow,nbandl,nbandu,iflag) ! in :pppack:../netlib/banfac.f
+python module dpppack ! in 
+    interface  ! in :dpppack
+        subroutine banfac(w,nroww,nrow,nbandl,nbandu,iflag) ! in :dpppack:../netlib/banfac.f
             real dimension(nroww,nrow) :: w
             integer, optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
             integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
@@ -11,7 +11,7 @@ python module pppack ! in
             integer :: nbandu
             integer :: iflag
         end subroutine banfac
-        subroutine banslv(w,nroww,nrow,nbandl,nbandu,b) ! in :pppack:../netlib/banslv.f
+        subroutine banslv(w,nroww,nrow,nbandl,nbandu,b) ! in :dpppack:../netlib/banslv.f
             real dimension(nroww,nrow) :: w
             integer, optional,check(shape(w,0)==nroww),depend(w) :: nroww=shape(w,0)
             integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
@@ -19,19 +19,19 @@ python module pppack ! in
             integer :: nbandu
             real dimension(nrow),depend(nrow) :: b
         end subroutine banslv
-        subroutine bchfac(w,nbands,nrow,diag) ! in :pppack:../netlib/bchfac.f
+        subroutine bchfac(w,nbands,nrow,diag) ! in :dpppack:../netlib/bchfac.f
             real dimension(nbands,nrow) :: w
             integer, optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
             integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
             real dimension(nrow),depend(nrow) :: diag
         end subroutine bchfac
-        subroutine bchslv(w,nbands,nrow,b) ! in :pppack:../netlib/bchslv.f
+        subroutine bchslv(w,nbands,nrow,b) ! in :dpppack:../netlib/bchslv.f
             real dimension(nbands,nrow) :: w
             integer, optional,check(shape(w,0)==nbands),depend(w) :: nbands=shape(w,0)
             integer, optional,check(shape(w,1)==nrow),depend(w) :: nrow=shape(w,1)
             real dimension(nrow),depend(nrow) :: b
         end subroutine bchslv
-        subroutine bsplpp(t,bcoef,n,k,scrtch,break_bn,coef,l) ! in :pppack:../netlib/bsplpp.f
+        subroutine bsplpp(t,bcoef,n,k,scrtch,break_bn,coef,l) ! in :dpppack:../netlib/bsplpp.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
@@ -41,7 +41,7 @@ python module pppack ! in
             real dimension(k,*),depend(k) :: coef
             integer intent(out) :: l
         end subroutine bsplpp
-        subroutine bsplvb(t,jhigh,index_bn,x,left,biatx) ! in :pppack:../netlib/bsplvb.f
+        subroutine bsplvb(t,jhigh,index_bn,x,left,biatx) ! in :dpppack:../netlib/bsplvb.f
             real dimension(1) :: t
             integer, optional,check(len(biatx)>=jhigh),depend(biatx) :: jhigh=len(biatx)
             integer :: index_bn
@@ -49,7 +49,7 @@ python module pppack ! in
             integer :: left
             real dimension(jhigh) :: biatx
         end subroutine bsplvb
-        subroutine bsplvd(t,k,x,left,a,dbiatx,nderiv) ! in :pppack:../netlib/bsplvd.f
+        subroutine bsplvd(t,k,x,left,a,dbiatx,nderiv) ! in :dpppack:../netlib/bsplvd.f
             real dimension(1) :: t
             integer, optional,check(shape(a,0)==k),depend(a) :: k=shape(a,0)
             real :: x
@@ -58,7 +58,7 @@ python module pppack ! in
             real dimension(k,nderiv),depend(k) :: dbiatx
             integer, optional,check(shape(dbiatx,1)==nderiv),depend(dbiatx) :: nderiv=shape(dbiatx,1)
         end subroutine bsplvd
-        subroutine bspp2d(t,bcoef,n,k,m,scrtch,break_bn,coef) ! in :pppack:../netlib/bspp2d.f
+        subroutine bspp2d(t,bcoef,n,k,m,scrtch,break_bn,coef) ! in :dpppack:../netlib/bspp2d.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n,m) :: bcoef
             integer, optional,check(shape(bcoef,0)==n),depend(bcoef) :: n=shape(bcoef,0)
@@ -68,7 +68,7 @@ python module pppack ! in
             real dimension(n+2-k),depend(n,k) :: break_bn
             real dimension(m,k,n+1-k),depend(m,k,n,k) :: coef
         end subroutine bspp2d
-        function bvalue(t,bcoef,n,k,x,jderiv) ! in :pppack:../netlib/bvalue.f
+        function bvalue(t,bcoef,n,k,x,jderiv) ! in :dpppack:../netlib/bvalue.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
@@ -77,7 +77,7 @@ python module pppack ! in
             integer :: jderiv
             real :: bvalue
         end function bvalue
-        subroutine chol1d(p,v,qty,npoint,ncol,u,qu) ! in :pppack:../netlib/chol1d.f
+        subroutine chol1d(p,v,qty,npoint,ncol,u,qu) ! in :dpppack:../netlib/chol1d.f
             real :: p
             real dimension(npoint,7) :: v
             real dimension(npoint),depend(npoint) :: qty
@@ -86,18 +86,18 @@ python module pppack ! in
             real dimension(npoint),depend(npoint) :: u
             real dimension(npoint),depend(npoint) :: qu
         end subroutine chol1d
-        subroutine colpnt(k,rho) ! in :pppack:../netlib/colpnt.f
+        subroutine colpnt(k,rho) ! in :dpppack:../netlib/colpnt.f
             integer, optional,check(len(rho)>=k),depend(rho) :: k=len(rho)
             real dimension(k) :: rho
         end subroutine colpnt
-        subroutine cubspl(tau,c,n,ibcbeg,ibcend) ! in :pppack:../netlib/cubspl.f
+        subroutine cubspl(tau,c,n,ibcbeg,ibcend) ! in :dpppack:../netlib/cubspl.f
             real dimension(n) :: tau
             real dimension(4,n),depend(n) :: c
             integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
             integer :: ibcbeg
             integer :: ibcend
         end subroutine cubspl
-        subroutine cwidth(w,b,nequ,ncols,integs,nbloks,d,x,iflag) ! in :pppack:../netlib/cwidth.f
+        subroutine cwidth(w,b,nequ,ncols,integs,nbloks,d,x,iflag) ! in :dpppack:../netlib/cwidth.f
             real dimension(nequ,ncols) :: w
             real dimension(nequ),depend(nequ) :: b
             integer, optional,check(shape(w,0)==nequ),depend(w) :: nequ=shape(w,0)
@@ -108,14 +108,14 @@ python module pppack ! in
             real dimension(nequ),depend(nequ) :: x
             integer :: iflag
         end subroutine cwidth
-        subroutine interv(xt,lxt,x,left,mflag) ! in :pppack:../netlib/interv.f
+        subroutine interv(xt,lxt,x,left,mflag) ! in :dpppack:../netlib/interv.f
             real dimension(lxt) :: xt
             integer, optional,check(len(xt)>=lxt),depend(xt) :: lxt=len(xt)
             real :: x
             integer intent(out) :: left
             integer intent(out) :: mflag
         end subroutine interv
-        subroutine l2appr(t,n,k,q,diag,bcoef,ntau,tau,gtau,weight) ! in :pppack:../netlib/l2appr.f
+        subroutine l2appr(t,n,k,q,diag,bcoef,ntau,tau,gtau,weight) ! in :dpppack:../netlib/l2appr.f
             real dimension(n+k),depend(n,k) :: t
             integer, optional,check(shape(q,1)==n),depend(q) :: n=shape(q,1)
             integer, optional,check(shape(q,0)==k),depend(q) :: k=shape(q,0)
@@ -127,7 +127,7 @@ python module pppack ! in
             real dimension(200) :: gtau
             real dimension(200) :: weight
         end subroutine l2appr
-        subroutine l2err(prfun,ftau,error,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:../netlib/l2err.f
+        subroutine l2err(prfun,ftau,error,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :dpppack:../netlib/l2err.f
             integer :: prfun
             real dimension(ntau) :: ftau
             real dimension(ntau),depend(ntau) :: error
@@ -141,14 +141,14 @@ python module pppack ! in
             integer :: l
             integer :: k
         end subroutine l2err
-        subroutine l2knts(break_bn,l,k,t,n) ! in :pppack:../netlib/l2knts.f
+        subroutine l2knts(break_bn,l,k,t,n) ! in :dpppack:../netlib/l2knts.f
             real dimension(l + 1) :: break_bn
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
             integer :: k
             real dimension(2*k-1+l),depend(l,k) :: t
             integer intent(out) :: n
         end subroutine l2knts
-        subroutine newnot(break_bn,coef,l,k,brknew,lnew,coefg) ! in :pppack:../netlib/newnot.f
+        subroutine newnot(break_bn,coef,l,k,brknew,lnew,coefg) ! in :dpppack:../netlib/newnot.f
             real dimension(l + 1) :: break_bn
             real dimension(k,l),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -157,7 +157,7 @@ python module pppack ! in
             integer, optional,check((len(brknew)-1)>=lnew),depend(brknew) :: lnew=(len(brknew)-1)
             real dimension(2,l),depend(l) :: coefg
         end subroutine newnot
-        function ppvalu(break_bn,coef,l,k,x,jderiv) ! in :pppack:../netlib/ppvalu.f
+        function ppvalu(break_bn,coef,l,k,x,jderiv) ! in :dpppack:../netlib/ppvalu.f
             real dimension(l + 1) :: break_bn
             real dimension(k,l),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -166,7 +166,7 @@ python module pppack ! in
             integer :: jderiv
             real :: ppvalu
         end function ppvalu
-        subroutine setdatex2(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:../netlib/setdatex2.f
+        subroutine setdatex2(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :dpppack:../netlib/setdatex2.f
             integer :: icount
             integer intent(out) :: ntau
             real dimension(200) :: tau
@@ -178,7 +178,7 @@ python module pppack ! in
             integer intent(out) :: l
             integer intent(out) :: k
         end subroutine setdatex2
-        subroutine setdatex3(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:../netlib/setdatex3.f
+        subroutine setdatex3(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :dpppack:../netlib/setdatex3.f
             integer :: icount
             integer intent(out) :: ntau
             real dimension(200) :: tau
@@ -190,7 +190,7 @@ python module pppack ! in
             integer intent(out) :: l
             integer intent(out) :: k
         end subroutine setdatex3
-        subroutine setdatex4(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :pppack:../netlib/setdatex4.f
+        subroutine setdatex4(icount,ntau,tau,gtau,weight,totalw,break_bn,coef,l,k) ! in :dpppack:../netlib/setdatex4.f
             integer :: icount
             integer intent(out) :: ntau
             real dimension(200) :: tau
@@ -202,7 +202,7 @@ python module pppack ! in
             integer intent(out) :: l
             integer intent(out) :: k
         end subroutine setdatex4
-        subroutine setupq(x,dx,y,npoint,v,qty) ! in :pppack:../netlib/setupq.f
+        subroutine setupq(x,dx,y,npoint,v,qty) ! in :dpppack:../netlib/setupq.f
             real dimension(npoint) :: x
             real dimension(npoint),depend(npoint) :: dx
             real dimension(npoint),depend(npoint) :: y
@@ -210,7 +210,7 @@ python module pppack ! in
             real dimension(npoint,7),depend(npoint) :: v
             real dimension(npoint),depend(npoint) :: qty
         end subroutine setupq
-        subroutine slvblk(bloks,integs,nbloks,b,ipivot,x,iflag) ! in :pppack:../netlib/slvblktext.f
+        subroutine slvblk(bloks,integs,nbloks,b,ipivot,x,iflag) ! in :dpppack:../netlib/slvblktext.f
             real dimension(1) :: bloks
             integer dimension(3,nbloks) :: integs
             integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
@@ -219,7 +219,7 @@ python module pppack ! in
             real dimension(1) :: x
             integer :: iflag
         end subroutine slvblk
-        subroutine fcblok(bloks,integs,nbloks,ipivot,scrtch,iflag) ! in :pppack:../netlib/slvblktext.f
+        subroutine fcblok(bloks,integs,nbloks,ipivot,scrtch,iflag) ! in :dpppack:../netlib/slvblktext.f
             real dimension(1) :: bloks
             integer dimension(3,nbloks) :: integs
             integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
@@ -227,7 +227,7 @@ python module pppack ! in
             real dimension(1) :: scrtch
             integer :: iflag
         end subroutine fcblok
-        subroutine factrb(w,ipivot,d,nrow,ncol,last,iflag) ! in :pppack:../netlib/slvblktext.f
+        subroutine factrb(w,ipivot,d,nrow,ncol,last,iflag) ! in :dpppack:../netlib/slvblktext.f
             real dimension(nrow,ncol) :: w
             integer dimension(nrow),depend(nrow) :: ipivot
             real dimension(nrow),depend(nrow) :: d
@@ -236,7 +236,7 @@ python module pppack ! in
             integer :: last
             integer :: iflag
         end subroutine factrb
-        subroutine shiftb(ai,ipivot,nrowi,ncoli,last,ai1,nrowi1,ncoli1) ! in :pppack:../netlib/slvblktext.f
+        subroutine shiftb(ai,ipivot,nrowi,ncoli,last,ai1,nrowi1,ncoli1) ! in :dpppack:../netlib/slvblktext.f
             real dimension(nrowi,ncoli) :: ai
             integer dimension(nrowi),depend(nrowi) :: ipivot
             integer, optional,check(shape(ai,0)==nrowi),depend(ai) :: nrowi=shape(ai,0)
@@ -246,7 +246,7 @@ python module pppack ! in
             integer, optional,check(shape(ai1,0)==nrowi1),depend(ai1) :: nrowi1=shape(ai1,0)
             integer, optional,check(shape(ai1,1)==ncoli1),depend(ai1) :: ncoli1=shape(ai1,1)
         end subroutine shiftb
-        subroutine sbblok(bloks,integs,nbloks,ipivot,b,x) ! in :pppack:../netlib/slvblktext.f
+        subroutine sbblok(bloks,integs,nbloks,ipivot,b,x) ! in :dpppack:../netlib/slvblktext.f
             real dimension(1) :: bloks
             integer dimension(3,nbloks) :: integs
             integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
@@ -254,7 +254,7 @@ python module pppack ! in
             real dimension(1) :: b
             real dimension(1) :: x
         end subroutine sbblok
-        subroutine subfor(w,ipivot,nrow,last,b,x) ! in :pppack:../netlib/slvblktext.f
+        subroutine subfor(w,ipivot,nrow,last,b,x) ! in :dpppack:../netlib/slvblktext.f
             real dimension(nrow,last) :: w
             integer dimension(nrow),depend(nrow) :: ipivot
             integer, optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
@@ -262,7 +262,7 @@ python module pppack ! in
             real dimension(1) :: b
             real dimension(nrow),depend(nrow) :: x
         end subroutine subfor
-        subroutine subbak(w,ipivot,nrow,ncol,last,x) ! in :pppack:../netlib/slvblktext.f
+        subroutine subbak(w,ipivot,nrow,ncol,last,x) ! in :dpppack:../netlib/slvblktext.f
             real dimension(nrow,ncol) :: w
             integer dimension(nrow),depend(nrow) :: ipivot
             integer, optional,check(shape(w,0)==nrow),depend(w) :: nrow=shape(w,0)
@@ -270,7 +270,7 @@ python module pppack ! in
             integer :: last
             real dimension(ncol),depend(ncol) :: x
         end subroutine subbak
-        subroutine dtblok(bloks,integs,nbloks,ipivot,iflag,detsgn,detlog) ! in :pppack:../netlib/slvblktext.f
+        subroutine dtblok(bloks,integs,nbloks,ipivot,iflag,detsgn,detlog) ! in :dpppack:../netlib/slvblktext.f
             real dimension(1) :: bloks
             integer dimension(3,nbloks) :: integs
             integer, optional,check(shape(integs,1)==nbloks),depend(integs) :: nbloks=shape(integs,1)
@@ -279,7 +279,7 @@ python module pppack ! in
             real :: detsgn
             real :: detlog
         end subroutine dtblok
-        function smooth(x,y,dy,npoint,s,v,a) ! in :pppack:../netlib/smooth.f
+        function smooth(x,y,dy,npoint,s,v,a) ! in :dpppack:../netlib/smooth.f
             real dimension(npoint) :: x
             real dimension(npoint),depend(npoint) :: y
             real dimension(npoint),depend(npoint) :: dy
@@ -289,7 +289,7 @@ python module pppack ! in
             real dimension(npoint,4),depend(npoint) :: a
             real :: smooth
         end function smooth
-        subroutine spli2d(tau,gtau,t,n,k,m,work,q,bcoef,iflag) ! in :pppack:../netlib/spli2d.f
+        subroutine spli2d(tau,gtau,t,n,k,m,work,q,bcoef,iflag) ! in :dpppack:../netlib/spli2d.f
             real dimension(n) :: tau
             real dimension(n,m),depend(n) :: gtau
             real dimension(n+k),depend(n,k) :: t
@@ -301,7 +301,7 @@ python module pppack ! in
             real dimension(m,n),depend(m,n) :: bcoef
             integer intent(out) :: iflag
         end subroutine spli2d
-        subroutine splint(tau,gtau,t,n,k,q,bcoef,iflag) ! in :pppack:../netlib/splint.f
+        subroutine splint(tau,gtau,t,n,k,q,bcoef,iflag) ! in :dpppack:../netlib/splint.f
             real dimension(n) :: tau
             real dimension(n),depend(n) :: gtau
             real dimension(n+k),depend(n,k) :: t
@@ -311,7 +311,7 @@ python module pppack ! in
             real dimension(n),depend(n) :: bcoef
             integer intent(out) :: iflag
         end subroutine splint
-        subroutine splopt(tau,n,k,scrtch,t,iflag) ! in :pppack:../netlib/splopt.f
+        subroutine splopt(tau,n,k,scrtch,t,iflag) ! in :dpppack:../netlib/splopt.f
             real dimension(n) :: tau
             integer, optional,check(len(tau)>=n),depend(tau) :: n=len(tau)
             integer :: k
@@ -319,7 +319,7 @@ python module pppack ! in
             real dimension(n+k),depend(n,k) :: t
             integer intent(out) :: iflag
         end subroutine splopt
-        subroutine tautsp(tau,gtau,ntau,gamma,s,break_bn,coef,l,k,iflag) ! in :pppack:../netlib/tautsp.f
+        subroutine tautsp(tau,gtau,ntau,gamma,s,break_bn,coef,l,k,iflag) ! in :dpppack:../netlib/tautsp.f
             real dimension(ntau) :: tau
             real dimension(ntau),depend(ntau) :: gtau
             integer, optional,check(len(tau)>=ntau),depend(tau) :: ntau=len(tau)
@@ -331,12 +331,12 @@ python module pppack ! in
             integer intent(out) :: k
             integer intent(out) :: iflag
         end subroutine tautsp
-        subroutine titand(tau,gtau,n) ! in :pppack:../netlib/titand.f
+        subroutine titand(tau,gtau,n) ! in :dpppack:../netlib/titand.f
             real dimension(49) :: tau
             real dimension(49) :: gtau
             integer intent(out) :: n
         end subroutine titand
-        subroutine bsplppd(t,bcoef,n,k,d,p,scrtch,break_bn,coef,l) ! in :pppack:../bsplppd.f
+        subroutine bsplppd(t,bcoef,n,k,d,p,scrtch,break_bn,coef,l) ! in :dpppack:../bsplppd.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -348,13 +348,13 @@ python module pppack ! in
             real dimension(d,k,l,p),depend(d,k,l,p) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
         end subroutine bsplppd
-        subroutine calcbspl(t,scr,k,d) ! in :pppack:../bsplppd.f
+        subroutine calcbspl(t,scr,k,d) ! in :dpppack:../bsplppd.f
             real dimension(1) :: t
             real dimension(d,k,k) :: scr
             integer, optional,check(shape(scr,1)==k),depend(scr) :: k=shape(scr,1)
             integer, optional,check(shape(scr,0)==d),depend(scr) :: d=shape(scr,0)
         end subroutine calcbspl
-        subroutine ppual(break_bn,coef,l,k,d,p,x,m,y) ! in :pppack:../ppual.f
+        subroutine ppual(break_bn,coef,l,k,d,p,x,m,y) ! in :dpppack:../ppual.f
             real dimension(l + 1) :: break_bn
             real dimension(d,k,l,p),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -365,7 +365,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(d,m,p),depend(d,m,p) :: y
         end subroutine ppual
-        subroutine ppual0(break_bn,coef,l,k,x,m,y) ! in :pppack:../ppual.f
+        subroutine ppual0(break_bn,coef,l,k,x,m,y) ! in :dpppack:../ppual.f
             real dimension(l + 1) :: break_bn
             real dimension(k,l),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -374,7 +374,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m),depend(m) :: y
         end subroutine ppual0
-        subroutine ppualp(break_bn,coef,l,k,p,x,m,y) ! in :pppack:../ppual.f
+        subroutine ppualp(break_bn,coef,l,k,p,x,m,y) ! in :dpppack:../ppual.f
             real dimension(l + 1) :: break_bn
             real dimension(k,l,p),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -384,7 +384,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m,p),depend(m,p) :: y
         end subroutine ppualp
-        subroutine ppuald(break_bn,coef,l,k,d,x,m,y) ! in :pppack:../ppual.f
+        subroutine ppuald(break_bn,coef,l,k,d,x,m,y) ! in :dpppack:../ppual.f
             real dimension(l + 1) :: break_bn
             real dimension(d,k,l),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -394,7 +394,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(d,m),depend(d,m) :: y
         end subroutine ppuald
-        subroutine ppualder(break_bn,coef,l,k,d,x,m,jderiv,y) ! in :pppack:../ppualder.f
+        subroutine ppualder(break_bn,coef,l,k,d,x,m,jderiv,y) ! in :dpppack:../ppualder.f
             real dimension(l + 1) :: break_bn
             real dimension(d,k,l),depend(l) :: coef
             integer, optional,check((len(break_bn)-1)>=l),depend(break_bn) :: l=(len(break_bn)-1)
@@ -405,7 +405,7 @@ python module pppack ! in
             integer :: jderiv
             real dimension(d,m),depend(d,m) :: y
         end subroutine ppualder
-        subroutine spder(t,bcoef,n,k,d,p,jderiv) ! in :pppack:../spder.f
+        subroutine spder(t,bcoef,n,k,d,p,jderiv) ! in :dpppack:../spder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -414,14 +414,14 @@ python module pppack ! in
             integer, optional,check(shape(bcoef,2)==p),depend(bcoef) :: p=shape(bcoef,2)
             integer :: jderiv
         end subroutine spder
-        subroutine spder0(t,bcoef,n,k,jderiv) ! in :pppack:../spder.f
+        subroutine spder0(t,bcoef,n,k,jderiv) ! in :dpppack:../spder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
             integer :: k
             integer :: jderiv
         end subroutine spder0
-        subroutine spderp(t,bcoef,n,k,p,jderiv) ! in :pppack:../spder.f
+        subroutine spderp(t,bcoef,n,k,p,jderiv) ! in :dpppack:../spder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n,p) :: bcoef
             integer, optional,check(shape(bcoef,0)==n),depend(bcoef) :: n=shape(bcoef,0)
@@ -429,7 +429,7 @@ python module pppack ! in
             integer, optional,check(shape(bcoef,1)==p),depend(bcoef) :: p=shape(bcoef,1)
             integer :: jderiv
         end subroutine spderp
-        subroutine spderd(t,bcoef,n,k,d,jderiv) ! in :pppack:../spder.f
+        subroutine spderd(t,bcoef,n,k,d,jderiv) ! in :dpppack:../spder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -437,7 +437,7 @@ python module pppack ! in
             integer, optional,check(shape(bcoef,0)==d),depend(bcoef) :: d=shape(bcoef,0)
             integer :: jderiv
         end subroutine spderd
-        subroutine spual(t,bcoef,n,k,d,p,x,m,y) ! in :pppack:../spual.f
+        subroutine spual(t,bcoef,n,k,d,p,x,m,y) ! in :dpppack:../spual.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -448,7 +448,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(d,m,p),depend(d,m,p) :: y
         end subroutine spual
-        subroutine eval0(t,bcoef,n,k,x,m,y) ! in :pppack:../spual.f
+        subroutine eval0(t,bcoef,n,k,x,m,y) ! in :dpppack:../spual.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
@@ -457,7 +457,7 @@ python module pppack ! in
             integer, optional,check(len(x)>=m),depend(x) :: m=len(x)
             real dimension(m),depend(m) :: y
         end subroutine eval0
-        subroutine spualder(t,bcoef,n,k,d,p,x,m,y,jderiv) ! in :pppack:../spualder.f
+        subroutine spualder(t,bcoef,n,k,d,p,x,m,y,jderiv) ! in :dpppack:../spualder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -469,7 +469,7 @@ python module pppack ! in
             real dimension(d,m,p),depend(d,m,p) :: y
             integer :: jderiv
         end subroutine spualder
-        subroutine evalder0(t,bcoef,n,k,x,m,y,jderiv) ! in :pppack:../spualder.f
+        subroutine evalder0(t,bcoef,n,k,x,m,y,jderiv) ! in :dpppack:../spualder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(n) :: bcoef
             integer, optional,check(len(bcoef)>=n),depend(bcoef) :: n=len(bcoef)
@@ -479,7 +479,7 @@ python module pppack ! in
             real dimension(m),depend(m) :: y
             integer :: jderiv
         end subroutine evalder0
-        subroutine bual(t,bcoef,n,k,d,p,x,y) ! in :pppack:../bual.f
+        subroutine bual(t,bcoef,n,k,d,p,x,y) ! in :dpppack:../bual.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -489,7 +489,7 @@ python module pppack ! in
             real :: x
             real dimension(d,p),depend(d,p) :: y
         end subroutine bual
-        subroutine bualder(t,bcoef,n,k,d,p,x,y,jderiv) ! in :pppack:../bualder.f
+        subroutine bualder(t,bcoef,n,k,d,p,x,y,jderiv) ! in :dpppack:../bualder.f
             real dimension(n+k),depend(n,k) :: t
             real dimension(d,n,p) :: bcoef
             integer, optional,check(shape(bcoef,1)==n),depend(bcoef) :: n=shape(bcoef,1)
@@ -501,7 +501,7 @@ python module pppack ! in
             integer :: jderiv
         end subroutine bualder
     end interface 
-end python module pppack
+end python module dpppack
 
 ! This file was auto-generated with f2py (version:2).
 ! See http://cens.ioc.ee/projects/f2py2e/
