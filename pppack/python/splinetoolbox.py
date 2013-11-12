@@ -879,7 +879,7 @@ class SplineND(object):
     def spval(self, x, der=0):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         dtype = self.c.dtype
-        x = cont(x, dtype)
+        x = np.atleast_2d(cont(x, dtype))
         m, nd = x.shape
         der = np.array(der, np.int32)
         if der.size == 1:
@@ -923,7 +923,7 @@ class SplineND(object):
     def spval_grid(self, x, der=0, fast=True):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         nd, dtype = c.ndim, c.dtype
-        m = np.array(map(len, x), np.int32)
+        m = np.array(map(np.size, x), np.int32)
         X = np.zeros(m.sum(), dtype)
         j = 0
         for i in xrange(m.size):
