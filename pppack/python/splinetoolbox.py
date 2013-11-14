@@ -2,6 +2,12 @@ import numpy as np
 find, cat, cont = np.flatnonzero, np.concatenate, np.ascontiguousarray
 diff, zeros, ones = np.diff, np.zeros, np.ones
 
+def Len(x):
+    try:
+        return len(x)
+    except TypeError:
+        return 1
+
 from matplotlib.pyplot import figure, show
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -906,10 +912,21 @@ class SplineND(object):
         s = [slice(i[d]-k[d], i[d]) for d in xrange(nd)]
         return self.from_knots_coefs(t, cont(self.c[s]))
 
+    def _spval_checkx(self, x, dtype):
+        if isinstance(x, np.ndarray):
+            return np.atleast_2d(cont(x, dtype))
+        else:
+            nd = len(x)
+            m = max(map(Len, x))
+            X = np.zeros((m, nd), dtype)
+            for d in xrange(nd):
+                X[:,d] = x[d]
+            return X
+
     def spval(self, x, der=0, y=None):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         dtype = self.c.dtype
-        x = np.atleast_2d(cont(x, dtype))
+        x = self._spval_checkx(x, dtype)
         m, nd = x.shape
         der = np.array(der, np.int32)
         if der.size == 1:
@@ -950,7 +967,7 @@ class SplineND(object):
     def spval_grid(self, x, der=0, y=None, fast=True):
         t, c, n, k = cat(self.t), self.c, self.n, self.k
         nd, dtype = c.ndim, c.dtype
-        m = np.array(map(np.size, x), np.int32)
+        m = np.array(map(Len, x), np.int32)
         X = np.zeros(m.sum(), dtype)
         j = 0
         for i in xrange(m.size):
@@ -995,7 +1012,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test1 = True
+    test4 = True
     #bench = True
 
 if test1:
@@ -1150,7 +1167,7 @@ if test3:
 if test4:
     #"""
     from pytokamak.tokamak import overview
-    AUG = overview.AUGOverview(29733, eqi_dig='EQI')
+    AUG = overview.AUGOverview(29733, eqi_dig='EQH')
     R, z, psi_n = AUG.eqi.R, AUG.eqi.z, AUG.eqi.psi_n
     # do not convert to double
     t = psi_n.t
@@ -1159,9 +1176,10 @@ if test4:
     mgc('%time sp = SplineND((t, z, R), psi_n, k=(2, 4, 4))')
     #"""
     pos = AUG.XPR.pos.t_gt(1.).compressed()
-    tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
-    
-    print "Evaluating at %d trajectory positions..." % tzR.shape[0]
+    #tzR = np.c_[pos.t[:,None], pos.x[:,::-1]]
+    tzR = (pos.t, pos.x[:,1], pos.x[:,0])
+
+    print "Evaluating at %d trajectory positions..." % pos.t.size
     mgc('%time y = sp(tzR, der=(0,0,0))')
     plot(pos.t, y)
     show()
