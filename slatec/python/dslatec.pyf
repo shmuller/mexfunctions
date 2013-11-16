@@ -527,6 +527,12 @@ python module dslatec ! in
             real dimension(*) :: tx
             real dimension(*) :: aj
         end subroutine deval
+        subroutine aptknt(x,n,k,t) ! in :dslatec:../ext/dbualu.f90
+            real dimension(n) :: x
+            integer, optional,check(len(x)>=n),depend(x) :: n=len(x)
+            integer :: k
+            real dimension(n+k),depend(n,k) :: t
+        end subroutine aptknt
         subroutine bsped(t,ad,n,k,nderiv,x,inev,svalue,work) ! in :dslatec:../ext/dbsped.f90
             real dimension(*) :: t
             real dimension(*) :: ad

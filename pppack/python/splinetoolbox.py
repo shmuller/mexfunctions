@@ -62,15 +62,27 @@ def aveknt(t, k):
         tstar[j] = t[j+1:j+k].mean()
     return tstar
 
-def aptknt(x, k=4):
+def aptknt_old(x, k=4):
     return augknt(cat((x[:1], aveknt(x, k), x[-1:])), k)
 
+def aptknt(x, k=4):
+    if x.dtype == np.float64:
+        import dslatec as slatec
+    else:
+        import slatec
+    t = np.zeros(x.size + k, x.dtype)
+    slatec.aptknt(x, k, t)
+    return t
+
 def optknt(x, k=4):
-    import dpppack
+    if x.dtype == np.float64:
+        import dpppack as pppack
+    else:
+        import pppack
     n = x.size
     t = np.zeros(n+k)
     scrtch = np.zeros((n-k)*(2*k+3) + 5*k + 3)
-    iflag = dpppack.splopt(x, k, scrtch, t)
+    iflag = pppack.splopt(x, k, scrtch, t)
     return t
 
 def get_left(t, k, n, x):
@@ -421,6 +433,7 @@ class SplinePGS(Spline):
             self.pppack = dpppack
         else:
             self.pppack = pppack
+        self.w_kxk = np.zeros((self.k, self.k), c.dtype)
 
     def spval(self, x, der=0, y=None, fast=True):
         t, c, k, p, n, d = self.spbrk()
@@ -446,7 +459,7 @@ class SplinePGS(Spline):
             for i in xrange(m):
                 bsplvb(t[:1], 1, x[i], left[i], B[i])
         else:
-            a = np.zeros((k, k), dtype)
+            a = self.w_kxk
             dbiatx = np.zeros((der+1, k), dtype)
             bsplvd = self.pppack.bsplvd
             for i in xrange(m):
@@ -456,6 +469,7 @@ class SplinePGS(Spline):
 
     def spval2(self, x, der=0, y=None):
         t, c, k, p, n, d = self.spbrk()
+        x = cont(x)
         left, B = self.evalB(x, der)
         m = x.size
         B = B[:,None,:,None]
@@ -555,6 +569,8 @@ class SplineSLA(SplinePGS):
             self.slatec = dslatec
         else:
             self.slatec = slatec
+        self.ileft = np.ones(1, np.int32)
+        self.w_3k = np.zeros(3*self.k, c.dtype)
 
     def spval(self, x, der=0, y=None, fast=True):
         t, c, k, p, n, d = self.spbrk()
@@ -565,7 +581,7 @@ class SplineSLA(SplinePGS):
         if der >= k:
             return y
         inbv = self.get_left(x).astype('i')
-        work = np.zeros(3*k, dtype)
+        work = self.w_3k
         ind = find((t[0] <= x) & (x <= t[-1]))
         c = cont(c.transpose((0, 2, 1)))
         bvalu = self.slatec.bvalu
@@ -592,8 +608,8 @@ class SplineSLA(SplinePGS):
         ind = find((t[0] <= x) & (x <= t[-1]))
         if der == 0:
             bspvn = self.slatec.bspvn
-            work = np.zeros(2*k, dtype)
-            iwork = np.zeros(1, 'i')
+            work = self.w_3k[:2]
+            iwork = self.ileft
             for i in ind:
                 bspvn(t, k, k, 1, x[i], left[i], B[i], work, iwork)
         else:
@@ -640,8 +656,8 @@ class SplineSLA(SplinePGS):
         if der >= k:
             return y
         nderiv = der+1
-        inev = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inev = self.ileft
+        work = self.w_3k
         ad = np.zeros((2*n-nderiv+1)*nderiv/2, dtype)
         c = cont(c.transpose((0, 2, 1)))
         ind = find((t[0] <= x) & (x <= t[-1]))
@@ -688,8 +704,8 @@ class SplineSLA1(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros(m, dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
         self.dbval(t, c.ravel(), k, der, x, inbv, work, y)
         return y.reshape((1, m, 1))
 
@@ -719,7 +735,7 @@ class SplineSLA2(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((p, m, d), dtype)
-        inbv = np.ones(1, 'i')
+        inbv = self.ileft
         work = np.zeros(k*(k+2), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return y
@@ -736,7 +752,7 @@ class SplineSLA3(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((p, m, d), dtype)
-        inbv = np.ones(1, 'i')
+        inbv = self.ileft
         work = np.zeros(k*(k+1), dtype)
         work2 = np.zeros((k, d), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
@@ -754,8 +770,8 @@ class SplineSLA4(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((p, m, d), dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return y
 
@@ -775,8 +791,8 @@ class SplineSLA6(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((p, m, d), dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
         work2 = np.zeros((k, p, d), dtype)
         self.dbual(t, c.T, k, der, x, inbv, work, work2.T, y.T)
         return y
@@ -790,8 +806,8 @@ class SplineSLA7(SplineSLA4):
         m = x.size
         if y is None:
             y = np.zeros((1, m, p*d), dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
         c = cont(c.transpose((1, 0, 2)).reshape((1, n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
@@ -808,8 +824,8 @@ class SplineSLA8(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((m, p*d), dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
         c = cont(c.transpose((1, 0, 2)).reshape((n, p*d)))
         self.dbual(t, c.T, k, der, x, inbv, work, y.T)
         return cont(y.reshape((m, p, d)).transpose((1, 0, 2)))
@@ -826,8 +842,8 @@ class SplineSLA9(SplineSLA):
         m = x.size
         if y is None:
             y = np.zeros((p, m, d), dtype)
-        inbv = np.ones(1, 'i')
-        work = np.zeros(3*k, dtype)
+        inbv = self.ileft
+        work = self.w_3k
 
         n = np.array([n], 'i')
         k = np.array([k], 'i')
@@ -1012,7 +1028,7 @@ mgc = get_ipython().magic
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
-    test4 = True
+    test1 = True
     #bench = True
 
 if test1:

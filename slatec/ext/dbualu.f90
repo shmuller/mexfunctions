@@ -671,3 +671,17 @@
    20 CONTINUE
       END
 
+
+      SUBROUTINE APTKNT (X, N, K, T)
+      INTEGER N, K, I, KM1
+      REAL X(N), T(N+K), FKM1
+      KM1 = K-1
+      FKM1 = KM1
+      DO 10 I=1,K
+        T(I) = X(1)
+        T(N+I) = X(N)
+   10 CONTINUE
+      DO 20 I=K+1,N
+        T(I) = SUM(X(I-KM1:I-1))/FKM1
+   20 CONTINUE
+      END

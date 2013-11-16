@@ -12,6 +12,6 @@ class ConfigurationSlatec(ConfigurationF2Py):
 if __name__ == "__main__":
     #ConfigurationSlatec('slatec').build()
     #ConfigurationSlatec('dslatec', r8=True).build()
-    ConfigurationSlatec('slatec', from_pyf=False).build()
-    #ConfigurationSlatec('dslatec', from_pyf=False).build()
+    #ConfigurationSlatec('slatec', from_pyf=False).build()
+    ConfigurationSlatec('dslatec', from_pyf=False).build()
 
