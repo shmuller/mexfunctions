@@ -75,6 +75,8 @@ def aptknt(x, k=4):
     return t
 
 def optknt(x, k=4):
+    if k < 3:
+        return aptknt(x, k)
     if x.dtype == np.float64:
         import dpppack as pppack
     else:
