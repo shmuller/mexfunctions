@@ -2,13 +2,15 @@ import numpy as np
 find, cat, cont = np.flatnonzero, np.concatenate, np.ascontiguousarray
 diff, zeros, ones = np.diff, np.zeros, np.ones
 
+import operator
+
 def Len(x):
     try:
         return len(x)
     except TypeError:
         return 1
 
-from matplotlib.pyplot import figure, show
+from matplotlib.pyplot import plot, figure, show
 from mpl_toolkits.mplot3d import Axes3D
 
 def surf(x, y, Z, ax=None, cmap='jet'):
@@ -181,6 +183,16 @@ class Spline(object):
 
     def spbrk(self):
         return self.t, self.c, self.k, self.p, self.n, self.d
+
+    def _op_factory(op):
+        def apply(self, other):
+            return self.from_knots_coefs(self.t, op(self.c, other))
+        return apply
+
+    __add__ = _op_factory(operator.add)
+    __sub__ = _op_factory(operator.sub)
+    __mul__ = _op_factory(operator.mul)
+    __div__ = _op_factory(operator.div)
 
     def bbox(self):
         return self.t[0], self.t[-1]
@@ -1026,7 +1038,11 @@ class SplineND(object):
             raise NotImplementedError("cannot plot more than 2 dimensions")
 
 
-mgc = get_ipython().magic
+try:
+    mgc = get_ipython().magic
+except NameError:
+    pass
+
 
 test1 = test2 = test3 = test4 = test5 = bench = False
 if __name__ == "__main__":
