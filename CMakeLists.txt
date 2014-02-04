@@ -24,6 +24,7 @@ add_subdirectory(dierckx)
 add_subdirectory(odepack)
 add_subdirectory(fieldline)
 add_subdirectory(pppack)
+add_subdirectory(sort)
 
 set(CMAKE_BUILD_TYPE Release)
 
