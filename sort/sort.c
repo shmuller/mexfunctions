@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h> /* qsort */
 
+#include "sort.h"
+
 #define PYA_QS_STACK 100
 #define SMALL_QUICKSORT 15
 

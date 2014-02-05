@@ -17,7 +17,7 @@ static PyObject* sort(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    quick_sort(x, N);
+    quick_sort((int*)x, N);
 
     Py_RETURN_NONE;
 }
@@ -29,7 +29,7 @@ static PyObject* qsort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    qsort_wrap(x, N);
+    qsort_wrap((int*)x, N);
 
     Py_RETURN_NONE;
 }
@@ -41,10 +41,12 @@ static PyObject* quicksort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    quicksort(x, N);
+    quicksort((int*)x, N);
 
     Py_RETURN_NONE;
 }
+
+#include <algorithm>
 
 static PyObject* stdsort_meth(PyObject *self, PyArrayObject *arr)
 {
@@ -53,10 +55,12 @@ static PyObject* stdsort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    stdsort(x, N);
+    std::sort((int*)x, (int*)x + N);
 
     Py_RETURN_NONE;
 }
+
+#include "../timsort.hpp"
 
 static PyObject* timsort_meth(PyObject *self, PyArrayObject *arr)
 {
@@ -65,7 +69,7 @@ static PyObject* timsort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    timsort(x, N);
+    gfx::timsort((int*)x, (int*)x + N);
 
     Py_RETURN_NONE;
 }
@@ -82,7 +86,7 @@ static PyObject* sw_timsort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    swenson_tim_sort(x, N);
+    swenson_tim_sort((int*)x, N);
 
     Py_RETURN_NONE;
 }
@@ -94,7 +98,7 @@ static PyObject* sw_quicksort_meth(PyObject *self, PyArrayObject *arr)
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    swenson_quick_sort(x, N);
+    swenson_quick_sort((int*)x, N);
 
     Py_RETURN_NONE;
 }

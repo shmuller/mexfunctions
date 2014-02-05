@@ -9,7 +9,7 @@ else:
     include_dirs.append(np.get_include())
 
 module1 = Extension('sort', 
-          sources = ['sortmodule.c'],
+          sources = ['sortmodule.cpp'],
           libraries = ['sort'])
  
 setup(name = 'sort',
