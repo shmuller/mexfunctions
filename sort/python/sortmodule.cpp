@@ -34,14 +34,62 @@ static PyObject* qsort_meth(PyObject *self, PyArrayObject *arr)
     Py_RETURN_NONE;
 }
 
-static PyObject* quicksort_meth(PyObject *self, PyArrayObject *arr)
+static PyObject* numpy_quicksort_meth(PyObject *self, PyArrayObject *arr)
 {
     int ndims = PyArray_NDIM(arr);
     npy_intp N = PyArray_DIM(arr, ndims-1);
     int typenum = PyArray_TYPE(arr);
     void *x = PyArray_DATA(arr);
 
-    quicksort((int*)x, N);
+    numpy_quicksort((int*)x, N);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* numpy_mergesort_meth(PyObject *self, PyArrayObject *arr)
+{
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    numpy_mergesort((int*)x, N);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* insert_sort_meth(PyObject *self, PyArrayObject *arr)
+{
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    insert_sort((int*)x, N);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* select_sort_meth(PyObject *self, PyArrayObject *arr)
+{
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    select_sort((int*)x, N);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* merge_sort_meth(PyObject *self, PyArrayObject *arr)
+{
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    merge_sort((int*)x, N);
 
     Py_RETURN_NONE;
 }
@@ -103,14 +151,32 @@ static PyObject* sw_quicksort_meth(PyObject *self, PyArrayObject *arr)
     Py_RETURN_NONE;
 }
 
+static PyObject* bitmap_sort_meth(PyObject *self, PyArrayObject *arr)
+{
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    int ncount = bitmap_sort((unsigned int*)x, N, NULL);
+
+    return Py_BuildValue("i", ncount);
+}
+
+
 static PyMethodDef methods[] = {
     {"qsort", (PyCFunction)qsort_meth, METH_O, "qsort"},
     {"sort", (PyCFunction)sort, METH_O, "Sort"},
-    {"quicksort", (PyCFunction)quicksort_meth, METH_O, "Quicksort"},
+    {"numpy_quicksort", (PyCFunction)numpy_quicksort_meth, METH_O, "Numpy quicksort"},
+    {"numpy_mergesort", (PyCFunction)numpy_mergesort_meth, METH_O, "Numpy mergesort"},
+    {"insert_sort", (PyCFunction)insert_sort_meth, METH_O, "Insertion sort"},
+    {"select_sort", (PyCFunction)select_sort_meth, METH_O, "Selection sort"},
+    {"merge_sort", (PyCFunction)merge_sort_meth, METH_O, "Mergesort"},
     {"stdsort", (PyCFunction)stdsort_meth, METH_O, "std::sort"},
     {"timsort", (PyCFunction)timsort_meth, METH_O, "gfx::timsort"},
     {"sw_timsort", (PyCFunction)sw_timsort_meth, METH_O, "Swenson timsort"},
     {"sw_quicksort", (PyCFunction)sw_quicksort_meth, METH_O, "Swenson quicksort"},
+    {"bitmap_sort", (PyCFunction)bitmap_sort_meth, METH_O, "Bitmap sort"},
     {NULL, NULL, 0, NULL}
 };
  

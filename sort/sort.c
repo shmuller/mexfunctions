@@ -5,6 +5,7 @@
 
 #define PYA_QS_STACK 100
 #define SMALL_QUICKSORT 15
+#define SMALL_MERGESORT 20
 
 #define DTYPE_SWAP(a, b) {dtype tmp=(b); (b)=(a); (a)=tmp;}
 #define DTYPE_LT(a, b) ((a) < (b))
@@ -19,7 +20,34 @@ void qsort_wrap(dtype *a, int n) {
     qsort(a, n, sizeof(dtype), compare_dtype);
 }
 
-void quicksort(dtype *start, int num)
+
+void insert_sort(dtype *pl, int n) {
+    dtype *pr = pl + n, *pi, *pj, *pk, vp;
+    for (pi=pl+1; pi<pr; ++pi) {
+        vp = *pi;
+        pj = pi;
+        pk = pi - 1;
+        while (pj > pl && DTYPE_LT(vp, *pk)) {
+            *pj-- = *pk--;
+        }
+        *pj = vp;
+    }
+}
+
+
+void select_sort(dtype *a, int n) {
+    int i, j, k;
+    for (i=0; i<n-1; ++i) {
+        k = i;
+        for (j=i+1; j<n; ++j) {
+            if (a[j] < a[k]) k = j;
+        }
+        DTYPE_SWAP(a[i], a[k]);
+    }
+}
+
+
+void numpy_quicksort(dtype *start, int num)
 {
     dtype vp;
     dtype *pl = start;
@@ -81,6 +109,59 @@ void quicksort(dtype *start, int num)
 }
 
 
+void _numpy_mergesort(dtype *pl, dtype *pr, dtype *pw)
+{
+    dtype vp, *pi, *pj, *pk, *pm;
+
+    if (pr - pl > SMALL_MERGESORT) {
+        /* merge sort */
+        pm = pl + ((pr - pl) >> 1);
+        _numpy_mergesort(pl, pm, pw);
+        _numpy_mergesort(pm, pr, pw);
+        for (pi = pw, pj = pl; pj < pm;) {
+            *pi++ = *pj++;
+        }
+        pi = pw + (pm - pl);
+        pj = pw;
+        pk = pl;
+        while (pj < pi && pm < pr) {
+            if (DTYPE_LT(*pm, *pj)) {
+                *pk++ = *pm++;
+            }
+            else {
+                *pk++ = *pj++;
+            }
+        }
+        while(pj < pi) {
+            *pk++ = *pj++;
+        }
+    }
+    else {
+        /* insertion sort */
+        for (pi = pl + 1; pi < pr; ++pi) {
+            vp = *pi;
+            pj = pi;
+            pk = pi - 1;
+            while (pj > pl && DTYPE_LT(vp, *pk)) {
+                *pj-- = *pk--;
+            }
+            *pj = vp;
+        }
+    }
+}
+
+void numpy_mergesort(dtype *start, int num)
+{
+    dtype *pl, *pr, *pw;
+
+    pl = start;
+    pr = pl + num;
+    pw = (dtype *) malloc((num/2) * sizeof(dtype));
+    _numpy_mergesort(pl, pr, pw);
+    free(pw);
+}
+
+
 void quick_sort (int *a, int n) {
     if (n < 2)
         return;
@@ -103,6 +184,42 @@ void quick_sort (int *a, int n) {
     quick_sort(a, r - a + 1);
     quick_sort(l, a + n - l);
 }
+
+
+void _merge_sort(dtype *a, int n, dtype *scratch) {
+    int i, m=n/2;
+    dtype *l=a, *r=a+m;
+    
+    if (!m) return;
+
+    _merge_sort(l, m, scratch);
+    _merge_sort(r, n - m, scratch + m);
+
+    for (i=0; i<n; ++i) {
+        scratch[i] = a[i];
+    }
+    l = scratch;
+    r = l + m;
+    while (l < scratch + m && r < scratch + n) {
+        *a++ = DTYPE_LT(*l, *r) ? *l++ : *r++;
+    }
+    if (r == scratch + n) {
+        while (l < scratch + m) {
+            *a++ = *l++;
+        } 
+    } else {
+        while (r < scratch + n) {
+            *a++ = *r++;
+        }
+    }
+}
+
+void merge_sort(dtype *a, int n) {
+    dtype *scratch = malloc(n*sizeof(dtype));
+    _merge_sort(a, n, scratch);
+    free(scratch);
+}
+
 
 typedef struct {
     int x;
@@ -191,6 +308,38 @@ void quicksort_3way(int l, int r) {
     quicksort_3way(l, j);
     quicksort_3way(i, r); 
 }
+
+
+#define SIZE 1000000 /* 1 MB */
+
+static const unsigned char masks[8] = {1, 2, 4, 8, 16, 32, 64, 128};
+
+unsigned int
+bitmap_sort(unsigned int *a, int n, unsigned int *res) {
+    unsigned char bitarray[SIZE] = {0}, bitelem;
+    unsigned int x, *t, i, j, k, MAX=8*SIZE;
+
+    t = a;
+    for (i=n; i--; ) {
+        x = *t++;
+        j = x >> 3;
+        k = x - (j << 3);
+        bitarray[j] |= masks[k];
+    }
+
+    if (!res) res = a;
+    t = res;
+    for (j=0; j<SIZE; ++j) {
+        bitelem = bitarray[j];
+        for (k=0; k<8; ++k) {
+            if (bitelem & masks[k]) {
+                *t++ = (j << 3) + k;
+            }
+        }
+    }
+    return t - res;
+}
+
 
 /*
 int main () {
