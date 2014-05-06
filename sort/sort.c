@@ -162,7 +162,7 @@ void numpy_mergesort(dtype *start, int num)
 }
 
 
-void quick_sort (int *a, int n) {
+void quick_sort(int *a, int n) {
     if (n < 2)
         return;
     int p = a[n / 2];
@@ -183,6 +183,27 @@ void quick_sort (int *a, int n) {
     }
     quick_sort(a, r - a + 1);
     quick_sort(l, a + n - l);
+}
+
+#include <assert.h>
+
+
+void quick_select(dtype *pl, int n, int k) {
+    if (n < 2) return;
+    dtype *pr = pl + n - 1;
+    dtype *pm = pl + n / 2;
+    dtype *pi = pl, *pj = pr;
+    dtype vp = *pm;
+    printf("%d\n", vp);
+    DTYPE_SWAP(*pm, *pr);
+    while (pi <= pj) {
+        while(*pi < vp) ++pi;
+        while(*pj > vp) --pj;
+        DTYPE_SWAP(*pi, *pj);
+        ++pi;
+        --pj;
+    }
+    DTYPE_SWAP(*pr, *pi);
 }
 
 
@@ -227,8 +248,6 @@ typedef struct {
 } Item;
 
 Item *a, v, p, t;
-
-#define exch(a, b) do {t=a; a=b; b=t;} while(0)
 
 void print_array(Item *a, int l, int r) {
     int i;
@@ -293,6 +312,7 @@ void quick_sort_arg2(int l, int r) {
 }
 
 
+#define exch(a, b) do {t=a; a=b; b=t;} while(0)
 
 void quicksort_3way(int l, int r) { 
     int i = l-1, j = r, p = l-1, q = r; 

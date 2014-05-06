@@ -10,7 +10,7 @@
 
 #include "../sort.h"
 
-static PyObject* sort(PyObject *self, PyArrayObject *arr)
+static PyObject* quick_sort_meth(PyObject *self, PyArrayObject *arr)
 {
     int ndims = PyArray_NDIM(arr);
     npy_intp N = PyArray_DIM(arr, ndims-1);
@@ -18,6 +18,22 @@ static PyObject* sort(PyObject *self, PyArrayObject *arr)
     void *x = PyArray_DATA(arr);
 
     quick_sort((int*)x, N);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* quick_select_meth(PyObject *self, PyObject *args)
+{
+    PyArrayObject *arr = (PyArrayObject*) PyTuple_GET_ITEM(args, 0);
+    int ndims = PyArray_NDIM(arr);
+    npy_intp N = PyArray_DIM(arr, ndims-1);
+    int typenum = PyArray_TYPE(arr);
+    void *x = PyArray_DATA(arr);
+
+    PyObject *obj = PyTuple_GET_ITEM(args, 1);
+    int k = PyInt_AS_LONG(obj);
+
+    quick_select((int*)x, N, k);
 
     Py_RETURN_NONE;
 }
@@ -166,7 +182,8 @@ static PyObject* bitmap_sort_meth(PyObject *self, PyArrayObject *arr)
 
 static PyMethodDef methods[] = {
     {"qsort", (PyCFunction)qsort_meth, METH_O, "qsort"},
-    {"sort", (PyCFunction)sort, METH_O, "Sort"},
+    {"sort", (PyCFunction)quick_sort_meth, METH_O, "Sort"},
+    {"quick_select", (PyCFunction)quick_select_meth, METH_VARARGS, "Quick select"},
     {"numpy_quicksort", (PyCFunction)numpy_quicksort_meth, METH_O, "Numpy quicksort"},
     {"numpy_mergesort", (PyCFunction)numpy_mergesort_meth, METH_O, "Numpy mergesort"},
     {"insert_sort", (PyCFunction)insert_sort_meth, METH_O, "Insertion sort"},

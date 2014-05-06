@@ -10,6 +10,7 @@ void numpy_quicksort(int *a, int n);
 void numpy_mergesort(int *a, int n);
 void merge_sort(int *a, int n);
 void quick_sort(int *a, int n);
+void quick_select(int *a, int n, int k);
 unsigned int bitmap_sort(unsigned int *a, int n, unsigned int *res);
 
 /* in sort.cpp */

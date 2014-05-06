@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import numpy.ma as ma
-import pppack
+import dpppack as pppack
 from matplotlib.pyplot import figure, plot, show
 
 def ev(tau, c, x):
@@ -249,10 +249,10 @@ class Knots:
             self.errmax_decay(brk[:l+1], c[:,:l], n)
 
 
-#knots = Knots()
-#knots.test09()
-#knots.test10()
-#knots.test12()
+knots = Knots()
+knots.test09()
+knots.test10()
+knots.test12()
 
 class Titan:
     def __init__(self):
