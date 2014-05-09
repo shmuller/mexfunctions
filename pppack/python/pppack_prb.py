@@ -198,6 +198,50 @@ class Knots:
 
             self.errmax_decay(brk[:l+1], c[:,:l], n)
 
+    def test11(self):
+        nmax = 20
+        k = 4
+        bcoef = np.zeros(nmax + 2)
+        scrtch = np.zeros((2*k-1)*nmax)
+        scrtch2 = scrtch[:k*k].reshape((k, k), order='F')
+        scrtch3 = scrtch[:2*nmax].reshape((2, nmax), order='F')
+        brk = np.zeros(nmax)
+        c = np.zeros((k, nmax), order='F')
+        t = np.zeros(nmax + 6)
+        tnew = np.zeros(nmax)
+        tau = np.zeros(nmax)
+        gtau = np.zeros(nmax)
+
+        def interp(t, n):
+            for i in xrange(n):
+                tau[i] = t[i+1:i+4].sum() / 3.
+            gtau[:n] = self.g(tau[:n])
+
+            iflag = pppack.splint(tau[:n], gtau[:n], t[:n+k], k, scrtch[:(2*k-1)*n], bcoef[:n])
+            l = pppack.bsplpp(t[:n+k], bcoef[:n], scrtch2, brk, c)
+            return l
+
+        figure()
+        X = np.linspace(-1., 1., 1001)
+        plot(X, self.g(X))
+        
+        for n in xrange(self.nlow, self.nhigh + 1, 2):
+            nmk = n - k
+            h = 2. / (nmk + 1)
+            t[:k] = -1
+            t[k:n] = np.arange(1, nmk + 1) * h - 1.
+            t[n:n+k] = 1.
+         
+            for iter in xrange(self.itermx):
+                l = interp(t, n)
+                pppack.newnot(brk[:l+1], c[:,:l], tnew[:l+1], scrtch3[:,:l])
+                t[4:3+l] = tnew[1:l]          
+
+            self.errmax_decay(brk[:l+1], c[:,:l], n)
+
+        print t
+        plot(X, ev(brk[:l+1], c[:,:l], X))
+
     def test12(self):
         nmax = 20
         k = 4
@@ -235,7 +279,7 @@ class Knots:
             else:
                 pppack.newnot(brk[:l+1], c[:,:l], tnew[:l+3], scrtch3[:,:l])
                 l += 2
-                t[4+l] = t[5+l] = 1.
+                t[4+l] = t[5+l] = 1.  # this is a bug! should be t[5+l] = t[6+l] = 1.
                 t[4:3+l] = tnew[1:l]
                         
             l = interp(t, n)
@@ -244,14 +288,16 @@ class Knots:
                 t[4:3+l] = tnew[1:l]
                 l = interp(t, n)
 
-            plot(X, ev(brk[:l+1], c[:,:l], X))
-
             self.errmax_decay(brk[:l+1], c[:,:l], n)
+
+        print t
+        plot(X, ev(brk[:l+1], c[:,:l], X))
 
 
 knots = Knots()
-knots.test09()
-knots.test10()
+#knots.test09()
+#knots.test10()
+knots.test11()
 knots.test12()
 
 class Titan:
@@ -515,13 +561,13 @@ class TensorProductSpline:
         err2 = res2 - fun
         return fun, res, err, res2, err2
 
-
+"""
 tps = TensorProductSpline()
 fun, res, err, res2, err2 = tps.test19_20()
 
 print err
 print ""
 print err2
-
+"""
 show()
 

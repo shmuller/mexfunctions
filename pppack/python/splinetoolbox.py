@@ -406,11 +406,12 @@ class PPPGS2(PPPGS):
 
 
 class SplinePGS(Spline):
-    def __init__(self, x, y, k=4, c=None, getknt=aptknt):
+    def __init__(self, x, y, k=4, t=None, c=None, getknt=aptknt):
         x, y = self._checkargs(x, y)
         dtype = y.dtype
         p, n, d = y.shape
-        t = getknt(x, k)
+        if t is None:
+            t = getknt(x, k)
         q = np.zeros((2*k-1)*n, dtype)
         g = np.zeros(n, dtype)
         bcoef = np.zeros(n, dtype)
