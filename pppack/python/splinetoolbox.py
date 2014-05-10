@@ -97,8 +97,6 @@ def chbpnt(t, k, tol=0.001, itermax=10):
     b = (arange(n - 1, -1, -1) % 2) * 2. - 1.
     sp = SplinePGS(tau, b, t=t)
 
-    r = arange(1, n - 1)
-    s = zeros(n - 2, np.int_)
     for _ in xrange(itermax):
         sp.plot()
         Dsp = sp.deriv()
@@ -106,13 +104,14 @@ def chbpnt(t, k, tol=0.001, itermax=10):
         intau = tau[1:n-1]
         Dsptau = Dsp(intau).ravel()
         DDsptau = DDsp(intau).ravel()
-        inb = b[1:n-1]
-        sign(inb * Dsptau, s)
-        dt = tau[r + s] - intau
 
-        sign(inb * DDsptau, s)
-        i = find(s >= 0)
-        DDsptau[i] = (-2) * (2 * inb[i] / dt[i] + Dsptau[i]) / dt[i]
+        inb = b[1:n-1]
+        i = find(sign(inb * DDsptau) >= 0)
+        if len(i):
+            s = sign(inb[i] * Dsptau[i]).astype(np.int_)
+            dt = tau[1 + i + s] - intau[i]
+            DDsptau[i] = (-2) * (2 * inb[i] / dt + Dsptau[i]) / dt
+        
         dtau = -Dsptau / DDsptau
         tau[1:n-1] += dtau
 
