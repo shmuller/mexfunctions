@@ -1,6 +1,7 @@
 import numpy as np
 find, cat, cont = np.flatnonzero, np.concatenate, np.ascontiguousarray
-diff, zeros, ones = np.diff, np.zeros, np.ones
+diff, zeros, ones, arange = np.diff, np.zeros, np.ones, np.arange
+sign = np.sign
 
 import operator
 
@@ -88,6 +89,51 @@ def optknt(x, k=4):
     scrtch = np.zeros((n-k)*(2*k+3) + 5*k + 3)
     iflag = pppack.splopt(x, k, scrtch, t)
     return t
+
+def chbpnt(t, k, tol=0.001, itermax=10):
+    n = len(t) - k
+    tau = aveknt(t, k)
+    difftau = diff(tau)
+    b = (arange(n - 1, -1, -1) % 2) * 2. - 1.
+    sp = SplinePGS(tau, b, t=t)
+
+    r = arange(1, n - 1)
+    s = zeros(n - 2, np.int_)
+    for _ in xrange(itermax):
+        sp.plot()
+        Dsp = sp.deriv()
+        DDsp = Dsp.deriv()
+        intau = tau[1:n-1]
+        Dsptau = Dsp(intau).ravel()
+        DDsptau = DDsp(intau).ravel()
+        inb = b[1:n-1]
+        sign(inb * Dsptau, s)
+        dt = tau[r + s] - intau
+
+        sign(inb * DDsptau, s)
+        i = find(s >= 0)
+        DDsptau[i] = (-2) * (2 * inb[i] / dt[i] + Dsptau[i]) / dt[i]
+        dtau = -Dsptau / DDsptau
+        tau[1:n-1] += dtau
+
+        difftauold = difftau
+        while True:
+            difftau = diff(tau)
+            if all(difftau > 0.1 * difftauold):
+                break
+            dtau /= 2.
+            tau[1:n-1] -= dtau
+
+        extremes = abs(sp(tau).ravel())
+        sp = SplinePGS(tau, b, t=t)
+
+        minext = min(extremes)
+        maxext = max(extremes)
+        if (maxext - minext) <= tol * minext:
+            return tau, sp
+
+    raise Exception("Failed to reach tolerance %f in %d iterations" % (tol, itermax))
+
 
 def get_left(t, k, n, x):
     x = cont(x)
