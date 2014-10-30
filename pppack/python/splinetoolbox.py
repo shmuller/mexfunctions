@@ -98,7 +98,6 @@ def chbpnt(t, k, tol=0.001, itermax=10):
     sp = SplinePGS(tau, b, t=t)
 
     for _ in xrange(itermax):
-        sp.plot()
         Dsp = sp.deriv()
         DDsp = Dsp.deriv()
         intau = tau[1:n-1]
@@ -131,7 +130,7 @@ def chbpnt(t, k, tol=0.001, itermax=10):
         if (maxext - minext) <= tol * minext:
             return tau, sp
 
-    raise Exception("Failed to reach tolerance %f in %d iterations" % (tol, itermax))
+    raise Exception("Failed to reach tolerance %e in %d iterations" % (tol, itermax))
 
 
 def get_left(t, k, n, x):

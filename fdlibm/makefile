@@ -49,7 +49,7 @@
 #
 # Default IEEE libm
 #
-CFLAGS = -D_IEEE_LIBM 
+CFLAGS = -D_IEEE_LIBM -D__LITTLE_ENDIAN 
 
 CC = cc
 
